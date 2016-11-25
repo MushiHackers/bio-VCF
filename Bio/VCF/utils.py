@@ -2,6 +2,7 @@
 Utilities for VCF files.
 """
 
+
 def walk_together(*readers, **kwargs):
     """
     Simultaneously iteratate over two or more VCF readers. For each 
