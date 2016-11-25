@@ -463,8 +463,7 @@ class _Record(object):
     @property
     def var_type(self):
         """
-        Return the type of variant [snp, indel, unknown]
-        TO DO: support SVs
+        Return the type of variant [snp, indel, sv, unknown]
         """
         if self.is_snp:
             return "snp"
@@ -480,7 +479,7 @@ class _Record(object):
         """
         Return the subtype of variant.
 
-        - For SNPs and INDELs, yeild one of: [ts, tv, ins, del]
+        - For SNPs and INDELs, yield one of: [ts, tv, ins, del]
         - For SVs yield either "complex" or the SV type defined in the ALT
           fields (removing the brackets). E.g.::
 
