@@ -7,7 +7,7 @@ import sys
 import warnings
 
 
-from parser import Reader, Writer
+from Bio.VCF.parser import Reader, Writer
 
 
 class SampleFilter(object):

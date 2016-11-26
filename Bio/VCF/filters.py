@@ -39,8 +39,7 @@ class SiteQuality(Base):
 
     @classmethod
     def customize_parser(self, parser):
-        parser.add_argument('--site-quality', type=int, default=30,
-                help='Filter sites below this quality')
+        parser.add_argument('--site-quality', type=int, default=30, help='Filter sites below this quality')
 
     def __init__(self, args):
         self.threshold = args.site_quality
@@ -62,7 +61,7 @@ class VariantGenotypeQuality(Base):
     @classmethod
     def customize_parser(self, parser):
         parser.add_argument('--genotype-quality', type=int, default=50,
-                help='Filter sites with no genotypes above this quality')
+                            help='Filter sites with no genotypes above this quality')
 
         def __init__(self, args):
             self.threshold = args.genotype_quality
@@ -98,7 +97,7 @@ class ErrorBiasFilter(Base):
     @classmethod
     def customize_parser(self, parser):
         parser.add_argument('--eblr', type=int, default=-10,
-                help='Filter sites above this error log odds ratio')
+                            help='Filter sites above this error log odds ratio')
 
     def __init__(self, args):
         self.threshold = args.eblr
@@ -137,7 +136,7 @@ class ErrorBiasFilter(Base):
 
     def bias_test(self, calls):
         calls = [x for x in calls if x.called]
-        #TODO: single genotype assumption
+        # TODO: single genotype assumption
   
         try:
             # freebayes
@@ -155,14 +154,14 @@ class ErrorBiasFilter(Base):
 
 
 class DepthPerSample(Base):
-    'Threshold read depth per sample'
+    """Threshold read depth per sample"""
 
     name = 'dps'
 
     @classmethod
     def customize_parser(self, parser):
         parser.add_argument('--depth-per-sample', type=int, default=5,
-                help='Minimum required coverage in each sample')
+                            help='Minimum required coverage in each sample')
 
     def __init__(self, args):
         self.threshold = args.depth_per_sample
@@ -178,14 +177,14 @@ class DepthPerSample(Base):
 
 
 class AvgDepthPerSample(Base):
-    'Threshold average read depth per sample (read_depth / sample_count)'
+    """Threshold average read depth per sample (read_depth / sample_count)"""
 
     name = 'avg-dps'
 
     @classmethod
     def customize_parser(self, parser):
         parser.add_argument('--avg-depth-per-sample', type=int, default=3,
-              help='Minimum required average coverage per sample')
+                            help='Minimum required average coverage per sample')
 
     def __init__(self, args):
         self.threshold = args.avg_depth_per_sample
@@ -197,7 +196,7 @@ class AvgDepthPerSample(Base):
 
 
 class SnpOnly(Base):
-    'Choose only SNP variants'
+    """Choose only SNP variants"""
 
     name = 'snp-only'
 

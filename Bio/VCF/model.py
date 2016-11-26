@@ -8,7 +8,8 @@ try:
 except ImportError:
     from counter import Counter
 
-allele_delimiter = re.compile(r'''[|/]''') # to split a genotype into alleles
+allele_delimiter = re.compile(r'''[|/]''')  # to split a genotype into alleles
+
 
 class _Call(object):
     """ A genotype call, a cell entry in a VCF file"""
@@ -29,7 +30,7 @@ class _Call(object):
             self.called = all([al != None for al in self.gt_alleles])
             self.gt_nums = self.data.GT if self.called else None
         else:
-            #62 a call without a genotype is not defined as called or not
+            # 62 a call without a genotype is not defined as called or not
             self.gt_alleles = None
             self.ploidity = None
             self.called = None
@@ -58,9 +59,9 @@ class _Call(object):
 
     @property
     def gt_bases(self):
-        '''The actual genotype alleles.
+        """The actual genotype alleles.
            E.g. if VCF genotype is 0/1, return A/G
-        '''
+        """
         # nothing to do if no genotype call
         if self.called:
             # lookup and return the actual DNA alleles
@@ -73,12 +74,12 @@ class _Call(object):
 
     @property
     def gt_type(self):
-        '''The type of genotype.
+        """The type of genotype.
            hom_ref  = 0
            het      = 1
            hom_alt  = 2  (we don;t track _which+ ALT)
            uncalled = None
-        '''
+        """
         # extract the numeric alleles of the gt string
         if self.called:
             alleles = self.gt_alleles
@@ -94,9 +95,9 @@ class _Call(object):
 
     @property
     def phased(self):
-        '''A boolean indicating whether or not
+        """A boolean indicating whether or not
            the genotype is phased for this sample
-        '''
+        """
         return self.gt_nums is not None and self.gt_nums.find("|") >= 0
 
     def __getitem__(self, key):
@@ -120,11 +121,11 @@ class _Call(object):
     @property
     def is_filtered(self):
         """ Return True for filtered calls """
-        try: # no FT annotation present for this variant
+        try:  # no FT annotation present for this variant
             filt = self.data.FT
         except AttributeError:
             return False
-        if filt is None or len(filt) == 0: # FT is not set or set to PASS
+        if filt is None or len(filt) == 0:  # FT is not set or set to PASS
             return False
         else:
             return True
@@ -172,6 +173,7 @@ class _Record(object):
             Neither the upstream nor downstream flanking bases are
             included in the region.
     """
+
     def __init__(self, CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO, FORMAT,
             sample_indexes, samples=None):
         self.CHROM = CHROM
@@ -203,7 +205,6 @@ class _Record(object):
         self.affected_end = None
         self._set_start_and_end()
 
-
     def _set_start_and_end(self):
         self.affected_start = self.affected_end = self.POS
         for alt in self.ALT:
@@ -218,12 +219,10 @@ class _Record(object):
             self.affected_start = min(self.affected_start, start)
             self.affected_end = max(self.affected_end, end)
 
-
     def _compute_coordinates_for_none_alt(self):
         start = self.POS - 1
         end = start + len(self.REF)
         return (start, end)
-
 
     def _compute_coordinates_for_snp(self):
         if len(self.REF) > 1:
@@ -234,7 +233,6 @@ class _Record(object):
             end = self.POS
         return (start, end)
 
-
     def _compute_coordinates_for_indel(self):
         if len(self.REF) > 1:
             start = self.POS
@@ -243,12 +241,10 @@ class _Record(object):
             start = end = self.POS
         return (start, end)
 
-
     def _compute_coordinates_for_sv(self):
         start = self.POS - 1
         end = start + len(self.REF)
         return (start, end)
-
 
     # For Python 2
     def __cmp__(self, other):
@@ -558,7 +554,7 @@ class _Record(object):
 
 
 class _AltRecord(object):
-    '''An alternative allele record: either replacement string, SV placeholder, or breakend'''
+    """An alternative allele record: either replacement string, SV placeholder, or breakend"""
     __metaclass__ = ABCMeta
 
     def __init__(self, type, **kwargs):
@@ -575,7 +571,7 @@ class _AltRecord(object):
 
 
 class _Substitution(_AltRecord):
-    '''A basic ALT record, where a REF sequence is replaced by an ALT sequence'''
+    """A basic ALT record, where a REF sequence is replaced by an ALT sequence"""
 
     def __init__(self, nucleotides, **kwargs):
         if len(nucleotides) == 1:
@@ -603,7 +599,7 @@ class _Substitution(_AltRecord):
 
 
 class _Breakend(_AltRecord):
-    '''A breakend which is paired to a remote location on or off the genome'''
+    """A breakend which is paired to a remote location on or off the genome"""
 
     def __init__(self, chr, pos, orientation, remoteOrientation, connectingSequence, withinMainAssembly, **kwargs):
         super(_Breakend, self).__init__(type="BND", **kwargs)
@@ -660,14 +656,14 @@ class _Breakend(_AltRecord):
 
 
 class _SingleBreakend(_Breakend):
-    '''A single breakend'''
+    """A single breakend"""
 
     def __init__(self, orientation, connectingSequence, **kwargs):
         super(_SingleBreakend, self).__init__(None, None, orientation, None, connectingSequence, None, **kwargs)
 
 
 class _SV(_AltRecord):
-    '''An SV placeholder'''
+    """An SV placeholder"""
 
     def __init__(self, type, **kwargs):
         super(_SV, self).__init__(type, **kwargs)
