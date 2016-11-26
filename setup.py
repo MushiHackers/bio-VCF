@@ -395,6 +395,7 @@ PACKAGES = [
     'Bio.UniGene',
     'Bio.UniProt',
     'Bio.Wise',
+    'Bio.VCF',
     'Bio._py3k',
     # Other top level packages,
     'BioSQL',
