@@ -658,7 +658,7 @@ class Writer(object):
         # get a maximum key).
         self.info_order = collections.defaultdict(
             lambda: len(template.infos),
-            dict(zip(template.infos.keys, itertools.count())))
+            dict(zip(template.infos.keys(), itertools.count())))
 
         two = '##{key}=<ID={0},Description="{1}">\n'
         four = '##{key}=<ID={0},Number={num},Type={2},Description="{3}">\n'
