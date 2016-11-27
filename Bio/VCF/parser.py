@@ -2,9 +2,14 @@ import codecs
 import collections
 import csv
 import gzip
-import itertools
 import re
 import sys
+
+try:
+    from itertools import izip, count
+except ImportError:
+    izip = zip
+    from itertools import count
 
 try:
     from collections import OrderedDict
@@ -467,7 +472,7 @@ class Reader(object):
 
         nfields = len(samp_fmt._fields)
 
-        for name, sample in itertools.izip(self.samples, samples):
+        for name, sample in izip(self.samples, samples):
 
             # parse the data for this sample
             sampdat = [None] * nfields
@@ -597,6 +602,8 @@ class Reader(object):
 
         return record
 
+    __next__ = next  # Python 3.X compatibility
+
     def fetch(self, chrom, start=None, end=None):
         """ Fetches records from a tabix-indexed VCF file and returns an
             iterable of ``_Record`` instances
@@ -625,7 +632,8 @@ class Reader(object):
             requires pysam
 
         """
-        if not pysam:
+        print("deprecated")
+        """if not pysam:
             raise Exception('pysam not available, try "pip install pysam"?')
         if not self.filename:
             raise Exception('Please provide a filename (or a "normal" fsock)')
@@ -637,7 +645,7 @@ class Reader(object):
         if self._prepend_chr and chrom[:3] == 'chr':
             chrom = chrom[3:]
 
-        self.reader = self._tabix.fetch(chrom, start, end)
+        self.reader = self._tabix.fetch(chrom, start, end)"""
         return self
 
 
@@ -658,7 +666,7 @@ class Writer(object):
         # get a maximum key).
         self.info_order = collections.defaultdict(
             lambda: len(template.infos),
-            dict(zip(template.infos.keys(), itertools.count())))
+            dict(zip(template.infos.keys(), count())))
 
         two = '##{key}=<ID={0},Description="{1}">\n'
         four = '##{key}=<ID={0},Number={num},Type={2},Description="{3}">\n'
