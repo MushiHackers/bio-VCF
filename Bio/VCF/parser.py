@@ -6,6 +6,7 @@ import itertools
 import re
 import sys
 
+
 try:
     from collections import OrderedDict
 except ImportError:
@@ -645,7 +646,7 @@ class Writer(object):
     """VCF Writer. On Windows Python 2, open stream with 'wb'."""
 
     # Reverse keys and values in header field count dictionary
-    counts = dict((v, k) for k, v in field_counts.iteritems())
+    counts = dict((v, k) for k, v in field_counts.items())
 
     def __init__(self, stream, template, lineterminator="\n"):
         self.writer = csv.writer(stream, delimiter="\t",
@@ -658,12 +659,12 @@ class Writer(object):
         # get a maximum key).
         self.info_order = collections.defaultdict(
             lambda: len(template.infos),
-            dict(zip(template.infos.iterkeys(), itertools.count())))
+            dict(zip(template.infos.keys, itertools.count())))
 
         two = '##{key}=<ID={0},Description="{1}">\n'
         four = '##{key}=<ID={0},Number={num},Type={2},Description="{3}">\n'
         _num = self._fix_field_count
-        for (key, vals) in template.metadata.iteritems():
+        for (key, vals) in template.metadata.items():
             if key in SINGULAR_METADATA:
                 vals = [vals]
             for val in vals:
@@ -673,15 +674,15 @@ class Writer(object):
                     stream.write('##{0}=<{1}>\n'.format(key, values))
                 else:
                     stream.write('##{0}={1}\n'.format(key, val))
-        for line in template.infos.itervalues():
+        for line in template.infos.values():
             stream.write(four.format(key="INFO", *line, num=_num(line.num)))
-        for line in template.formats.itervalues():
+        for line in template.formats.values():
             stream.write(four.format(key="FORMAT", *line, num=_num(line.num)))
-        for line in template.filters.itervalues():
+        for line in template.filters.values():
             stream.write(two.format(key="FILTER", *line))
-        for line in template.alts.itervalues():
+        for line in template.alts.values():
             stream.write(two.format(key="ALT", *line))
-        for line in template.contigs.itervalues():
+        for line in template.contigs.values():
             if line.length:
                 stream.write('##contig=<ID={0},length={1}>\n'.format(*line))
             else:
