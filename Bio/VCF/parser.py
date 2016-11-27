@@ -6,7 +6,6 @@ import itertools
 import re
 import sys
 
-
 try:
     from collections import OrderedDict
 except ImportError:
