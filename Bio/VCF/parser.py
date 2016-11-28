@@ -614,6 +614,8 @@ class Reader(object):
 
         return record
 
+    __next__ = next  # Python 3.X compatibility
+
     #Fetch na pliku bed
     def fetch_bed(self, bed_file='../../chr13bed.bed'):
         if not self.filename:
