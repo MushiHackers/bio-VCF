@@ -4,6 +4,8 @@ import csv
 import gzip
 import re
 import sys
+import pybedtools
+from pybedtools import featurefuncs as f
 
 try:
     from itertools import izip, count
@@ -80,6 +82,16 @@ _Format = collections.namedtuple('Format', ['id', 'num', 'type', 'desc'])
 _SampleInfo = collections.namedtuple('SampleInfo', ['samples', 'gt_bases', 'gt_types', 'gt_phases'])
 _Contig = collections.namedtuple('Contig', ['id', 'length'])
 
+def lf_filter(feature, location, featuretype):  # funkcja do filtrowania w fetch'u
+    if ((int(feature[3]) >= location[0] and int(feature[4]) <= location[1]) and feature[2] == featuretype):
+        return True
+    return False
+
+
+def feature_filter(feature, featuretype):
+    if (feature[2] == featuretype):
+        return True
+    return False
 
 class _vcf_metadata_parser(object):
     """Parse the metadata in the header of a VCF file."""
@@ -602,51 +614,102 @@ class Reader(object):
 
         return record
 
-    __next__ = next  # Python 3.X compatibility
+    #Fetch na pliku bed
+    def fetch_bed(self, bed_file='../../chr13bed.bed'):
+        if not self.filename:
+            raise Exception('Please provide a filename (or a "normal" fsock)')
+        if not self._bedtool:
+            self._bedtool = pybedtools.BedTool(self.filename)
+        bed = pybedtools.BedTool(bed_file).merge()
+        features = self._bedtool.intersect(bed)
+        for d  in features:
+            print (d)
+        return features
 
-    def fetch(self, chrom, start=None, end=None):
-        """ Fetches records from a tabix-indexed VCF file and returns an
-            iterable of ``_Record`` instances
-
-            chrom must be specified.
-
-            The start and end coordinates are in the zero-based,
-            half-open coordinate system, similar to ``_Record.start`` and
-            ``_Record.end``. The very first base of a chromosome is
-            index 0, and the the region includes bases up to, but not
-            including the base at the end coordinate. For example
-            ``fetch('4', 10, 20)`` would include all variants
-            overlapping a 10 base pair region from the 11th base of
-            through the 20th base (which is at index 19) of chromosome
-            4. It would not include the 21st base (at index 20). See
-            http://genomewiki.ucsc.edu/index.php/Coordinate_Transforms
-            for more information on the zero-based, half-open coordinate
-            system.
-
-            If end is omitted, all variants from start until the end of
-            the chromosome chrom will be included.
-
-            If start and end are omitted, all variants on chrom will be
-            returned.
-
-            requires pysam
-
-        """
-        print("deprecated")
-        """if not pysam:
-            raise Exception('pysam not available, try "pip install pysam"?')
+    #Fetch do wyboru listy lokalizacji, w local_list=[]
+    def fetch_multilocal(self, chrom='13', local_list=[], local_file='feature_local.bed'):
         if not self.filename:
             raise Exception('Please provide a filename (or a "normal" fsock)')
 
-        if not self._tabix:
-            self._tabix = pysam.Tabixfile(self.filename,
-                                          encoding=self.encoding)
+        if not self._bedtool:
+            self._bedtool = pybedtools.BedTool(self.filename)
+        if not self._prepend_chr and chrom[:3] != 'chr':
+            chrom = 'chr' + chrom
 
-        if self._prepend_chr and chrom[:3] == 'chr':
-            chrom = chrom[3:]
+        g = open(local_file, "w+")
+        for l in local_list:
+            description = chrom + " " + str(l[0]) + " " + str(l[1])
+            feature = pybedtools.BedTool(description,
+                                         from_string=True)
+            g.write(str(feature))
+        g.seek(0)
+        self.fetch_bed(local_file)
 
-        self.reader = self._tabix.fetch(chrom, start, end)"""
-        return self
+        '''bed = pybedtools.BedTool(local_file).merge()
+        intervals = self._bedtool.intersect(bed)
+        return intervals'''
+
+    #Fetch zwykly, jako interval podajemy lokalizacje
+    def fetch(self, chrom='13', interval=[]):
+        if not self.filename:
+            raise Exception('Please provide a filename (or a "normal" fsock)')
+
+        if not self._bedtool:
+            self._bedtool = pybedtools.BedTool(self.filename)
+        if not self._prepend_chr and chrom[:3] != 'chr':
+            chrom = 'chr' + chrom
+
+        description = chrom + " " + str(interval[0]) + " " + str(interval[1])
+        feature = pybedtools.BedTool(description, from_string=True)
+        result = self._bedtool.intersect(feature)
+        for r in result:
+            print (r)
+        return result
+
+    #Fetch na pliku gff, wymaga podania feature_type, w kwargs podajemy location = [] i lokalizacje
+    def fetch_gff(self, gff_file='../../HS_do_gff.gff3', chrom='13', gff2bedfile='gffbed.bed',
+                  feature_type='pseudogene', **kwargs):
+
+        location = kwargs.get('location',None)
+
+        if not self.filename:
+            raise Exception('Please provide a filename (or a "normal" fsock)')
+
+        if not self._bedtool:
+            self._bedtool = pybedtools.BedTool(self.filename)  # , encoding=self.encoding)
+
+        if not self._prepend_chr and chrom[:3] != 'chr':
+            chrom = 'chr' + chrom
+
+        if location:
+            print ("Finding SV corresponding to %s and chosen localisation" % (feature_type))
+            genes = pybedtools.BedTool(gff_file).remove_invalid().saveas()
+            filter_feature = genes.filter(lf_filter, location, feature_type)
+            g = open(gff2bedfile, 'w+')
+            for feature in filter_feature:
+                feature_bed = f.gff2bed(feature)
+                g.write(str(feature_bed))
+            g.seek(0)
+            features = self.fetch_bed(gff2bedfile)
+
+        else:
+            print ("Finding SV corresponding to %s" % (feature_type))
+            genes = pybedtools.BedTool(gff_file).remove_invalid().saveas()
+            filter_f = genes.filter(feature_filter, feature_type)
+            # print (filter_f)
+            g = open(gff2bedfile, "w+")
+            for feature in filter_f:
+                feature_bed = f.gff2bed(feature)
+                # print (feature_bed)
+                g.write(str(feature_bed))
+            g.seek(0)
+            features = self.fetch_bed(gff2bedfile)
+
+
+        return features
+
+        # self.reader = self._bedtool.fetch(chrom, start, end)#tu cyba bedzie intersect?
+        # return self
 
 
 class Writer(object):
