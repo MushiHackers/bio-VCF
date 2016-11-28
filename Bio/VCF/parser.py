@@ -311,11 +311,11 @@ class Reader(object):
         self._sample_indexes = None
         self._header_lines = []
         self._column_headers = []
-        self._tabix = None
         self._prepend_chr = prepend_chr
         self._parse_metainfo()
         self._format_cache = {}
         self.encoding = encoding
+        self._bedtool = None
 
     def __iter__(self):
         return self
