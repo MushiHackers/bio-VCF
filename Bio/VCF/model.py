@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 import collections
 import sys
 import re
+from Bio._py3k import basestring
 
 try:
     from collections import Counter
