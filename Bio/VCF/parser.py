@@ -4,8 +4,7 @@ import csv
 import gzip
 import re
 import sys
-import pybedtools
-from pybedtools import featurefuncs as f
+
 
 try:
     from itertools import izip, count
@@ -19,9 +18,9 @@ except ImportError:
     from ordereddict import OrderedDict
 
 try:
-    import pysam
+    import pybedtools
 except ImportError:
-    pysam = None
+    pybedtools = None
 
 try:
     import cparse
@@ -30,6 +29,7 @@ except ImportError:
 
 from Bio.VCF.model import _Call, _Record, make_calldata_tuple
 from Bio.VCF.model import _Substitution, _Breakend, _SingleBreakend, _SV
+from pybedtools import featurefuncs as f
 
 
 # Metadata parsers/constants
