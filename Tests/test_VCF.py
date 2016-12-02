@@ -1317,7 +1317,7 @@ class TestIssue246(unittest.TestCase):
         ]
         result=[call.data.FT for call in r.samples]
         self.assertEqual(target,result)
-            
+
 
 class TestIsFiltered(unittest.TestCase):
     """ Test is_filtered property for _Call and _Record """

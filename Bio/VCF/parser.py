@@ -19,8 +19,10 @@ except ImportError:
 
 try:
     import pybedtools
+    from pybedtools import featurefuncs as f
 except ImportError:
     pybedtools = None
+    f = None
 
 try:
     import cparse
@@ -29,7 +31,6 @@ except ImportError:
 
 from Bio.VCF.model import _Call, _Record, make_calldata_tuple
 from Bio.VCF.model import _Substitution, _Breakend, _SingleBreakend, _SV
-from pybedtools import featurefuncs as f
 
 
 # Metadata parsers/constants
