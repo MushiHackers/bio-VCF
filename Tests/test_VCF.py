@@ -1682,3 +1682,4 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestUtils))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGATKMeta))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestUncalledGenotypes))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestStrelka))
+

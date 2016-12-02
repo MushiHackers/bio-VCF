@@ -4,8 +4,7 @@ import csv
 import gzip
 import re
 import sys
-import pybedtools
-from pybedtools import featurefuncs as f
+
 
 try:
     from itertools import izip, count
@@ -19,9 +18,11 @@ except ImportError:
     from ordereddict import OrderedDict
 
 try:
-    import pysam
+    import pybedtools
+    from pybedtools import featurefuncs as f
 except ImportError:
-    pysam = None
+    pybedtools = None
+    f = None
 
 try:
     import cparse
@@ -616,20 +617,41 @@ class Reader(object):
 
     __next__ = next  # Python 3.X compatibility
 
-    #Fetch na pliku bed
-    def fetch_bed(self, bed_file='../../chr13bed.bed'):
+
+    def fetch_bed(self, bed_file):
+        """Fetches VCF file records that correspond to regions contained in a BED file.
+
+        Fetch is based on pybedtools 'intersect' method and returns a BedTool object of selected features.
+
+        BED file must be specified and pybedtools package is required."""
+
+        if not pybedtools:
+            raise Exception('pybedtools not available, try "pip install pybedtools"?')
+
         if not self.filename:
             raise Exception('Please provide a filename (or a "normal" fsock)')
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
+
         bed = pybedtools.BedTool(bed_file).merge()
         features = self._bedtool.intersect(bed)
         for d  in features:
             print (d)
         return features
 
-    #Fetch do wyboru listy lokalizacji, w local_list=[]
-    def fetch_multilocal(self, chrom='13', local_list=[], local_file='feature_local.bed'):
+    def fetch_multilocal(self, chrom, local_list):
+        """Fetches VCF records that correspond to intervals provided in 'local_list'.
+
+        Local_list must be a list of tuples (start, end), where start and end coordinates are in in the
+        zero-based, half-open coordinate system.
+
+        Function returns selected records as a BedTool object.
+
+        Chrom must be specified and pybedtools package is required."""
+
+        if not pybedtools:
+            raise Exception('pybedtools not available, try "pip install pybedtools"?')
+
         if not self.filename:
             raise Exception('Please provide a filename (or a "normal" fsock)')
 
@@ -638,6 +660,7 @@ class Reader(object):
         if not self._prepend_chr and chrom[:3] != 'chr':
             chrom = 'chr' + chrom
 
+        local_file = 'feature_local.bed'
         g = open(local_file, "w+")
         for l in local_list:
             description = chrom + " " + str(l[0]) + " " + str(l[1])
@@ -647,12 +670,20 @@ class Reader(object):
         g.seek(0)
         self.fetch_bed(local_file)
 
-        '''bed = pybedtools.BedTool(local_file).merge()
-        intervals = self._bedtool.intersect(bed)
-        return intervals'''
+    def fetch(self, chrom, interval):
+        """Fetches those records from VCF file that fit in provided interval.
 
-    #Fetch zwykly, jako interval podajemy lokalizacje
-    def fetch(self, chrom='13', interval=[]):
+        This method creates one-line pybedtool feature based on provided interval - (start,stop), and then uses it
+        in pybedtools intersection method.
+
+        Function returns BedTool object representing selected VCF records.
+
+        Chrom and interval must be specified and pybedtools package is required."""
+
+
+        if not pybedtools:
+            raise Exception('pybedtools not available, try "pip install pybedtools"?')
+
         if not self.filename:
             raise Exception('Please provide a filename (or a "normal" fsock)')
 
@@ -668,11 +699,23 @@ class Reader(object):
             print (r)
         return result
 
-    #Fetch na pliku gff, wymaga podania feature_type, w kwargs podajemy location = [] i lokalizacje
-    def fetch_gff(self, gff_file='../../HS_do_gff.gff3', chrom='13', gff2bedfile='gffbed.bed',
-                  feature_type='pseudogene', **kwargs):
+
+    def fetch_gff(self, gff_file, chrom, feature_type, **kwargs):
+
+        """This method enables to select desired features from a GFF/GFF2/GFF3 file and fetch VCF records
+        that correspond to position of those features. Fetch is based on pybedtools 'intersection' method and returns
+        a BedTool object of chosen VCF records.
+
+        Gff file, chrom and feature type are required as well as pybedtools package.
+
+        Selection of desired features from a GFF/GFF2/GFF3 file with a specified location is possible when
+        provided optional parameter 'location=[start,end]'."""
 
         location = kwargs.get('location',None)
+        gff2bedfile = 'gffbed.bed'
+
+        if not pybedtools:
+            raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
         if not self.filename:
             raise Exception('Please provide a filename (or a "normal" fsock)')
@@ -682,17 +725,21 @@ class Reader(object):
 
         if not self._prepend_chr and chrom[:3] != 'chr':
             chrom = 'chr' + chrom
-
+        is_feature = False
         if location:
-            print ("Finding SV corresponding to %s and chosen localisation" % (feature_type))
+            print ("Finding SV corresponding to %s and chosen position" % (feature_type))
             genes = pybedtools.BedTool(gff_file).remove_invalid().saveas()
             filter_feature = genes.filter(lf_filter, location, feature_type)
             g = open(gff2bedfile, 'w+')
             for feature in filter_feature:
                 feature_bed = f.gff2bed(feature)
                 g.write(str(feature_bed))
+                is_feature = True
             g.seek(0)
-            features = self.fetch_bed(gff2bedfile)
+            if is_feature:
+                features = self.fetch_bed(gff2bedfile)
+            else:
+                raise Exception('Did not find any GFF features corresponding to chosen type and/or location.')
 
         else:
             print ("Finding SV corresponding to %s" % (feature_type))
@@ -704,14 +751,17 @@ class Reader(object):
                 feature_bed = f.gff2bed(feature)
                 # print (feature_bed)
                 g.write(str(feature_bed))
+                is_feature = True
             g.seek(0)
-            features = self.fetch_bed(gff2bedfile)
+            if is_feature:
+                features = self.fetch_bed(gff2bedfile)
+
+            else:
+                raise Exception('Did not find any GFF features corresponding to chosen type.')
 
 
         return features
 
-        # self.reader = self._bedtool.fetch(chrom, start, end)#tu cyba bedzie intersect?
-        # return self
 
 
 class Writer(object):
