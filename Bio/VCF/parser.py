@@ -624,6 +624,9 @@ class Reader(object):
 
         BED file must be specified and pybedtools package is required."""
 
+        if not pybedtools:
+            raise Exception('pybedtools not available, try "pip install pybedtools"?')
+
         if not self.filename:
             raise Exception('Please provide a filename (or a "normal" fsock)')
         if not self._bedtool:
@@ -644,6 +647,9 @@ class Reader(object):
         Function returns selected records as a BedTool object.
 
         Chrom must be specified and pybedtools package is required."""
+
+        if not pybedtools:
+            raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
         if not self.filename:
             raise Exception('Please provide a filename (or a "normal" fsock)')
@@ -674,6 +680,9 @@ class Reader(object):
         Chrom and interval must be specified and pybedtools package is required."""
 
 
+        if not pybedtools:
+            raise Exception('pybedtools not available, try "pip install pybedtools"?')
+
         if not self.filename:
             raise Exception('Please provide a filename (or a "normal" fsock)')
 
@@ -703,6 +712,10 @@ class Reader(object):
 
         location = kwargs.get('location',None)
         gff2bedfile = 'gffbed.bed'
+
+        if not pybedtools:
+            raise Exception('pybedtools not available, try "pip install pybedtools"?')
+
         if not self.filename:
             raise Exception('Please provide a filename (or a "normal" fsock)')
 
