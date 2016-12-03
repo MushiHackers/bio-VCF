@@ -94,6 +94,11 @@ def feature_filter(feature, featuretype):
         return True
     return False
 
+
+def truncate_feature(feature):
+    feature.chrom = "chr" + feature.chrom
+    return feature
+
 class _vcf_metadata_parser(object):
     """Parse the metadata in the header of a VCF file."""
     def __init__(self):
@@ -729,6 +734,13 @@ class Reader(object):
         if location:
             print ("Finding SV corresponding to %s and chosen position" % (feature_type))
             genes = pybedtools.BedTool(gff_file).remove_invalid().saveas()
+
+            arg = False
+            if genes[0].chrom[:3] != "chr":
+                arg = True
+            if arg:
+                genes=genes.each(truncate_feature)
+
             filter_feature = genes.filter(lf_filter, location, feature_type)
             g = open(gff2bedfile, 'w+')
             for feature in filter_feature:
@@ -744,6 +756,13 @@ class Reader(object):
         else:
             print ("Finding SV corresponding to %s" % (feature_type))
             genes = pybedtools.BedTool(gff_file).remove_invalid().saveas()
+
+            arg = False
+            if genes[0].chrom[:3] != "chr":
+                arg = True
+            if arg:
+                genes = genes.each(truncate_feature)
+
             filter_f = genes.filter(feature_filter, feature_type)
             # print (filter_f)
             g = open(gff2bedfile, "w+")
