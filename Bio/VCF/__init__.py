@@ -12,5 +12,6 @@ from Bio.VCF.filters import Base as Filter
 from Bio.VCF.parser import RESERVED_INFO, RESERVED_FORMAT
 from Bio.VCF.sample_filter import SampleFilter
 from Bio.VCF.utils import walk_together, trim_common_suffix
+from Bio.VCF.phase import PhasedReader, PhasedWriter
 
 VERSION = '0.6.8'
