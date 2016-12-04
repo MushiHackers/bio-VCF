@@ -4,7 +4,16 @@ import csv
 import gzip
 import re
 import sys
+import io
+import codecs
 
+
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
 
 try:
     from itertools import izip, count
@@ -19,8 +28,10 @@ except ImportError:
 
 try:
     import pybedtools
+    from pybedtools import featurefuncs as f
 except ImportError:
     pybedtools = None
+    f = None
 
 try:
     import cparse
@@ -29,7 +40,6 @@ except ImportError:
 
 from Bio.VCF.model import _Call, _Record, make_calldata_tuple
 from Bio.VCF.model import _Substitution, _Breakend, _SingleBreakend, _SV
-from pybedtools import featurefuncs as f
 
 
 # Metadata parsers/constants
@@ -621,7 +631,6 @@ class Reader(object):
 
     __next__ = next  # Python 3.X compatibility
 
-
     def fetch_bed(self, bed_file):
         """Fetches VCF file records that correspond to regions contained in a BED file.
 
@@ -639,9 +648,27 @@ class Reader(object):
 
         bed = pybedtools.BedTool(bed_file).merge()
         features = self._bedtool.intersect(bed)
-        for d  in features:
+        for d in features:
             print (d)
         return features
+
+    '''def fetch_bed_fsock(self,organism,chr): prawdopodobnie nie dziala
+        features = None
+        if organism == "Homo_sapiens":
+            stream = "ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/BED/bed_"
+            if chr[:3] == "chr":
+                chr = "chr_" + chr[3:]
+            thetarfile = stream + chr + ".bed.gz"
+            page = urlopen(thetarfile)
+            gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
+            bed = pybedtools.BedTool(gzip_f)
+            #print bed
+            features = self._bedtool.intersect(bed)
+            return features
+        else:
+            raise Exception("Method works only on Homo_sapiens database")'''
+
+
 
     def fetch_multilocal(self, chrom, local_list):
         """Fetches VCF records that correspond to intervals provided in 'local_list'.
@@ -777,10 +804,40 @@ class Reader(object):
             else:
                 raise Exception('Did not find any GFF features corresponding to chosen type.')
 
-
         return features
 
-
+    '''opis co robi plus ze to tylko dla python 2.7'''
+    def fetch_gff_fsock(self, vcf_chrom, organism, gff_chrom, feature_type, **kwargs):
+        location = kwargs.get('location', None)
+        gff2bedfile = 'gffbed.bed'
+        g = open(gff2bedfile, 'w+')
+        if organism == "Homo_sapiens":
+            if sys.version < '3':
+                stream = "ftp://ftp.ensembl.org/pub/release-86/gff3/homo_sapiens/Homo_sapiens.GRCh38.86.chromosome."
+                if gff_chrom[:3] =="chr":
+                    gff_chrom = gff_chrom[3:]
+                thetarfile = stream + gff_chrom + ".gff3.gz"
+                page = urlopen(thetarfile)
+                gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
+                if location:
+                    return self.fetch_gff(gzip_f,vcf_chrom,feature_type,location=location)
+                else:
+                    return self.fetch_gff(gzip_f,vcf_chrom,feature_type)
+            if sys.version > '3':
+                stream = "ftp://ftp.ensembl.org/pub/release-86/gff3/homo_sapiens/Homo_sapiens.GRCh38.86.chromosome."
+                if gff_chrom[:3] == "chr":
+                    gff_chrom = gff_chrom[3:]
+                thetarfile = stream + gff_chrom + ".gff3.gz"
+                page = urlopen(thetarfile)
+                gzip_f = gzip.GzipFile(mode='rb',fileobj=page)
+                reader = codecs.getreader("utf-8")
+                contents = reader(gzip_f)
+                if location:
+                    return self.fetch_gff(contents,vcf_chrom,feature_type,location=location)
+                else:
+                    return self.fetch_gff(contents,vcf_chrom,feature_type)
+        else:
+            raise Exception('Method works only with Homo_sapiens database')
 
 class Writer(object):
     """VCF Writer. On Windows Python 2, open stream with 'wb'."""
