@@ -806,8 +806,14 @@ class Reader(object):
 
         return features
 
-    '''opis co robi plus ze to tylko dla python 2.7'''
-    def fetch_gff_fsock(self, vcf_chrom, organism, gff_chrom, feature_type, **kwargs):
+    def fetch_gff_fsock(self, organism, gff_chrom, feature_type, **kwargs):
+        ''' This method works exactly the same as fetch_gff(), except the GFF file is not required.
+
+        The GFF file is replaced with a stream object from the ENSEMBL database. The GFF fsock corresponds to the GFF3
+        file of provided human chromosome.
+
+        Method returns a BedTool object of selected VCF records.'''
+
         location = kwargs.get('location', None)
         stream = "ftp://ftp.ensembl.org/pub/release-86/gff3/homo_sapiens/Homo_sapiens.GRCh38.86.chromosome."
         if gff_chrom[:3] == "chr":
@@ -818,17 +824,17 @@ class Reader(object):
             if sys.version < '3':
                 gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
                 if location:
-                    return self.fetch_gff(gzip_f,vcf_chrom,feature_type,location=location)
+                    return self.fetch_gff(gzip_f,gff_chrom,feature_type,location=location)
                 else:
-                    return self.fetch_gff(gzip_f,vcf_chrom,feature_type)
+                    return self.fetch_gff(gzip_f,gff_chrom,feature_type)
             if sys.version > '3':
                 gzip_f = gzip.GzipFile(mode='rb',fileobj=page)
                 reader = codecs.getreader("utf-8")
                 contents = reader(gzip_f)
                 if location:
-                    return self.fetch_gff(contents,vcf_chrom,feature_type,location=location)
+                    return self.fetch_gff(contents,gff_chrom,feature_type,location=location)
                 else:
-                    return self.fetch_gff(contents,vcf_chrom,feature_type)
+                    return self.fetch_gff(contents,gff_chrom,feature_type)
         else:
             raise Exception('Method works only with Homo_sapiens database')
 
