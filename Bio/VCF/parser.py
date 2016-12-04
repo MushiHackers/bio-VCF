@@ -809,26 +809,19 @@ class Reader(object):
     '''opis co robi plus ze to tylko dla python 2.7'''
     def fetch_gff_fsock(self, vcf_chrom, organism, gff_chrom, feature_type, **kwargs):
         location = kwargs.get('location', None)
-        gff2bedfile = 'gffbed.bed'
-        g = open(gff2bedfile, 'w+')
+        stream = "ftp://ftp.ensembl.org/pub/release-86/gff3/homo_sapiens/Homo_sapiens.GRCh38.86.chromosome."
+        if gff_chrom[:3] == "chr":
+            gff_chrom = gff_chrom[3:]
+        thetarfile = stream + gff_chrom + ".gff3.gz"
+        page = urlopen(thetarfile)
         if organism == "Homo_sapiens":
             if sys.version < '3':
-                stream = "ftp://ftp.ensembl.org/pub/release-86/gff3/homo_sapiens/Homo_sapiens.GRCh38.86.chromosome."
-                if gff_chrom[:3] =="chr":
-                    gff_chrom = gff_chrom[3:]
-                thetarfile = stream + gff_chrom + ".gff3.gz"
-                page = urlopen(thetarfile)
                 gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
                 if location:
                     return self.fetch_gff(gzip_f,vcf_chrom,feature_type,location=location)
                 else:
                     return self.fetch_gff(gzip_f,vcf_chrom,feature_type)
             if sys.version > '3':
-                stream = "ftp://ftp.ensembl.org/pub/release-86/gff3/homo_sapiens/Homo_sapiens.GRCh38.86.chromosome."
-                if gff_chrom[:3] == "chr":
-                    gff_chrom = gff_chrom[3:]
-                thetarfile = stream + gff_chrom + ".gff3.gz"
-                page = urlopen(thetarfile)
                 gzip_f = gzip.GzipFile(mode='rb',fileobj=page)
                 reader = codecs.getreader("utf-8")
                 contents = reader(gzip_f)
