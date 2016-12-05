@@ -9,7 +9,7 @@ a given sample's genotype with, say, grep.
 
 import sys
 import csv
-import vcf
+import VCF
 
 out = csv.writer(sys.stdout, delimiter='\t')
 if len(sys.argv) > 1:

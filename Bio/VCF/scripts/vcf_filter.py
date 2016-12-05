@@ -3,8 +3,8 @@ import sys
 import argparse
 import pkg_resources
 
-import vcf
-from vcf.parser import _Filter
+import Bio.VCF
+from Bio.VCF.parser import _Filter
 
 def create_filt_parser(name):
     parser = argparse.ArgumentParser(description='Parser for %s' % name,
