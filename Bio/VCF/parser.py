@@ -6,6 +6,7 @@ import re
 import sys
 import io
 import codecs
+import os
 
 
 try:
@@ -652,22 +653,41 @@ class Reader(object):
             print (d)
         return features
 
-    '''def fetch_bed_fsock(self,organism,chr): prawdopodobnie nie dziala
-        features = None
-        if organism == "Homo_sapiens":
-            stream = "ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/BED/bed_"
-            if chr[:3] == "chr":
-                chr = "chr_" + chr[3:]
-            thetarfile = stream + chr + ".bed.gz"
-            page = urlopen(thetarfile)
+    def fetch_bed_fsock(self, stream):
+        '''This fetch works exactly the same as fetch_bed(), except the BED file is not required.
+        Intervals used for intersection with a VCF file are provided in stream object of chosen BED file.
+
+        This method returns a BedTool object of selected VCF features.
+
+        Pybedtools and stream of gzipped file are required.'''
+
+        if not pybedtools:
+            raise Exception('pybedtools not available, try "pip install pybedtools"?')
+
+        if not self.filename:
+            raise Exception('Please provide a filename (or a "normal" fsock)')
+        if not self._bedtool:
+            self._bedtool = pybedtools.BedTool(self.filename)
+        thetarfile = stream
+        page = urlopen(thetarfile)
+        if sys.version > '3':
+            gzip_f = gzip.GzipFile(mode='rb', fileobj=page)
+            reader = codecs.getreader("utf-8")
+            contents = reader(gzip_f)
+            bed = pybedtools.BedTool(contents)
+            features = self._bedtool.intersect(bed)
+            if features:
+                return features
+            else:
+                raise Exception("Did not find any SV in provided intervals")
+        elif sys.version < '3':
             gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
             bed = pybedtools.BedTool(gzip_f)
-            #print bed
             features = self._bedtool.intersect(bed)
-            return features
-        else:
-            raise Exception("Method works only on Homo_sapiens database")'''
-
+            if features:
+                return features
+            else:
+                raise Exception("Did not find any SV in provided intervals")
 
 
     def fetch_multilocal(self, chrom, local_list):
@@ -732,7 +752,6 @@ class Reader(object):
 
 
     def fetch_gff(self, gff_file, chrom, feature_type, **kwargs):
-
         """This method enables to select desired features from a GFF/GFF2/GFF3 file and fetch VCF records
         that correspond to position of those features. Fetch is based on pybedtools 'intersection' method and returns
         a BedTool object of chosen VCF records.
@@ -752,7 +771,7 @@ class Reader(object):
             raise Exception('Please provide a filename (or a "normal" fsock)')
 
         if not self._bedtool:
-            self._bedtool = pybedtools.BedTool(self.filename)  # , encoding=self.encoding)
+            self._bedtool = pybedtools.BedTool(self.filename)
 
         if not self._prepend_chr and chrom[:3] != 'chr':
             chrom = 'chr' + chrom
@@ -790,11 +809,9 @@ class Reader(object):
                 genes = genes.each(truncate_feature)
 
             filter_f = genes.filter(feature_filter, feature_type)
-            # print (filter_f)
             g = open(gff2bedfile, "w+")
             for feature in filter_f:
                 feature_bed = f.gff2bed(feature)
-                # print (feature_bed)
                 g.write(str(feature_bed))
                 is_feature = True
             g.seek(0)
@@ -806,37 +823,33 @@ class Reader(object):
 
         return features
 
-    def fetch_gff_fsock(self, organism, gff_chrom, feature_type, **kwargs):
-        ''' This method works exactly the same as fetch_gff(), except the GFF file is not required.
+    def fetch_gff_fsock(self, stream, chrom, feature_type, **kwargs):
+        '''This method works exactly the same as fetch_gff(), except the GFF file is not required.
+        The GFF file is replaced with a stream object from chosen database.
 
-        The GFF file is replaced with a stream object from the ENSEMBL database. The GFF fsock corresponds to the GFF3
-        file of provided human chromosome.
+        Method returns a BedTool object of selected VCF records.
 
-        Method returns a BedTool object of selected VCF records.'''
+        Pybedtools and stream of gzipped file are required.'''
 
         location = kwargs.get('location', None)
-        stream = "ftp://ftp.ensembl.org/pub/release-86/gff3/homo_sapiens/Homo_sapiens.GRCh38.86.chromosome."
-        if gff_chrom[:3] == "chr":
-            gff_chrom = gff_chrom[3:]
-        thetarfile = stream + gff_chrom + ".gff3.gz"
+        thetarfile = stream
         page = urlopen(thetarfile)
-        if organism == "Homo_sapiens":
-            if sys.version < '3':
-                gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
-                if location:
-                    return self.fetch_gff(gzip_f,gff_chrom,feature_type,location=location)
-                else:
-                    return self.fetch_gff(gzip_f,gff_chrom,feature_type)
-            if sys.version > '3':
-                gzip_f = gzip.GzipFile(mode='rb',fileobj=page)
-                reader = codecs.getreader("utf-8")
-                contents = reader(gzip_f)
-                if location:
-                    return self.fetch_gff(contents,gff_chrom,feature_type,location=location)
-                else:
-                    return self.fetch_gff(contents,gff_chrom,feature_type)
-        else:
-            raise Exception('Method works only with Homo_sapiens database')
+        if sys.version < '3':
+            gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
+            if location:
+                return self.fetch_gff(gzip_f,chrom,feature_type,location=location)
+            else:
+                return self.fetch_gff(gzip_f,chrom,feature_type)
+        if sys.version > '3':
+            gzip_f = gzip.GzipFile(mode='rb',fileobj=page)
+            reader = codecs.getreader("utf-8")
+            contents = reader(gzip_f)
+            if location:
+                return self.fetch_gff(contents,chrom,feature_type,location=location)
+            else:
+                return self.fetch_gff(contents,chrom,feature_type)
+
+
 
 class Writer(object):
     """VCF Writer. On Windows Python 2, open stream with 'wb'."""
