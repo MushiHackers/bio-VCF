@@ -14,4 +14,4 @@ from Bio.VCF.sample_filter import SampleFilter
 from Bio.VCF.utils import walk_together, trim_common_suffix
 from Bio.VCF.phase import PhasedReader, PhasedWriter
 
-VERSION = '0.6.8'
+VERSION = '0.0.1'
