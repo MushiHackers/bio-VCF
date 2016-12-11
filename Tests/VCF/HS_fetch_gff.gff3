@@ -1,0 +1,36 @@
+##gff-version   3
+##sequence-region   13 1 114364328
+#!genome-build  GRCh38.p7
+#!genome-version GRCh38
+#!genome-date 2013-12
+#!genome-build-accession NCBI:GCA_000001405.22
+#!genebuild-last-updated 2016-06
+1	GRCh38	chromosome	1	1585	.	.	.	ID=chromosome:13;Alias=CM000675.2,chr13,NC_000013.11
+###
+1	havana	pseudogene	1	1600	.	-	.	ID=gene:ENSG00000279924;Name=RP11-341D18.2;biotype=unprocessed_pseudogene;gene_id=ENSG00000279924;havana_gene=OTTHUMG00000189380;havana_version=1;logic_name=havana;version=1
+1	havana	pseudogene	1000	18178465	.	-	.	ID=transcript:ENST00000623078;Parent=gene:ENSG00000279924;Name=RP11-341D18.2-001;biotype=unprocessed_pseudogene;havana_transcript=OTTHUMT00000479521;havana_version=1;tag=basic;transcript_id=ENST00000623078;transcript_support_level=NA;version=1
+13	GRCh38	chromosome	1	114364328	.	.	.	ID=chromosome:13;Alias=CM000675.2,chr13,NC_000013.11
+###
+13	havana	gene	18174010	18178465	.	-	.	ID=gene:ENSG00000279924;Name=RP11-341D18.2;biotype=unprocessed_pseudogene;gene_id=ENSG00000279924;havana_gene=OTTHUMG00000189380;havana_version=1;logic_name=havana;version=1
+13	havana	pseudogene	18	18178465	.	-	.	ID=transcript:ENST00000623078;Parent=gene:ENSG00000279924;Name=RP11-341D18.2-001;biotype=unprocessed_pseudogene;havana_transcript=OTTHUMT00000479521;havana_version=1;tag=basic;transcript_id=ENST00000623078;transcript_support_level=NA;version=1
+13	havana	exon	18174010	18174103	.	-	.	Parent=transcript:ENST00000623078;Name=ENSE00003759026;constitutive=1;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00003759026;rank=4;version=1
+13	havana	exon	18174442	18174512	.	-	.	Parent=transcript:ENST00000623078;Name=ENSE00003758363;constitutive=1;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00003758363;rank=3;version=1
+13	havana	exon	18176018	18176170	.	-	.	Parent=transcript:ENST00000623078;Name=ENSE00003757170;constitutive=1;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00003757170;rank=2;version=1
+13	havana	exon	18177555	18178465	.	-	.	Parent=transcript:ENST00000623078;Name=ENSE00003755659;constitutive=1;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00003755659;rank=1;version=1
+###
+13	.	biological_region	18194094	18195677	235	.	.	external_name=oe %3D 0.63;logic_name=cpg
+13	.	biological_region	18194297	18195275	1	-	.	external_name=rank %3D 1;logic_name=firstef
+13	.	biological_region	18195266	18195411	1	+	.	external_name=rank %3D 1;logic_name=firstef
+13	havana	processed_transcript	18195297	18232024	.	+	.	ID=gene:ENSG00000279516;Name=FAM230C;biotype=processed_transcript;description=family with sequence similarity 230 member C [Source:HGNC Symbol%3BAcc:HGNC:24482];gene_id=ENSG00000279516;havana_gene=OTTHUMG00000189381;havana_version=1;logic_name=havana;version=1
+13	havana	processed_transcript	18195297	18232024	.	+	.	ID=transcript:ENST00000623511;Parent=gene:ENSG00000279516;Name=FAM230C-001;biotype=processed_transcript;havana_transcript=OTTHUMT00000479522;havana_version=1;tag=basic;transcript_id=ENST00000623511;transcript_support_level=1;version=1
+13	havana	exon	18195297	18195411	.	+	.	Parent=transcript:ENST00000623511;Name=ENSE00003758598;constitutive=1;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00003758598;rank=1;version=1
+
+###
+13	ensembl	gene	18206570	18207469	.	-	.	ID=gene:ENSG00000279081;Name=AL356585.1;biotype=protein_coding;gene_id=ENSG00000279081;logic_name=ensembl;version=1
+13	ensembl	mRNA	18206570	18207469	.	-	.	ID=transcript:ENST00000624447;Parent=gene:ENSG00000279081;Name=AL356585.1-201;biotype=protein_coding;tag=basic;transcript_id=ENST00000624447;transcript_support_level=NA;version=1
+13	havana	gene	18253526	18270822	.	-	.	ID=gene:ENSG00000280208;Name=GGT4P;biotype=unprocessed_pseudogene;description=gamma-glutamyltransferase 4 pseudogene [Source:HGNC Symbol%3BAcc:HGNC:33207];gene_id=ENSG00000280208;havana_gene=OTTHUMG00000189382;havana_version=1;logic_name=havana;version=1
+13	havana	pseudogene	111	18270822	.	-	.	ID=transcript:ENST00000623672;Parent=gene:ENSG00000280208;Name=GGT4P-001;biotype=unprocessed_pseudogene;havana_transcript=OTTHUMT00000479523;havana_version=1;tag=basic;transcript_id=ENST00000623672;transcript_support_level=NA;version=1
+13	havana	exon	18253526	18253672	.	-	.	Parent=transcript:ENST00000623672;Name=ENSE00003758983;constitutive=1;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00003758983;rank=12;version=1
+13	havana	exon	18253977	18254090	.	-	.	Parent=transcript:ENST00000623672;Name=ENSE00003757508;constitutive=1;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00003757508;rank=11;version=1
+13	havana	exon	18254172	18254284	.	-	.	Parent=transcript:ENST00000623672;Name=ENSE00003757006;constitutive=1;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00003757006;rank=10;version=1
+
