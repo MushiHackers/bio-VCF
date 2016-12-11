@@ -719,7 +719,8 @@ class Reader(object):
                                          from_string=True)
             g.write(str(feature))
         g.seek(0)
-        self.fetch_bed(local_file)
+        result = self.fetch_bed(local_file)
+        return result
 
     def fetch(self, chrom, interval):
         """Fetches those records from VCF file that fit in provided interval.
@@ -837,17 +838,21 @@ class Reader(object):
         if sys.version < '3':
             gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
             if location:
-                return self.fetch_gff(gzip_f,chrom,feature_type,location=location)
+                result = self.fetch_gff(gzip_f,chrom,feature_type,location=location)
+                return result
             else:
-                return self.fetch_gff(gzip_f,chrom,feature_type)
+                result = self.fetch_gff(gzip_f,chrom,feature_type)
+                return result
         if sys.version > '3':
             gzip_f = gzip.GzipFile(mode='rb',fileobj=page)
             reader = codecs.getreader("utf-8")
             contents = reader(gzip_f)
             if location:
-                return self.fetch_gff(contents,chrom,feature_type,location=location)
+                result = self.fetch_gff(contents,chrom,feature_type,location=location)
+                return result
             else:
-                return self.fetch_gff(contents,chrom,feature_type)
+                result = self.fetch_gff(contents,chrom,feature_type)
+                return result
 
 
 
