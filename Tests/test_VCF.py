@@ -20,9 +20,16 @@ import sys
 #    import pysam
 #except ImportError:
 #    pysam = None
+try:
+    import pybedtools
+except ImportError:
+    pybedtools=None
+
+
+
 
 from Bio import VCF
-from Bio.VCF import model, utils
+from Bio.VCF import model, utils, parser
 
 IS_PYTHON2 = sys.version_info[0] == 2
 IS_NOT_PYPY = 'PyPy' not in sys.version
@@ -148,6 +155,96 @@ class TestVcfSpecs(unittest.TestCase):
                 assert contig.length == 2000
             elif cid == "3":
                 assert contig.length == 3000
+
+
+
+
+@unittest.skipUnless(pybedtools, "test requires installation of PyBedTools.")
+class TestFetch(unittest.TestCase):
+
+    def testFetchBed(self):
+        reader = VCF.Reader(fh("VCF/chr13.vcf"))
+        bedfile = "VCF/chr13bed.bed"
+        x=[]
+        for i in reader.fetch_bed(bedfile):
+            x.append(i.start)
+        assert x==[10,20,40,50,60]
+
+    def testFetchBedFsock(self):
+        reader = VCF.Reader(fh("VCF/chrMT_fsock.vcf"))
+        stream = "ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/BED/bed_chr_MT.bed.gz"
+        x=[]
+        for i in reader.fetch_bed_fsock(stream):
+            x.append(i.start)
+        assert x ==[1734,2140]
+
+
+    def testFetchMultilocal(self):
+        reader = VCF.Reader(fh("VCF/chr13.vcf"))
+        x=[]
+        for i in reader.fetch_multilocal('13',[[10,30],[80,100],[85837129,100000000]]):
+            x.append(i.start)
+        assert x==[20,30,85837130]
+        y = []
+        for i in reader.fetch_multilocal('chr13',[[10,30],[80,100],[85837129,100000000]]):
+            y.append(i.start)
+        assert y==[20,30,85837130]
+
+
+    def testFetch(self):
+        reader = VCF.Reader(fh("VCF/chr13.vcf"))
+        x=[]
+        for i in reader.fetch('13',[46,100000000]):
+            x.append(i.start)
+        assert x ==[50,60,85837130,9542346]
+        y = []
+        for i in reader.fetch('chr13', [46, 100000000]):
+            y.append(i.start)
+        assert y == [50, 60, 85837130, 9542346]
+
+    def testFetchGff(self):
+        reader = VCF.Reader(fh("VCF/chr13.vcf"))
+        x = []
+        gfffile="VCF/HS_fetch_gff.gff3"
+        for i in reader.fetch_gff(gfffile,'13','pseudogene'):
+            x.append(i.start)
+        assert x == [20,30,40,50,60,9542346]
+        xx=[]
+        for i in reader.fetch_gff(gfffile,'chr13','pseudogene'):
+            xx.append(i.start)
+        assert xx == [20,30,40,50,60,9542346]
+        y=[]
+        for i in reader.fetch_gff(gfffile, '13', 'pseudogene',location=[1,18270822]):
+            y.append(i.start)
+        assert y == [20,30,40,50,60,9542346]
+        yy=[]
+        for i in reader.fetch_gff(gfffile, 'chr13', 'pseudogene',location=[1,18270822]):
+            yy.append(i.start)
+        assert yy == [20,30,40,50,60,9542346]
+
+
+    def testFetchGffFsock(self):
+        stream = "ftp://ftp.ensembl.org/pub/release-86/gff3/homo_sapiens/Homo_sapiens.GRCh38.86.chromosome.13.gff3.gz"
+        reader = VCF.Reader(fh("VCF/chr13.vcf"))
+        x=[]
+        for i in reader.fetch_gff_fsock(stream,'13','pseudogene'):
+            x.append(i.start)
+        assert x == [85837130,110952750,111182500]
+        xx=[]
+        for i in reader.fetch_gff_fsock(stream,'chr13','pseudogene'):
+            xx.append(i.start)
+        assert xx == [85837130,110952750,111182500]
+        y=[]
+        for i in reader.fetch_gff_fsock(stream,'13','pseudogene',location=[110952721,120000000]):
+            y.append(i.start)
+        assert y == [110952750,111182500]
+        yy=[]
+        for i in reader.fetch_gff_fsock(stream,'chr13','pseudogene',location=[110952721,120000000]):
+            yy.append(i.start)
+        assert yy == [110952750,111182500]
+
+
+
 
 class TestGatkOutput(unittest.TestCase):
 
@@ -1669,7 +1766,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMetadataWhitespac
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMixedFiltering))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRecord))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCall))
-##suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
 ##suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue201))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue234))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue246))
