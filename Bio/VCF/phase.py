@@ -83,7 +83,7 @@ class _PhasedRecord(object):
         for sample in self.samples:
             samples_string += (str(sample)+', ')
         samples_string = samples_string[:-2]
-        return "Record(rsID=%(rsID)s, position=%(pos)s, samples = ["+samples_string+"]" % self.__dict__
+        return "Record(rsID=%(rsID)s, position=%(pos)s, samples = [" % self.__dict__ +samples_string+"]"
 
 
 class PhasedReader(object):
@@ -163,7 +163,6 @@ class PhasedReader(object):
                 elif name_string[5].lower() in ['trios','phased']:
                     self.filedata['data_type'] = 'trios'
 
-
     def next(self):
         """Return the next record in the file."""
         line = next(self.reader)
@@ -178,11 +177,43 @@ class PhasedReader(object):
 
     __next__ = next # Python 3.X compatibility
 
-class PhasedWriter(object):
+    def fetch_SNPs(self, vcffile):
+        pass
+
+'''class PhasedWrite(object):
     """Phased file writer. On Windows Python 2, open stream with 'wb'."""
 
     ###
-    def __init__(self):
-        print('not implemented yet')
-    pass
+    def __init__(self,stream,template,linteretminator="\n"):
+        self.writer = csv.writer(stream, delimiter ="\t",lineterminator=linteretminator,quotechar='',quoting=csv.QUOTE_NONE)
+        self.template = template
+        self.stream = stream
+        self._write_headers
+
+    def _write_headers(self):
+        hapnames = [hap. for hap in self.template.haplotypes]
+        self.writer.writerow(['rsID','position']+self.template.haplotypes)
+'''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
