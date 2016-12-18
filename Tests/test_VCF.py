@@ -1008,9 +1008,10 @@ class TestRecord(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_pickle(self):
-        reader = VCF.Reader(fh('VCF/example-4.0.vcf'))
-        for var in reader:
-            self.assertEqual(pickle.loads(pickle.dumps(var)), var)
+        if pickle is not None:
+            reader = VCF.Reader(fh('VCF/example-4.0.vcf'))
+            for var in reader:
+                self.assertEqual(pickle.loads(pickle.dumps(var)), var)
 
 
     def assert_has_expected_coordinates(
@@ -1637,7 +1638,7 @@ class TestUtils(unittest.TestCase):
                 assert recs[1] is not None
 
         # test files with many chromosomes, set 'vcf_record_sort_key' to define chromosome order
-        chr_order = map(str, range(1, 30)) + ['X', 'Y', 'M']
+        chr_order = list(map(str, range(1, 30))) + ['X', 'Y', 'M']
         get_key = lambda r: (chr_order.index(r.CHROM.replace('chr','')), r.POS)
         reader1 = VCF.Reader(fh('VCF/issue-140-file1.vcf'))
         reader2 = VCF.Reader(fh('VCF/issue-140-file2.vcf'))
