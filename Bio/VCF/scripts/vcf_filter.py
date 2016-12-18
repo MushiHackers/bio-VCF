@@ -30,8 +30,8 @@ def create_core_parser():
             help='Show this help message and exit.')
     parser.add_argument('input', metavar='input', type=argparse.FileType('rb'), nargs='?', default=None,
             help='File to process (use - for STDIN)')
-#    parser.add_argument('filters', metavar='filter', type=str, nargs='*', default=None,
-#            help='Filters to use')
+    parser.add_argument('filters', metavar='filter', type=str, nargs='*', default=None,
+            help='Filters to use')
     parser.add_argument('--no-short-circuit', action='store_true',
             help='Do not stop filter processing on a site if any filter is triggered')
     parser.add_argument('--output', action='store', default=sys.stdout,
@@ -87,7 +87,7 @@ def main():
         filt.customize_parser(arg_group)
 
     # look for global extensions
-    for p in pkg_resources.iter_entry_points('vcf.filters'):
+    for p in pkg_resources.iter_entry_points('VCF.filters'):
         filt = p.load()
         addfilt(filt)
 
