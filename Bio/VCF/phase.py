@@ -177,6 +177,20 @@ class PhasedReader(object):
 
     __next__ = next # Python 3.X compatibility
 
+    def get_snp_with_specific_id(self, rsID):
+        """Returns SNP with rsID given by the user."""
+        record = self.next()
+        found = False
+        try:
+            while not found:
+                if str(record.rsID) == str(rsID):
+                    found = True
+                    print(record)
+                else:
+                    record = self.next()
+        except StopIteration:
+            print('SNP with given rsID was not found.')
+
     def fetch_SNPs(self, vcffile):
         pass
 
