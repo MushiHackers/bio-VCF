@@ -35,12 +35,14 @@ class _Haplotype(object):
 class _Sample(object):
     """Sample info"""
 
-    def __init__(self,sample,haplotype):
+    def __init__(self,sample,haplotype,rsID):
         self.nucleotide = None
         self.is_unresolved = None
         self.exists = None
         self.haplotype = haplotype
         self._get_nucleotide(sample)
+        self.rsID = rsID
+        
 
     def _get_nucleotide(self,sample):
         if sample == '-':
@@ -82,7 +84,6 @@ class _PhasedRecord(object):
             samples_string += (str(sample)+', ')
         samples_string = samples_string[:-2]
         return "Record(rsID=%(rsID)s, position=%(pos)s, samples = ["+samples_string+"]" % self.__dict__
-
 
 
 class PhasedReader(object):
@@ -132,7 +133,7 @@ class PhasedReader(object):
     def _parse_haplotypes(self):
         """Parse the IIDS of haplotypes stored in Phased file.
 
-        The end users shouldn't have to use this. They can access the haplotpes
+        The end users shouldn't have to use this. They can access the haplotypes
         directly with ``self.haplotypes``.
         """
         line = next(self.reader)
@@ -171,20 +172,17 @@ class PhasedReader(object):
         pos = int(row[1])
         samples=[]
         for i in range(len(row)-2):
-            samples.append(_Sample(row[2+i],self.haplotypes[i]))
+            samples.append(_Sample(row[2+i],self.haplotypes[i],rsID))
         record = _PhasedRecord(rsID,pos,samples)
         return record
 
     __next__ = next # Python 3.X compatibility
 
-
-
-
-
 class PhasedWriter(object):
-    """Phased file writer. On Winows Python 2, open stream with 'wb'."""
+    """Phased file writer. On Windows Python 2, open stream with 'wb'."""
 
     ###
     def __init__(self):
         print('not implemented yet')
     pass
+
