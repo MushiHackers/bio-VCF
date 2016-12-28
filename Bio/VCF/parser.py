@@ -332,6 +332,7 @@ class Reader(object):
         self._format_cache = {}
         self.encoding = encoding
         self._bedtool = None
+        self._stream = None
 
     def __iter__(self):
         return self
