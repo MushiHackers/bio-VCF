@@ -269,14 +269,11 @@ class Reader(object):
     def __init__(self, fsock=None, filename=None, compressed=None, prepend_chr=False,
                  strict_whitespace=False, encoding='ascii'):
         """ Create a new Reader for a VCF file.
-
             You must specify either fsock (stream) or filename.  Gzipped streams
             or files are attempted to be recogized by the file extension, or gzipped
             can be forced with ``compressed=True``
-
             'prepend_chr=True' will put 'chr' before all the CHROM values, useful
             for different sources.
-
             'strict_whitespace=True' will split records on tabs only (as with VCF
             spec) which allows you to parse files with spaces in the sample names.
         """
@@ -332,13 +329,13 @@ class Reader(object):
         self._format_cache = {}
         self.encoding = encoding
         self._bedtool = None
+        self._stream = None
 
     def __iter__(self):
         return self
 
     def _parse_metainfo(self):
         """Parse the information stored in the metainfo of the VCF.
-
         The end users shouldn't have to use this. They can access the metainfo
         directly with ``self.metadata``."""
         for attr in ('metadata', 'infos', 'filters', 'alts', 'contigs', 'formats'):
@@ -393,7 +390,6 @@ class Reader(object):
 
     def _parse_filter(self, filt_str):
         """Parse the FILTER field of a VCF entry into a Python list
-
         NOTE: this method has a cython equivalent and care must be taken
         to keep the two methods equivalent
         """
@@ -407,7 +403,6 @@ class Reader(object):
     def _parse_info(self, info_str):
         """Parse the INFO field of a VCF entry into a dictionary of Python
         types.
-
         """
         if info_str == '.':
             return {}
@@ -481,7 +476,6 @@ class Reader(object):
     def _parse_samples(self, samples, samp_fmt, site):
         """Parse a sample entry according to the format specified in the FORMAT
         column.
-
         NOTE: this method has a cython equivalent and care must be taken
         to keep the two methods equivalent
         """
@@ -634,9 +628,7 @@ class Reader(object):
 
     def fetch_bed(self, bed_file):
         """Fetches VCF file records that correspond to regions contained in a BED file.
-
         Fetch is based on pybedtools 'intersect' method and returns a BedTool object of selected features.
-
         BED file must be specified and pybedtools package is required."""
 
         if not pybedtools:
@@ -656,9 +648,7 @@ class Reader(object):
     def fetch_bed_fsock(self, stream):
         '''This fetch works exactly the same as fetch_bed(), except the BED file is not required.
         Intervals used for intersection with a VCF file are provided in stream object of chosen BED file.
-
         This method returns a BedTool object of selected VCF features.
-
         Pybedtools and stream of gzipped file are required.'''
 
         if not pybedtools:
@@ -692,12 +682,9 @@ class Reader(object):
 
     def fetch_multilocal(self, chrom, local_list):
         """Fetches VCF records that correspond to intervals provided in 'local_list'.
-
         Local_list must be a list of tuples (start, end), where start and end coordinates are in in the
         zero-based, half-open coordinate system.
-
         Function returns selected records as a BedTool object.
-
         Chrom must be specified and pybedtools package is required."""
 
         if not pybedtools:
@@ -724,12 +711,9 @@ class Reader(object):
 
     def fetch(self, chrom, interval):
         """Fetches those records from VCF file that fit in provided interval.
-
         This method creates one-line pybedtool feature based on provided interval - (start,stop), and then uses it
         in pybedtools intersection method.
-
         Function returns BedTool object representing selected VCF records.
-
         Chrom and interval must be specified and pybedtools package is required."""
 
 
@@ -756,9 +740,7 @@ class Reader(object):
         """This method enables to select desired features from a GFF/GFF2/GFF3 file and fetch VCF records
         that correspond to position of those features. Fetch is based on pybedtools 'intersection' method and returns
         a BedTool object of chosen VCF records.
-
         Gff file, chrom and feature type are required as well as pybedtools package.
-
         Selection of desired features from a GFF/GFF2/GFF3 file with a specified location is possible when
         provided optional parameter 'location=[start,end]'."""
 
@@ -827,9 +809,7 @@ class Reader(object):
     def fetch_gff_fsock(self, stream, chrom, feature_type, **kwargs):
         '''This method works exactly the same as fetch_gff(), except the GFF file is not required.
         The GFF file is replaced with a stream object from chosen database.
-
         Method returns a BedTool object of selected VCF records.
-
         Pybedtools and stream of gzipped file are required.'''
 
         location = kwargs.get('location', None)

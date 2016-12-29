@@ -35,12 +35,14 @@ class _Haplotype(object):
 class _Sample(object):
     """Sample info"""
 
-    def __init__(self,sample,haplotype):
+    def __init__(self,sample,haplotype,rsID):
         self.nucleotide = None
         self.is_unresolved = None
         self.exists = None
         self.haplotype = haplotype
         self._get_nucleotide(sample)
+        self.rsID = rsID
+        
 
     def _get_nucleotide(self,sample):
         if sample == '-':
@@ -81,8 +83,7 @@ class _PhasedRecord(object):
         for sample in self.samples:
             samples_string += (str(sample)+', ')
         samples_string = samples_string[:-2]
-        return "Record(rsID=%(rsID)s, position=%(pos)s, samples = ["+samples_string+"]" % self.__dict__
-
+        return "Record(rsID=%(rsID)s, position=%(pos)s, samples = [" % self.__dict__ +samples_string+"]"
 
 
 class PhasedReader(object):
@@ -132,7 +133,7 @@ class PhasedReader(object):
     def _parse_haplotypes(self):
         """Parse the IIDS of haplotypes stored in Phased file.
 
-        The end users shouldn't have to use this. They can access the haplotpes
+        The end users shouldn't have to use this. They can access the haplotypes
         directly with ``self.haplotypes``.
         """
         line = next(self.reader)
@@ -162,7 +163,6 @@ class PhasedReader(object):
                 elif name_string[5].lower() in ['trios','phased']:
                     self.filedata['data_type'] = 'trios'
 
-
     def next(self):
         """Return the next record in the file."""
         line = next(self.reader)
@@ -171,20 +171,63 @@ class PhasedReader(object):
         pos = int(row[1])
         samples=[]
         for i in range(len(row)-2):
-            samples.append(_Sample(row[2+i],self.haplotypes[i]))
+            samples.append(_Sample(row[2+i],self.haplotypes[i],rsID))
         record = _PhasedRecord(rsID,pos,samples)
         return record
 
     __next__ = next # Python 3.X compatibility
 
+    def get_snp_with_specific_id(self, rsID):
+        """Returns SNP with rsID given by the user."""
+        record = self.next()
+        found = False
+        try:
+            while not found:
+                if str(record.rsID) == str(rsID):
+                    found = True
+                    print(record)
+                else:
+                    record = self.next()
+        except StopIteration:
+            print('SNP with given rsID was not found.')
 
+    def fetch_SNPs(self, vcffile):
+        pass
 
-
-
-class PhasedWriter(object):
-    """Phased file writer. On Winows Python 2, open stream with 'wb'."""
+'''class PhasedWrite(object):
+    """Phased file writer. On Windows Python 2, open stream with 'wb'."""
 
     ###
-    def __init__(self):
-        print('not implemented yet')
-    pass
+    def __init__(self,stream,template,linteretminator="\n"):
+        self.writer = csv.writer(stream, delimiter ="\t",lineterminator=linteretminator,quotechar='',quoting=csv.QUOTE_NONE)
+        self.template = template
+        self.stream = stream
+        self._write_headers
+
+    def _write_headers(self):
+        hapnames = [hap. for hap in self.template.haplotypes]
+        self.writer.writerow(['rsID','position']+self.template.haplotypes)
+'''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

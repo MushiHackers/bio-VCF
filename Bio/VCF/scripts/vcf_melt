@@ -9,14 +9,14 @@ a given sample's genotype with, say, grep.
 
 import sys
 import csv
-import vcf
+import Bio.VCF
 
 out = csv.writer(sys.stdout, delimiter='\t')
 if len(sys.argv) > 1:
     inp = file(sys.argv[1])
 else:
     inp = sys.stdin
-reader = vcf.VCFReader(inp)
+reader = Bio.VCF.VCFReader(inp)
 
 formats = reader.formats.keys()
 infos = reader.infos.keys()
