@@ -6,7 +6,7 @@ try:
     from urllib.request import urlopen
     from urllib.request import urlretrieve
 except ImportError:
-    # Fall back to Python 2's urllib2
+    # Fall back to Python 2's urllib2 and urllib
     from urllib2 import urlopen
     from urllib import urlretrieve
 
