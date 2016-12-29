@@ -7,7 +7,7 @@
 import argparse
 import logging
 
-from vcf import SampleFilter
+from Bio.VCF import sample_filter
 
 
 if __name__ == "__main__":
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         log_level = logging.INFO
     logging.basicConfig(format='%(message)s', level=log_level)
 
-    sf = SampleFilter(infile=args.file, outfile=args.o,
+    sf = sample_filter(infile=args.file, outfile=args.o,
                       filters=args.f, invert=args.invert)
     if args.f is None:
         print "Samples:"
