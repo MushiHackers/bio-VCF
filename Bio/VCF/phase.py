@@ -8,6 +8,8 @@ import re
 class _Haplotype(object):
     """Haplotype info"""
 
+    # TODO equals
+
     def __init__(self, hap):
         self.is_transmitted = None
         if len(hap.split('_')) > 1:
@@ -34,6 +36,8 @@ class _Haplotype(object):
 
 class _Sample(object):
     """Sample info"""
+
+    # TODO equals
 
     def __init__(self, sample, haplotype, rsID):
         self.nucleotide = None
@@ -71,6 +75,9 @@ class _PhasedRecord(object):
     - ``pos`` contains the physical position of these SNPs in the particular chromosome.
     """
 
+    # TODO equals
+
+
     def __init__(self, rsID, pos, samples=None):
         self.rsID = rsID
         self.pos = pos
@@ -89,6 +96,7 @@ class _PhasedRecord(object):
 
 class PhasedReader(object):
     """ Reader for a phased files from HAPmap project, iterator """
+    # TODO equals
 
     def __init__(self, filename=None, fsock=None, compressed=None, encoding='ascii'):
         """ Create a new Reader for a phased file.
@@ -200,14 +208,13 @@ class PhasedReader(object):
         """
         if not (filename or region):
             raise Exception('You must provide ar least filename or region')
-        
+
         pass
 
 
 class PhasedWriter(object):
     """Phased file writer. On Windows Python 2, open stream with 'wb'."""
 
-    ###
     def __init__(self, stream, template):
         self.template = template
         self.stream = stream
@@ -215,7 +222,7 @@ class PhasedWriter(object):
 
     def _write_header(self):
         """ write header (haplotype info) """
-        header = 'rsID\tposition_' + self.template._position + '\t'
+        header = 'rsID\t' + self.template._position + '\t'
         for hap in self.template.haplotypes:
             if hap.is_transmitted:
                 suffix = '_A'
@@ -226,7 +233,7 @@ class PhasedWriter(object):
 
     def write_record(self, record):
         """Write a record (SNPs) to the file """
-        rec = record.rsID + '\t' + record.pos + '\t'
+        rec = record.rsID + '\t' + str(record.pos) + '\t'
         for sample in record.samples:
             if not sample.exists:
                 rec += '- '

@@ -9,7 +9,7 @@ reader = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_
 ##to jest lista haplotypow
 #print(reader.haplotypes[0].name,reader.haplotypes[0].is_transmitted)
 ##wezmy sobie obejrzyjmy ten pierwszy
-record = reader.next()
+#record = reader.next()
 ##bierzemy pierwszy rekord
 #print(record)
 #print(record.rsID)
@@ -26,5 +26,11 @@ record = reader.next()
 #reader2 = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_asw.unr.phased.gz')
 ##radzi sobie tez z gzipowanymi
 ##streamow jeszcze nie robilam i nie testowalam
-reader.get_snp_with_specific_id('rs10400036')
+#reader.get_snp_with_specific_id('rs10400036')
 ##sprawdza, czy SNP o danym rsID jest w pliku - jezeli jest, to zwraca caly record z nim, jezeli nie - informacje, ze nie ma takiego w pliku
+plik = open('plikphased.phased','w')
+writer = VCF.PhasedWriter(plik, reader)
+for record in reader:
+    writer.write_record(record)
+#writer.flush()
+writer.close()
