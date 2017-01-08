@@ -34,3 +34,9 @@ for record in reader:
     writer.write_record(record)
 #writer.flush()
 writer.close()
+
+pliczek = open('pliczek.txt','r')
+reader = VCF.Reader(fsock=pliczek)
+reader.next()
+reader.next()
+reader.next()

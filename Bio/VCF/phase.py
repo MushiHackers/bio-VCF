@@ -4,6 +4,8 @@ import sys
 
 import re
 
+from Bio.VCF.parser import VCFReader
+
 
 class _Haplotype(object):
     """Haplotype info"""
@@ -199,17 +201,46 @@ class PhasedReader(object):
         except StopIteration:
             print('SNP with given rsID was not found.')
 
-    def fetch(self, filename=None, region=None):
+    def fetch(self, fsock= None, filename=None,  region=None, compressed = None, prepend_chr=False,
+                 strict_whitespace=False,  encoding = 'ascii'):
         """
         Fetches snps from VCF or from a region (positions)
         - filename is a filename of the VCF
         - region is positions in a string format 'pos1-pos2',
             ex.: '1102-49658'
+        - other arguments are for a vcf reader.
         """
-        if not (filename or region):
-            raise Exception('You must provide ar least filename or region')
+        if not (filename or fsock or region):
+            raise Exception('You must provide at least filename or fsock or region')
 
-        pass
+        result = []
+
+        if region:
+            start,end = region.split('-')
+            start = int(start)
+            end = int(end)
+            eof = False
+
+            # TODO decide
+            # should we treat them as unsorted as below
+            # if so should we sort them first
+            # or should we treat them as unsorted?
+
+            while not eof:
+                try:
+                    rec = self.next()
+                    if rec.pos >= start and rec.pos < end:
+                        result.append(rec)
+                except StopIteration:
+                    eof = False
+        elif filename or fsock:
+            vcf = VCFReader(fsock,filename,compressed, prepend_chr,strict_whitespace,encoding)
+            pass
+            # TODO write fetch vcf
+
+        for r in result:
+            print(r)
+        return result
 
 
 class PhasedWriter(object):
