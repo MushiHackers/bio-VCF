@@ -62,7 +62,10 @@ class _Sample(object):
             self.nucleotide = sample
 
     def __str__(self):
-        return "(%(haplotype)s : %(nucleotide)s)" % self.__dict__
+        if self.exists:
+            return "%(nucleotide)s" % self.__dict__
+        else:
+            return "-"
 
 
 class _PhasedRecord(object):
@@ -93,7 +96,7 @@ class _PhasedRecord(object):
         for sample in self.samples:
             samples_string += (str(sample) + ', ')
         samples_string = samples_string[:-2]
-        return "Record(rsID=%(rsID)s, position=%(pos)s, samples = [" % self.__dict__ + samples_string + "]"
+        return "%(rsID)s\t%(pos)s\t" % self.__dict__ + samples_string + ""
 
 
 class PhasedReader(object):
@@ -232,7 +235,7 @@ class PhasedReader(object):
                     if rec.pos >= start and rec.pos < end:
                         result.append(rec)
                 except StopIteration:
-                    eof = False
+                    eof = True
         elif filename or fsock:
             vcf = VCFReader(fsock,filename,compressed, prepend_chr,strict_whitespace,encoding)
             pass

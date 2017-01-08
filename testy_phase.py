@@ -30,13 +30,8 @@ reader = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_
 ##sprawdza, czy SNP o danym rsID jest w pliku - jezeli jest, to zwraca caly record z nim, jezeli nie - informacje, ze nie ma takiego w pliku
 plik = open('plikphased.phased','w')
 writer = VCF.PhasedWriter(plik, reader)
-for record in reader:
+for record in reader.fetch(region='191761-112976029'):
     writer.write_record(record)
 #writer.flush()
 writer.close()
 
-pliczek = open('pliczek.txt','r')
-reader = VCF.Reader(fsock=pliczek)
-reader.next()
-reader.next()
-reader.next()
