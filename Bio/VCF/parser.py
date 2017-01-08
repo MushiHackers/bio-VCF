@@ -709,14 +709,16 @@ class Reader(object):
         result = self.fetch_bed(local_file)
         return result
 
-    def fetch(self, chrom, interval):
-        """Fetches those records from VCF file that fit in provided interval.
-        This method creates one-line pybedtool feature based on provided interval - (start,stop), and then uses it
-        in pybedtools intersection method.
+
+    def fetch(self, chrom, **kwargs):
+        """Fetches those records from VCF file that correspond to selected chromosome and
+        fit in selected interval (if provided).
+        This method creates one-line pybedtool feature based on selected chromosome (and interval = [start,stop]),
+        and then uses it in pybedtools intersection method.
         Function returns BedTool object representing selected VCF records.
-        Chrom and interval must be specified and pybedtools package is required."""
+        Chrom must be specified and interval is optional. Pybedtools package is required."""
 
-
+        interval = kwargs.get('interval',None)
         if not pybedtools:
             raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
@@ -727,14 +729,24 @@ class Reader(object):
             self._bedtool = pybedtools.BedTool(self.filename)
         if not self._prepend_chr and chrom[:3] != 'chr':
             chrom = 'chr' + chrom
-
-        description = chrom + " " + str(interval[0]) + " " + str(interval[1])
-        feature = pybedtools.BedTool(description, from_string=True)
-        result = self._bedtool.intersect(feature)
-        for r in result:
-            print (r)
-        return result
-
+        if not interval:
+            end_position = 0
+            for v in self._bedtool:
+                if (v.chrom == chrom and int(v.end) > end_position):
+                    end_position = v.end
+            description = chrom + " " + str(0) + " " + str(end_position)
+            feature = pybedtools.BedTool(description, from_string=True)
+            result = self._bedtool.intersect(feature)
+            for r in result:
+                print(r)
+            return result
+        else:
+            description = chrom + " " + str(interval[0]) + " " + str(interval[1])
+            feature = pybedtools.BedTool(description, from_string=True)
+            result = self._bedtool.intersect(feature)
+            for r in result:
+                print(r)
+            return result
 
     def fetch_gff(self, gff_file, chrom, feature_type, **kwargs):
         """This method enables to select desired features from a GFF/GFF2/GFF3 file and fetch VCF records
