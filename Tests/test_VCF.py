@@ -226,6 +226,14 @@ class TestFetch(unittest.TestCase):
         for i in reader.fetch('chr13', [46, 100000000]):
             y.append(i.start)
         assert y == [50, 60, 85837130, 9542346]
+        z=[]
+        for i in reader.fetch('13'):
+            z.append(i.start)
+        assert len(x) == 10
+        q = []
+        for i in reader.fetch('chr13'):
+            q.append(i.start)
+        assert len(q) == 10
 
     def testFetchGff(self):
         reader = VCF.Reader(fh("VCF/chr13.vcf"))
