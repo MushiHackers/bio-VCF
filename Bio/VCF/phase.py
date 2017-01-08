@@ -204,7 +204,7 @@ class PhasedReader(object):
         except StopIteration:
             print('SNP with given rsID was not found.')
 
-    def fetch(self, fsock= None, filename=None,  region=None, compressed = None, prepend_chr=False,
+    def fetch(self, chrom = None, region=None, fsock= None, filename=None, compressed = None, prepend_chr=False,
                  strict_whitespace=False,  encoding = 'ascii'):
         """
         Fetches snps from VCF or from a region (positions)
@@ -217,6 +217,9 @@ class PhasedReader(object):
             raise Exception('You must provide at least filename or fsock or region')
 
         result = []
+
+        if chrom and self.filedata['chrom'] and chrom!=self.filedata['chrom']:
+            raise Exception('This file is for chrom '+str(self.filedata['chrom'])+' and you wanted to search for chrom '+chrom)
 
         if region:
             start,end = region.split('-')
@@ -238,7 +241,12 @@ class PhasedReader(object):
                     eof = True
         elif filename or fsock:
             vcf = VCFReader(fsock,filename,compressed, prepend_chr,strict_whitespace,encoding)
-            pass
+            rec = self.next()
+            vcfrec = vcf.next()
+            if self.filedata['chrom']:
+                # filtrowanie chromem
+
+
             # TODO write fetch vcf
 
         for r in result:

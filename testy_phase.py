@@ -35,3 +35,8 @@ for record in reader.fetch(region='191761-112976029'):
 #writer.flush()
 writer.close()
 
+plikvcf = open('Tests/VCF/chr13.vcf')
+
+r = VCF.VCFReader(plikvcf)
+
+for x in r.fetch(13,())
