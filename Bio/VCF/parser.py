@@ -740,7 +740,7 @@ class Reader(object):
             for r in result:
                 print(r)
             return result
-        if interval:
+        else:
             description = chrom + " " + str(interval[0]) + " " + str(interval[1])
             feature = pybedtools.BedTool(description, from_string=True)
             result = self._bedtool.intersect(feature)

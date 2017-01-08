@@ -32,12 +32,11 @@ reader.get_snp_within_range(418076, 504032)
 #plik = open('plikphased.phased','w')
 #writer = VCF.PhasedWriter(plik, reader)
 #for record in reader.fetch(region='191761-112976029'):
-#   writer.write_record(record)
+#    writer.write_record(record)
 #writer.flush()
 #writer.close()
 
-#plikvcf = open('Tests/VCF/chr13.vcf')
+#plikvcf = open('Tests/VCF/chr10.vcf')
 
-#r = VCF.VCFReader(plikvcf)
+#reader.fetch(fsock=plikvcf)
 
-#for x in r.fetch(13,())

@@ -6,6 +6,11 @@ import re
 
 from Bio.VCF.parser import VCFReader
 
+try:
+    import pybedtools
+except ImportError:
+    pybedtools = None
+
 
 class _Haplotype(object):
     """Haplotype info"""
@@ -96,7 +101,7 @@ class _PhasedRecord(object):
         for sample in self.samples:
             samples_string += (str(sample) + ', ')
         samples_string = samples_string[:-2]
-        return "%(rsID)s\t%(pos)s\t" % self.__dict__ + samples_string + ""
+        return "Record(%(rsID)s at %(pos)s: " % self.__dict__ + samples_string + ")"
 
 
 class PhasedReader(object):
@@ -225,14 +230,18 @@ class PhasedReader(object):
         """
         Fetches snps from VCF or from a region (positions)
         - filename is a filename of the VCF
+        - fsock is a stream to the file
         - region is positions in a string format 'pos1-pos2',
             ex.: '1102-49658'
         - other arguments are for a vcf reader.
+
+        filename/fsock fetching needs pybedtools
         """
         if not (filename or fsock or region):
             raise Exception('You must provide at least filename or fsock or region')
 
         result = []
+        eof = False
 
         if chrom and self.filedata['chrom'] and chrom!=self.filedata['chrom']:
             raise Exception('This file is for chrom '+str(self.filedata['chrom'])+' and you wanted to search for chrom '+chrom)
@@ -241,31 +250,53 @@ class PhasedReader(object):
             start,end = region.split('-')
             start = int(start)
             end = int(end)
-            eof = False
 
             # TODO decide
-            # should we treat them as unsorted as below
-            # if so should we sort them first
-            # or should we treat them as unsorted?
+            # should we treat them as sorted as below (both VCF and phased)
+            # if not should we sort them first
+            # or should we treat them just as unsorted?
 
             while not eof:
                 try:
                     rec = self.next()
+                    if rec.pos < start:
+                        rec = self.next()
+                    if rec.pos > end:
+                        eof = True
+                        continue
                     if rec.pos >= start and rec.pos < end:
                         result.append(rec)
                 except StopIteration:
                     eof = True
-        elif filename or fsock:
-            vcf = VCFReader(fsock,filename,compressed, prepend_chr,strict_whitespace,encoding)
-            rec = self.next()
-            vcfrec = vcf.next()
-            if self.filedata['chrom']:
-                pass
-                # TODO tooo
-                # filtrowanie chromem
-                # a potem pracujemy na vcfie wyfiltrowanym chromem
 
-            # TODO write fetch vcf
+        elif filename or fsock:
+
+            if not pybedtools:
+                raise Exception('pybedtools not available, try "pip install pybedtools"?')
+
+            vfile = VCFReader(fsock,filename,compressed, prepend_chr,strict_whitespace,encoding)
+
+            if self.filedata['chrom']:
+                vfile = vfile.fetch(self.filedata['chrom'])
+
+            rec = self.next()
+            while not eof:
+                try:
+                    for v in vfile:
+                        if isinstance(vfile,pybedtools.bedtool.BedTool):
+                            start = int(v[1])-1
+                            end = start + len(v[3])
+                        else:
+                            start = v.start
+                            end = v.end
+                        if rec.pos < start or rec.pos > end:
+                            continue
+                        if rec.pos >= start and rec.pos < end:
+                            result.append(rec)
+                            rec = self.next()
+                    rec = self.next()
+                except StopIteration:
+                    eof = True
 
         for r in result:
             print(r)
