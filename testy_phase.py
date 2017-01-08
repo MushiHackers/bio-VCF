@@ -28,15 +28,16 @@ reader = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_
 ##streamow jeszcze nie robilam i nie testowalam
 #reader.get_snp_with_specific_id('rs10400036')
 ##sprawdza, czy SNP o danym rsID jest w pliku - jezeli jest, to zwraca caly record z nim, jezeli nie - informacje, ze nie ma takiego w pliku
-plik = open('plikphased.phased','w')
-writer = VCF.PhasedWriter(plik, reader)
-for record in reader.fetch(region='191761-112976029'):
-    writer.write_record(record)
+reader.get_snp_within_range(418076, 504032)
+#plik = open('plikphased.phased','w')
+#writer = VCF.PhasedWriter(plik, reader)
+#for record in reader.fetch(region='191761-112976029'):
+#   writer.write_record(record)
 #writer.flush()
-writer.close()
+#writer.close()
 
-plikvcf = open('Tests/VCF/chr13.vcf')
+#plikvcf = open('Tests/VCF/chr13.vcf')
 
-r = VCF.VCFReader(plikvcf)
+#r = VCF.VCFReader(plikvcf)
 
 #for x in r.fetch(13,())
