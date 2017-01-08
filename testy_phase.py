@@ -39,4 +39,4 @@ plikvcf = open('Tests/VCF/chr13.vcf')
 
 r = VCF.VCFReader(plikvcf)
 
-for x in r.fetch(13,())
+#for x in r.fetch(13,())

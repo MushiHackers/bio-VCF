@@ -244,8 +244,10 @@ class PhasedReader(object):
             rec = self.next()
             vcfrec = vcf.next()
             if self.filedata['chrom']:
+                pass
+                # TODO tooo
                 # filtrowanie chromem
-
+                # a potem pracujemy na vcfie wyfiltrowanym chromem
 
             # TODO write fetch vcf
 
