@@ -196,7 +196,7 @@ class PhasedReader(object):
     __next__ = next  # Python 3.X compatibility
 
     def get_snp_with_specific_id(self, rsID):
-        """Returns SNP with rsID given by the user."""
+        """Returns SNP with given rsID."""
         record = self.next()
         found = False
         try:
@@ -208,6 +208,22 @@ class PhasedReader(object):
                     record = self.next()
         except StopIteration:
             print('SNP with given rsID was not found.')
+            
+    def get_snp_within_range(self, pos1, pos2):
+        """Returns SNP/SNPs within given range. Condition: pos1 must be smaller than pos2."""
+        record = self.next()
+        found = False
+        try:
+            while record is not None:
+                if int(record.pos) >= int(pos1) and int(record.pos) < int(pos2):
+                    found = True
+                    print(record)
+                record = self.next()
+        except StopIteration:
+            if not found:
+                print('No SNP within given range was found.')
+            else:
+                pass
 
     def fetch(self, chrom = None, region=None, fsock= None, filename=None, compressed = None, prepend_chr=False,
                  strict_whitespace=False,  encoding = 'ascii'):
