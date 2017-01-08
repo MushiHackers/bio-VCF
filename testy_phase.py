@@ -40,4 +40,3 @@ reader.get_snp_within_range(418076, 504032)
 
 #r = VCF.VCFReader(plikvcf)
 
-#for x in r.fetch(13,())
