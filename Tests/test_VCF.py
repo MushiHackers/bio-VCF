@@ -219,17 +219,17 @@ class TestFetch(unittest.TestCase):
     def testFetch(self):
         reader = VCF.Reader(fh("VCF/chr13.vcf"))
         x = []
-        for i in reader.fetch('13', [46, 100000000]):
+        for i in reader.fetch('13', interval=[46, 100000000]):
             x.append(i.start)
         assert x == [50, 60, 85837130, 9542346]
         y = []
-        for i in reader.fetch('chr13', [46, 100000000]):
+        for i in reader.fetch('chr13', interval=[46, 100000000]):
             y.append(i.start)
         assert y == [50, 60, 85837130, 9542346]
         z=[]
         for i in reader.fetch('13'):
             z.append(i.start)
-        assert len(x) == 10
+        assert len(z) == 10
         q = []
         for i in reader.fetch('chr13'):
             q.append(i.start)
