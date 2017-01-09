@@ -626,7 +626,7 @@ class Reader(object):
 
     __next__ = next  # Python 3.X compatibility
 
-    def fetch_bed(self, bed_file):
+    def fetch_bed(self, bed_file, verbose = True):
         """Fetches VCF file records that correspond to regions contained in a BED file.
         Fetch is based on pybedtools 'intersect' method and returns a BedTool object of selected features.
         BED file must be specified and pybedtools package is required."""
@@ -641,11 +641,12 @@ class Reader(object):
 
         bed = pybedtools.BedTool(bed_file).merge()
         features = self._bedtool.intersect(bed)
-        for d in features:
-            print (d)
+        if verbose:
+            for d in features:
+                print(d)
         return features
 
-    def fetch_bed_fsock(self, stream):
+    def fetch_bed_fsock(self, stream, verbose = True):
         '''This fetch works exactly the same as fetch_bed(), except the BED file is not required.
         Intervals used for intersection with a VCF file are provided in stream object of chosen BED file.
         This method returns a BedTool object of selected VCF features.
@@ -667,6 +668,9 @@ class Reader(object):
             bed = pybedtools.BedTool(contents)
             features = self._bedtool.intersect(bed)
             if features:
+                if verbose:
+                    for d in features:
+                        print(d)
                 return features
             else:
                 raise Exception("Did not find any SV in provided intervals")
@@ -675,11 +679,14 @@ class Reader(object):
             bed = pybedtools.BedTool(gzip_f)
             features = self._bedtool.intersect(bed)
             if features:
+                if verbose:
+                    for d in features:
+                        print(d)
                 return features
             else:
                 raise Exception("Did not find any SV in provided intervals")
 
-    def fetch_multilocal(self, chrom, local_list):
+    def fetch_multilocal(self, chrom, local_list, verbose = True):
         """Fetches VCF records that correspond to intervals provided in 'local_list'.
         Local_list must be a list of tuples (start, end), where start and end coordinates are in in the
         zero-based, half-open coordinate system.
@@ -706,9 +713,12 @@ class Reader(object):
             g.write(str(feature))
         g.seek(0)
         result = self.fetch_bed(local_file)
+        if verbose:
+            for r in result:
+                print(r)
         return result
 
-    def fetch(self, chrom, **kwargs):
+    def fetch(self, chrom, interval = None, verbose = True):
         """Fetches those records from VCF file that correspond to selected chromosome and
         fit in selected interval (if provided).
         This method creates one-line pybedtool feature based on selected chromosome (and interval = [start,stop]),
@@ -716,7 +726,6 @@ class Reader(object):
         Function returns BedTool object representing selected VCF records.
         Chrom must be specified and interval is optional. Pybedtools package is required."""
 
-        interval = kwargs.get('interval', None)
         if not pybedtools:
             raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
@@ -735,18 +744,20 @@ class Reader(object):
             description = chrom + " " + str(0) + " " + str(end_position)
             feature = pybedtools.BedTool(description, from_string=True)
             result = self._bedtool.intersect(feature)
-            for r in result:
-                print(r)
+            if verbose:
+                for r in result:
+                    print(r)
             return result
         else:
             description = chrom + " " + str(interval[0]) + " " + str(interval[1])
             feature = pybedtools.BedTool(description, from_string=True)
             result = self._bedtool.intersect(feature)
-            for r in result:
-                print(r)
+            if verbose:
+                for r in result:
+                    print(r)
             return result
 
-    def fetch_gff(self, gff_file, chrom, feature_type, **kwargs):
+    def fetch_gff(self, gff_file, chrom, feature_type, location = None, verbose = True):
         """This method enables to select desired features from a GFF/GFF2/GFF3 file and fetch VCF records
         that correspond to position of those features. Fetch is based on pybedtools 'intersection' method and returns
         a BedTool object of chosen VCF records.
@@ -754,7 +765,6 @@ class Reader(object):
         Selection of desired features from a GFF/GFF2/GFF3 file with a specified location is possible when
         provided optional parameter 'location=[start,end]'."""
 
-        location = kwargs.get('location', None)
         gff2bedfile = 'gffbed.bed'
 
         if not pybedtools:
@@ -813,36 +823,39 @@ class Reader(object):
 
             else:
                 raise Exception('Did not find any GFF features corresponding to chosen type.')
-
+        if verbose:
+            for d in features:
+                print(d)
         return features
 
-    def fetch_gff_fsock(self, stream, chrom, feature_type, **kwargs):
+    def fetch_gff_fsock(self, stream, chrom, feature_type, location = None, verbose = True):
         '''This method works exactly the same as fetch_gff(), except the GFF file is not required.
         The GFF file is replaced with a stream object from chosen database.
         Method returns a BedTool object of selected VCF records.
         Pybedtools and stream of gzipped file are required.'''
 
-        location = kwargs.get('location', None)
         thetarfile = stream
         page = urlopen(thetarfile)
         if sys.version < '3':
             gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
             if location:
                 result = self.fetch_gff(gzip_f, chrom, feature_type, location=location)
-                return result
             else:
                 result = self.fetch_gff(gzip_f, chrom, feature_type)
-                return result
-        if sys.version > '3':
+        else: # sys.version > '3'
             gzip_f = gzip.GzipFile(mode='rb', fileobj=page)
             reader = codecs.getreader("utf-8")
             contents = reader(gzip_f)
             if location:
                 result = self.fetch_gff(contents, chrom, feature_type, location=location)
-                return result
             else:
                 result = self.fetch_gff(contents, chrom, feature_type)
-                return result
+
+        if verbose:
+            for r in result:
+                print(r)
+
+        return result
 
 
 class Writer(object):

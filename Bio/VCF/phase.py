@@ -226,13 +226,14 @@ class PhasedReader(object):
                 pass
 
     def fetch(self, chrom=None, region=None, fsock=None, filename=None, compressed=None, prepend_chr=False,
-              strict_whitespace=False, encoding='ascii'):
+              strict_whitespace=False, encoding='ascii', verbose = True):
         """
         Fetches snps from VCF or from a region (positions)
         - filename is a filename of the VCF
         - fsock is a stream to the file
         - region is positions in a string format 'pos1-pos2',
             ex.: '1102-49658'
+        - verbose if true prints all the fetched records
         - other arguments are for a vcf reader.
 
         filename/fsock fetching needs pybedtools
@@ -284,7 +285,7 @@ class PhasedReader(object):
             vfile = VCFReader(fsock, filename, compressed, prepend_chr, strict_whitespace, encoding)
 
             if self.filedata['chrom']:
-                vfile = vfile.fetch(self.filedata['chrom'])
+                vfile = vfile.fetch(self.filedata['chrom'], verbose = False)
 
             rec = self.next()
             while not eof:
@@ -315,8 +316,9 @@ class PhasedReader(object):
                 except StopIteration:
                     eof = True
 
-        for r in result:
-            print(r)
+        if verbose:
+            for r in result:
+                print(r)
         origin = self._reader
         self.reader, self._reader = None,None
         resultreader = deepcopy(self)
