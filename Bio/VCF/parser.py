@@ -8,7 +8,6 @@ import io
 import codecs
 import os
 
-
 try:
     # For Python 3.0 and later
     from urllib.request import urlopen
@@ -41,7 +40,6 @@ except ImportError:
 
 from Bio.VCF.model import _Call, _Record, make_calldata_tuple
 from Bio.VCF.model import _Substitution, _Breakend, _SingleBreakend, _SV
-
 
 # Metadata parsers/constants
 RESERVED_INFO = {
@@ -85,13 +83,13 @@ field_counts = {
     'R': -3,  # Equal to the number of alleles including reference in a given record
 }
 
-
 _Info = collections.namedtuple('Info', ['id', 'num', 'type', 'desc', 'source', 'version'])
 _Filter = collections.namedtuple('Filter', ['id', 'desc'])
 _Alt = collections.namedtuple('Alt', ['id', 'desc'])
 _Format = collections.namedtuple('Format', ['id', 'num', 'type', 'desc'])
 _SampleInfo = collections.namedtuple('SampleInfo', ['samples', 'gt_bases', 'gt_types', 'gt_phases'])
 _Contig = collections.namedtuple('Contig', ['id', 'length'])
+
 
 def lf_filter(feature, location, featuretype):  # funkcja do filtrowania w fetch'u
     if ((int(feature[3]) >= location[0] and int(feature[4]) <= location[1]) and feature[2] == featuretype):
@@ -109,8 +107,10 @@ def truncate_feature(feature):
     feature.chrom = "chr" + feature.chrom
     return feature
 
+
 class _vcf_metadata_parser(object):
     """Parse the metadata in the header of a VCF file."""
+
     def __init__(self):
         super(_vcf_metadata_parser, self).__init__()
         self.info_pattern = re.compile(r'''\#\#INFO=<
@@ -381,7 +381,7 @@ class Reader(object):
         fields = self._row_pattern.split(line[1:])
         self._column_headers = fields[:9]
         self.samples = fields[9:]
-        self._sample_indexes = dict([(x,i) for (i,x) in enumerate(self.samples)])
+        self._sample_indexes = dict([(x, i) for (i, x) in enumerate(self.samples)])
 
     def _map(self, func, iterable, bad='.'):
         """``map``, but make bad values None."""
@@ -439,14 +439,14 @@ class Reader(object):
                 val = True
             elif entry_type in ('String', 'Character'):
                 try:
-                    vals = entry[1].split(',') # commas are reserved characters indicating multiple values
+                    vals = entry[1].split(',')  # commas are reserved characters indicating multiple values
                     val = self._map(str, vals)
                 except IndexError:
                     entry_type = 'Flag'
                     val = True
 
             try:
-                if self.infos[ID].num == 1 and entry_type not in ( 'Flag', ):
+                if self.infos[ID].num == 1 and entry_type not in ('Flag',):
                     val = val[0]
             except KeyError:
                 pass
@@ -679,7 +679,6 @@ class Reader(object):
             else:
                 raise Exception("Did not find any SV in provided intervals")
 
-
     def fetch_multilocal(self, chrom, local_list):
         """Fetches VCF records that correspond to intervals provided in 'local_list'.
         Local_list must be a list of tuples (start, end), where start and end coordinates are in in the
@@ -709,7 +708,6 @@ class Reader(object):
         result = self.fetch_bed(local_file)
         return result
 
-
     def fetch(self, chrom, **kwargs):
         """Fetches those records from VCF file that correspond to selected chromosome and
         fit in selected interval (if provided).
@@ -718,7 +716,7 @@ class Reader(object):
         Function returns BedTool object representing selected VCF records.
         Chrom must be specified and interval is optional. Pybedtools package is required."""
 
-        interval = kwargs.get('interval',None)
+        interval = kwargs.get('interval', None)
         if not pybedtools:
             raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
@@ -756,7 +754,7 @@ class Reader(object):
         Selection of desired features from a GFF/GFF2/GFF3 file with a specified location is possible when
         provided optional parameter 'location=[start,end]'."""
 
-        location = kwargs.get('location',None)
+        location = kwargs.get('location', None)
         gff2bedfile = 'gffbed.bed'
 
         if not pybedtools:
@@ -779,7 +777,7 @@ class Reader(object):
             if genes[0].chrom[:3] != "chr":
                 arg = True
             if arg:
-                genes=genes.each(truncate_feature)
+                genes = genes.each(truncate_feature)
 
             filter_feature = genes.filter(lf_filter, location, feature_type)
             g = open(gff2bedfile, 'w+')
@@ -830,22 +828,21 @@ class Reader(object):
         if sys.version < '3':
             gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
             if location:
-                result = self.fetch_gff(gzip_f,chrom,feature_type,location=location)
+                result = self.fetch_gff(gzip_f, chrom, feature_type, location=location)
                 return result
             else:
-                result = self.fetch_gff(gzip_f,chrom,feature_type)
+                result = self.fetch_gff(gzip_f, chrom, feature_type)
                 return result
         if sys.version > '3':
-            gzip_f = gzip.GzipFile(mode='rb',fileobj=page)
+            gzip_f = gzip.GzipFile(mode='rb', fileobj=page)
             reader = codecs.getreader("utf-8")
             contents = reader(gzip_f)
             if location:
-                result = self.fetch_gff(contents,chrom,feature_type,location=location)
+                result = self.fetch_gff(contents, chrom, feature_type, location=location)
                 return result
             else:
-                result = self.fetch_gff(contents,chrom,feature_type)
+                result = self.fetch_gff(contents, chrom, feature_type)
                 return result
-
 
 
 class Writer(object):
@@ -910,7 +907,7 @@ class Writer(object):
             ffs.append(record.FORMAT)
 
         samples = [self._format_sample(record.FORMAT, sample)
-            for sample in record.samples]
+                   for sample in record.samples]
         self.writer.writerow(ffs + samples)
 
     def flush(self):
@@ -945,9 +942,11 @@ class Writer(object):
     def _format_info(self, info):
         if not info:
             return '.'
+
         def order_key(field):
             # Order by header definition first, alphabetically second.
             return self.info_order[field], field
+
         return ';'.join(self._stringify_pair(f, info[f]) for f in
                         sorted(info, key=order_key))
 
@@ -960,7 +959,7 @@ class Writer(object):
         result = [gt] if gt else []
         # Following the VCF spec, GT is always the first item whenever it is present.
         for field in sample.data._fields:
-            value = getattr(sample.data,field)
+            value = getattr(sample.data, field)
             if field == 'GT':
                 continue
             if field == 'FT':

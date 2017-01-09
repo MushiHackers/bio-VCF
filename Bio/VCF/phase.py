@@ -87,7 +87,6 @@ class _PhasedRecord(object):
 
     # TODO equals
 
-
     def __init__(self, rsID, pos, samples=None):
         self.rsID = rsID
         self.pos = pos
@@ -106,6 +105,7 @@ class _PhasedRecord(object):
 
 class PhasedReader(object):
     """ Reader for a phased files from HAPmap project, iterator """
+
     # TODO equals
 
     def __init__(self, filename=None, fsock=None, compressed=None, encoding='ascii'):
@@ -208,7 +208,7 @@ class PhasedReader(object):
                     record = self.next()
         except StopIteration:
             print('SNP with given rsID was not found.')
-            
+
     def get_snp_within_range(self, pos1, pos2):
         """Returns SNP/SNPs within given range. Condition: pos1 must be smaller than pos2."""
         record = self.next()
@@ -225,8 +225,8 @@ class PhasedReader(object):
             else:
                 pass
 
-    def fetch(self, chrom = None, region=None, fsock= None, filename=None, compressed = None, prepend_chr=False,
-                 strict_whitespace=False,  encoding = 'ascii'):
+    def fetch(self, chrom=None, region=None, fsock=None, filename=None, compressed=None, prepend_chr=False,
+              strict_whitespace=False, encoding='ascii'):
         """
         Fetches snps from VCF or from a region (positions)
         - filename is a filename of the VCF
@@ -243,11 +243,12 @@ class PhasedReader(object):
         result = []
         eof = False
 
-        if chrom and self.filedata['chrom'] and chrom!=self.filedata['chrom']:
-            raise Exception('This file is for chrom '+str(self.filedata['chrom'])+' and you wanted to search for chrom '+chrom)
+        if chrom and self.filedata['chrom'] and chrom != self.filedata['chrom']:
+            raise Exception('This file is for chrom ' + str(
+                self.filedata['chrom']) + ' and you wanted to search for chrom ' + chrom)
 
         if region:
-            start,end = region.split('-')
+            start, end = region.split('-')
             start = int(start)
             end = int(end)
 
@@ -274,7 +275,7 @@ class PhasedReader(object):
             if not pybedtools:
                 raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
-            vfile = VCFReader(fsock,filename,compressed, prepend_chr,strict_whitespace,encoding)
+            vfile = VCFReader(fsock, filename, compressed, prepend_chr, strict_whitespace, encoding)
 
             if self.filedata['chrom']:
                 vfile = vfile.fetch(self.filedata['chrom'])
@@ -283,8 +284,8 @@ class PhasedReader(object):
             while not eof:
                 try:
                     for v in vfile:
-                        if isinstance(vfile,pybedtools.bedtool.BedTool):
-                            start = int(v[1])-1
+                        if isinstance(vfile, pybedtools.bedtool.BedTool):
+                            start = int(v[1]) - 1
                             end = start + len(v[3])
                         else:
                             start = v.start
