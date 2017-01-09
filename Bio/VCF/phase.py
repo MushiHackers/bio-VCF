@@ -365,12 +365,12 @@ class PhasedWriter(object):
         """Try closing the writer"""
         try:
             self.stream.close()
-        except:
+        except AttributeError:
             pass
 
     def flush(self):
         """Try flushing the writer"""
         try:
             self.stream.flush()
-        except:
+        except AttributeError:
             pass

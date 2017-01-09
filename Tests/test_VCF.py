@@ -152,21 +152,20 @@ class TestVcfSpecs(unittest.TestCase):
             elif cid == "3":
                 assert contig.length == 3000
 
-class TestPhasedReader(unittest.TestCase):
 
+class TestPhasedReader(unittest.TestCase):
     def testReader(self):
-        t = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+        t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
         assert t
         assert len(t.haplotypes) == 12
-        t = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
         assert t
-        t = phase.PhasedReader(fsock=fh('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz','rb'))
+        t = phase.PhasedReader(fsock=fh('VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz', 'rb'))
         assert t
-        assert t.filedata == {'chrom' : '10', 'region' : 'yri', 'data_type' : 'duos'}
-
+        assert t.filedata == {'chrom': '10', 'region': 'yri', 'data_type': 'duos'}
 
     def test_next(self):
-        t = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
         rec = t.next()
         assert rec.rsID == 'rs12255619'
         assert rec.pos == 88481
@@ -180,7 +179,7 @@ class TestPhasedReader(unittest.TestCase):
         assert hap.is_transmitted == True
 
     def test_fetch_region(self):
-        t = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
         t2 = t.fetch(region='191761-112976029')
         assert t
         assert t2
@@ -190,11 +189,13 @@ class TestPhasedReader(unittest.TestCase):
         assert rec.rsID == 'rs17156316'
 
     def test_fetch_file(self):
-        t = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
-        t2 = t.fetch(fsock=fh('Tests/VCF/chr10.vcf'))
+        t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        t2 = t.fetch(fsock=fh('VCF/chr10.vcf'))
         assert t
         assert t2
         rec = t.next()
+        assert rec.rsID == 'rs12255619'
+        rec = t2.next()
         assert rec.rsID == 'rs12255619'
         rec = t2.next()
         assert rec.rsID == 'rs2066314'
@@ -209,14 +210,15 @@ class TestPhasedReader(unittest.TestCase):
 
 
 class TestPhasedWriter(unittest.TestCase):
-
     def testWriter(self):
-        r = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
-        t = phase.PhasedWriter(fh('Tests/VCF/testfile.phased','w'),r)
+        r = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+        t = phase.PhasedWriter(fh('VCF/testfile.phased', 'w'), r)
         assert t
+        t.flush()
+        t.close()
 
     def test_write_record(self):
-        r = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+        r = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
         out = StringIO()
         t = phase.PhasedWriter(out, r)
 
@@ -224,17 +226,15 @@ class TestPhasedWriter(unittest.TestCase):
             t.write_record(record)
         out.seek(0)
         out_str = out.getvalue()
-        for line in out_str.split('\n'):
+        for line in out_str.split('\n')[:-1]:
             assert not line.endswith('\t')
-            assert len(line.split())==14
             assert len(line.split('\t')) == 3
-        assert out_str.split('\n')[0]=='rsID\tposition_b36\tNA18855_A NA18855_B NA18855_NA18856_A NA18511_A NA18511_B NA18511_0_A NA19093_A NA19093_B NA19093_NA19092_A NA18501_A NA18501_B NA18501_NA18502_A'
+            assert len(line.split(' ')) == 13
 
-    def test_close(self):
-        pass
+        assert out_str.split('\n')[
+                   0] == 'rsID\tposition_b36\tNA18855_A NA18855_B NA18855_NA18856_A NA18511_A NA18511_B NA18511_0_A NA19093_A NA19093_B NA19093_NA19092_A NA18501_A NA18501_B NA18501_NA18502_A '
+        assert out_str.split('\n')[-2] == 'rs11528930\t135327873\tT T T T T T T T T T T T '
 
-    def test_flush(self):
-        pass
 
 class TestdbSNP(unittest.TestCase):
     # TODO Zojka
@@ -242,37 +242,33 @@ class TestdbSNP(unittest.TestCase):
 
 
 class Test1001Genomes(unittest.TestCase):
-
     def testThousandgenomes(self):
-        t = databases.thousandgenomes(file='VCF/thaliana_strains.csv', ecotype = '88')
+        t = databases.thousandgenomes(file='VCF/thaliana_strains.csv', ecotype='88')
         assert t
-        t = databases.thousandgenomes(file='VCF/thaliana_strains.csv', name = "CYR")
+        t = databases.thousandgenomes(file='VCF/thaliana_strains.csv', name="CYR")
         assert t.samples == ['88']
-        t = databases.thousandgenomes(file="VCF/thaliana_strains.csv", ecnumber= "CS76790")
+        t = databases.thousandgenomes(file="VCF/thaliana_strains.csv", ecnumber="CS76790")
         assert t.samples == ['88']
-
 
     def testThousandgenomesCountry(self):
         t = databases.thousandgenomes_country(file="VCF/thaliana_strains.csv", name="UKR")
         assert len(t) == 2
 
-
     def testThousandgenomesGeo(self):
         t = databases.thousandgenomes_geo(file="VCF/thaliana_strains.csv", latitude=(40.9063, 40.9064),
                                           longitude=(-73.1494, -73.1492))
         assert len(t) == 2
-        t = databases.thousandgenomes_geo(file="VCF/thaliana_strains.csv", latitude=(40.95,41))
+        t = databases.thousandgenomes_geo(file="VCF/thaliana_strains.csv", latitude=(40.95, 41))
         assert len(t) == 4
         t = databases.thousandgenomes_geo(file="VCF/thaliana_strains.csv", longitude=(-87.736, -87.734))
-        assert len(t) ==  6
+        assert len(t) == 6
 
-
-    def testDownload(self):
+    # commented out because takes to much time (download of big files)
+    '''def testDownload(self):
         t = databases.thousandgenomes_geo(file = "VCF/thaliana_strains.csv",latitude=(40.9063, 40.9064), longitude=(-73.1494, -73.1492))
         databases.download(t[0],'../database_download.gz')
         assert os.path.isfile('../database_download.gz')
-        os.system("rm -r ../database_download.gz")
-
+        os.system("rm -r ../database_download.gz")'''
 
 
 @unittest.skipUnless(pybedtools, "test requires installation of PyBedTools.")
@@ -314,7 +310,7 @@ class TestFetch(unittest.TestCase):
         for i in reader.fetch('chr13', [46, 100000000]):
             y.append(i.start)
         assert y == [50, 60, 85837130, 9542346]
-        z=[]
+        z = []
         for i in reader.fetch('13'):
             z.append(i.start)
         assert len(x) == 10
@@ -1560,7 +1556,8 @@ class TestOpenMethods(unittest.TestCase):
         r = VCF.Reader(filename=self.fp('VCF/tb.vcf.gz'))
         self.assertEqual(self.samples, r.samples)
 
-#TODO Zoanna to wyzej nizej, do poszukania i sprawdzenia czy dziala
+
+# TODO Zoanna to wyzej nizej, do poszukania i sprawdzenia czy dziala
 
 '''class TestSampleFilter(unittest.TestCase):
     @unittest.skipUnless(IS_PYTHON2, "test broken for Python 3")

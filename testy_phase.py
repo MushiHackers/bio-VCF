@@ -1,5 +1,5 @@
 from Bio import VCF
-reader = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+reader = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
 ##to Ci daje caly plik wczytany jako obiekt reader
 print(reader.filedata)
 ##to informacje o pliku jesli sa dostepne
@@ -36,13 +36,18 @@ print(record.samples[0].exists,record.samples[0].is_unresolved,record.samples[0]
 #writer.flush()
 #writer.close()
 
-plikvcf = open('Tests/VCF/chr10.vcf')
 
-reader.fetch(fsock=plikvcf)
 
 print('-a-a-a-a-a-a-')
+#plik = open('plikphased3.phased','w')
+plikvcf = open('Tests/VCF/chr10.vcf')
+#writer = VCF.PhasedWriter(plik, reader)
 
-newr = reader.fetch(region='191761-112976029')
+newr = reader.fetch(fsock=plikvcf)
+#for record in newr:
+#    writer.write_record(record)
+
+#newr = reader.fetch(region='191761-112976029')
 print(newr.filedata)
 ##to informacje o pliku jesli sa dostepne
 print(newr.filedata['region'])
