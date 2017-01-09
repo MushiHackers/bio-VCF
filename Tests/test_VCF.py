@@ -28,7 +28,7 @@ except ImportError:
     pybedtools = None
 
 from Bio import VCF
-from Bio.VCF import model, utils, parser, databases
+from Bio.VCF import model, utils, parser, databases, phase
 
 IS_PYTHON2 = sys.version_info[0] == 2
 IS_NOT_PYPY = 'PyPy' not in sys.version
@@ -151,6 +151,54 @@ class TestVcfSpecs(unittest.TestCase):
                 assert contig.length == 2000
             elif cid == "3":
                 assert contig.length == 3000
+
+class TestPhasedReader(unittest.TestCase):
+
+    def testReader(self):
+        t = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+        assert t
+        assert len(t.haplotypes) == 12
+        t = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        assert t
+        t = phase.PhasedReader(fsock=fh('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz','rb'))
+        assert t
+        assert t.filedata == {'chrom' : '10', 'region' : 'yri', 'data_type' : 'duos'}
+
+
+    def test_next(self):
+        t = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        rec = t.next()
+        assert rec.rsID == 'rs12255619'
+        assert rec.pos == 88481
+        assert len(rec.samples) == 12
+        samp = t.next().samples
+        assert samp[3].nucleotide == 'T'
+        assert samp[1].exists == True
+        assert samp[6].is_unresolved == False
+        hap = t.next().samples[2].haplotype
+        assert hap.name == 'NA18855_NA18856'
+        assert hap.is_transmitted == True
+
+    def test_fetch(self):
+        pass
+
+    def test_get_snp_with_specific_id(self):
+        # TODO Dejw
+        pass
+
+    def test_get_snp_within_range(self):
+        # TODO Dejw
+        pass
+
+
+class TestPhasedWriter(unittest.TestCase):
+
+    def test(self):
+        pass
+
+class TestdbSNP(unittest.TestCase):
+    # TODO Zojka
+    pass
 
 
 class Test1001Genomes(unittest.TestCase):
@@ -1472,6 +1520,7 @@ class TestOpenMethods(unittest.TestCase):
         r = VCF.Reader(filename=self.fp('VCF/tb.vcf.gz'))
         self.assertEqual(self.samples, r.samples)
 
+#TODO Zoanna to wyzej nizej, do poszukania i sprawdzenia czy dziala
 
 '''class TestSampleFilter(unittest.TestCase):
     @unittest.skipUnless(IS_PYTHON2, "test broken for Python 3")
@@ -1739,6 +1788,8 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRecord))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCall))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Test1001Genomes))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedReader))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedWriter))
 ##suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue201))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue234))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue246))
