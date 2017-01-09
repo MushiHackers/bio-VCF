@@ -36,9 +36,9 @@ print(record.samples[0].exists,record.samples[0].is_unresolved,record.samples[0]
 #writer.flush()
 #writer.close()
 
-#plikvcf = open('Tests/VCF/chr10.vcf')
+plikvcf = open('Tests/VCF/chr10.vcf')
 
-#reader.fetch(fsock=plikvcf)
+reader.fetch(fsock=plikvcf)
 
 print('-a-a-a-a-a-a-')
 

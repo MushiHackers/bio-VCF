@@ -179,9 +179,25 @@ class TestPhasedReader(unittest.TestCase):
         assert hap.name == 'NA18855_NA18856'
         assert hap.is_transmitted == True
 
-    def test_fetch(self):
+    def test_fetch_region(self):
         t = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        t2 = t.fetch(region='191761-112976029')
+        assert t
+        assert t2
+        rec = t.next()
+        assert rec.rsID == 'rs12255619'
+        rec = t2.next()
+        assert rec.rsID == 'rs17156316'
 
+    def test_fetch_file(self):
+        t = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        t2 = t.fetch(fsock=fh('Tests/VCF/chr10.vcf'))
+        assert t
+        assert t2
+        rec = t.next()
+        assert rec.rsID == 'rs12255619'
+        rec = t2.next()
+        assert rec.rsID == 'rs2066314'
 
     def test_get_snp_with_specific_id(self):
         # TODO Dejw
@@ -195,10 +211,24 @@ class TestPhasedReader(unittest.TestCase):
 class TestPhasedWriter(unittest.TestCase):
 
     def testWriter(self):
-        pass
+        r = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+        t = phase.PhasedWriter(fh('Tests/VCF/testfile.phased','w'),r)
+        assert t
 
     def test_write_record(self):
-        pass
+        r = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+        out = StringIO()
+        t = phase.PhasedWriter(out, r)
+
+        for record in r:
+            t.write_record(record)
+        out.seek(0)
+        out_str = out.getvalue()
+        for line in out_str.split('\n'):
+            assert not line.endswith('\t')
+            assert len(line.split())==14
+            assert len(line.split('\t')) == 3
+        assert out_str.split('\n')[0]=='rsID\tposition_b36\tNA18855_A NA18855_B NA18855_NA18856_A NA18511_A NA18511_B NA18511_0_A NA19093_A NA19093_B NA19093_NA19092_A NA18501_A NA18501_B NA18501_NA18502_A'
 
     def test_close(self):
         pass

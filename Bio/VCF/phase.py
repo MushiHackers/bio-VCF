@@ -326,7 +326,7 @@ class PhasedReader(object):
         next(self.reader)
 
         resultreader.reader = (line for line in result)
-        
+
         # TODO check how it works with streams
 
         return resultreader
