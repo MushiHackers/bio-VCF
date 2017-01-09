@@ -1,8 +1,8 @@
 import codecs
 import gzip
 import sys
-
 import re
+from copy import deepcopy
 
 from Bio.VCF.parser import VCFReader
 
@@ -136,7 +136,7 @@ class PhasedReader(object):
             if sys.version > '3':
                 self._reader = codecs.getreader(encoding)(self._reader)
 
-        self._row_pattern = re.compile('\t| +')
+        #self._row_pattern = re.compile('\t| +')
 
         self.reader = (line.strip() for line in self._reader if line.strip())
         self.haplotypes = None
@@ -157,7 +157,7 @@ class PhasedReader(object):
         """
         line = next(self.reader)
         if line.startswith('rsID'):
-            row = self._row_pattern.split(line.rstrip())
+            row = list(filter(None, re.split("\s+",line.rstrip())))
             self._position = row[1]
             self.haplotypes = []
             for hap in row[2:]:
@@ -184,7 +184,7 @@ class PhasedReader(object):
     def next(self):
         """Return the next record in the file."""
         line = next(self.reader)
-        row = self._row_pattern.split(line.rstrip())
+        row = list(filter(None, re.split("\s+",line.rstrip())))
         rsID = row[0]
         pos = int(row[1])
         samples = []
@@ -266,7 +266,13 @@ class PhasedReader(object):
                         eof = True
                         continue
                     if rec.pos >= start and rec.pos < end:
-                        result.append(rec)
+                        rec_string = rec.rsID + '\t' + str(rec.pos) + '\t'
+                        for sample in rec.samples:
+                            if not sample.exists:
+                                rec_string += '- '
+                            else:
+                                rec_string += sample.nucleotide + ' '
+                        result.append(rec_string)
                 except StopIteration:
                     eof = True
 
@@ -283,7 +289,9 @@ class PhasedReader(object):
             rec = self.next()
             while not eof:
                 try:
+                    added = False
                     for v in vfile:
+                        added = False
                         if isinstance(vfile, pybedtools.bedtool.BedTool):
                             start = int(v[1]) - 1
                             end = start + len(v[3])
@@ -293,15 +301,35 @@ class PhasedReader(object):
                         if rec.pos < start or rec.pos > end:
                             continue
                         if rec.pos >= start and rec.pos < end:
-                            result.append(rec)
+                            rec_string = rec.rsID + '\t' + str(rec.pos) + '\t'
+                            for sample in rec.samples:
+                                if not sample.exists:
+                                    rec_string += '- '
+                                else:
+                                    rec_string += sample.nucleotide + ' '
+                            result.append(rec_string)
                             rec = self.next()
-                    rec = self.next()
+                            added = True
+                    if not added:
+                        rec = self.next()
                 except StopIteration:
                     eof = True
 
         for r in result:
             print(r)
-        return result
+        origin = self._reader
+        self.reader, self._reader = None,None
+        resultreader = deepcopy(self)
+        origin.seek(0)
+        self._reader = origin
+        self.reader = (line.strip() for line in self._reader if line.strip())
+        next(self.reader)
+
+        resultreader.reader = (line for line in result)
+        
+        # TODO check how it works with streams
+
+        return resultreader
 
 
 class PhasedWriter(object):

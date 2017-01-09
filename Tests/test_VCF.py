@@ -180,7 +180,8 @@ class TestPhasedReader(unittest.TestCase):
         assert hap.is_transmitted == True
 
     def test_fetch(self):
-        pass
+        t = phase.PhasedReader(filename='Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+
 
     def test_get_snp_with_specific_id(self):
         # TODO Dejw
@@ -193,7 +194,16 @@ class TestPhasedReader(unittest.TestCase):
 
 class TestPhasedWriter(unittest.TestCase):
 
-    def test(self):
+    def testWriter(self):
+        pass
+
+    def test_write_record(self):
+        pass
+
+    def test_close(self):
+        pass
+
+    def test_flush(self):
         pass
 
 class TestdbSNP(unittest.TestCase):
