@@ -858,6 +858,30 @@ class Reader(object):
         return result
 
 
+    def create_vcf(self,bedtool,vcf_name):
+        '''Method creates VCF.Reader object from provided pybedtools.BedTool object.
+        It is based on VCF.Writer class and uses Writer.write_record() method - new VCF file is saved to
+        bio-VCF/Bio/VCF directory.
+        BedTool object and name for new VCF file are required.
+        Method returns VCF.Reader object.'''
+        vcf_reader = self
+        name = vcf_name+'.vcf'
+        vcf_writer = Writer(open(name,'w'),vcf_reader)
+        vcf_writer.close()
+        f = open(name,'a')
+        for record in bedtool:
+            line = ""
+            for r in record.fields:
+                line += str(r) + " "
+            line = line[:-1]
+            line += "\n"
+            f.write(line)
+        f.close()
+        vcf = Reader(open(name))
+        return vcf
+
+
+
 class Writer(object):
     """VCF Writer. On Windows Python 2, open stream with 'wb'."""
 
