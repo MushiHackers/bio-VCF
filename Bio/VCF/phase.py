@@ -38,7 +38,7 @@ class _Haplotype(object):
             # in the other case we do not now - stays as None
 
     def __str__(self):
-        return "/%(name)s, transmitted: %(is_transmitted)s/" % self.__dict__
+        return "%(name)s, transmitted: %(is_transmitted)s" % self.__dict__
 
 
 class _Sample(object):
