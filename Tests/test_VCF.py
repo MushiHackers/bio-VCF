@@ -242,26 +242,23 @@ class TestdbSNP(unittest.TestCase):
 
 
 class Test1001Genomes(unittest.TestCase):
+
     def testThousandgenomes(self):
-        t = databases.thousandgenomes(file='VCF/thaliana_strains.csv', ecotype='88')
+        t = databases.thousandgenomes(ecotype='88')
         assert t
-        t = databases.thousandgenomes(file='VCF/thaliana_strains.csv', name="CYR")
+        t = databases.thousandgenomes(name="CYR")
         assert t.samples == ['88']
-        t = databases.thousandgenomes(file="VCF/thaliana_strains.csv", ecnumber="CS76790")
+        t = databases.thousandgenomes(ecnumber="CS76790")
         assert t.samples == ['88']
-
-    def testThousandgenomesCountry(self):
-        t = databases.thousandgenomes_country(file="VCF/thaliana_strains.csv", name="UKR")
+        t = databases.thousandgenomes(country="UKR")
         assert len(t) == 2
-
-    def testThousandgenomesGeo(self):
-        t = databases.thousandgenomes_geo(file="VCF/thaliana_strains.csv", latitude=(40.9063, 40.9064),
-                                          longitude=(-73.1494, -73.1492))
+        t = databases.thousandgenomes(latitude=(40.9063, 40.9064),longitude=(-73.1494, -73.1492))
         assert len(t) == 2
-        t = databases.thousandgenomes_geo(file="VCF/thaliana_strains.csv", latitude=(40.95, 41))
+        t = databases.thousandgenomes(latitude=(40.95, 41))
         assert len(t) == 4
-        t = databases.thousandgenomes_geo(file="VCF/thaliana_strains.csv", longitude=(-87.736, -87.734))
+        t = databases.thousandgenomes(longitude=(-87.736, -87.734))
         assert len(t) == 6
+
 
     # commented out because takes to much time (download of big files)
     '''def testDownload(self):
@@ -359,6 +356,12 @@ class TestFetch(unittest.TestCase):
             yy.append(i.start)
         assert yy == [110952750, 111182500]
 
+    def testCreateVCF(self):
+        reader = VCF.Reader(fh("VCF/chr13.vcf"))
+        t = reader.fetch('13')
+        reader.create_vcf(t,'test')
+        assert os.path.isfile('test.vcf')
+        os.system("rm -r test.vcf")
 
 class TestGatkOutput(unittest.TestCase):
     filename = 'gatk.vcf'

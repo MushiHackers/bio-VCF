@@ -626,9 +626,10 @@ class Reader(object):
 
     __next__ = next  # Python 3.X compatibility
 
-    def fetch_bed(self, bed_file, verbose = True):
+    def fetch_bed(self, bed_file, verbose = True, vcf = None):
         """Fetches VCF file records that correspond to regions contained in a BED file.
         Fetch is based on pybedtools 'intersect' method and returns a BedTool object of selected features.
+        If vcf = new_vcf_filename is provided method returns new VCF.Reader object.
         BED file must be specified and pybedtools package is required."""
 
         if not pybedtools:
@@ -644,12 +645,18 @@ class Reader(object):
         if verbose:
             for d in features:
                 print(d)
+
+        if vcf:
+            new_vcf = self.create_vcf(features, vcf)
+            return new_vcf
+
         return features
 
-    def fetch_bed_fsock(self, stream, verbose = True):
+    def fetch_bed_fsock(self, stream, verbose = False, vcf=None):
         '''This fetch works exactly the same as fetch_bed(), except the BED file is not required.
         Intervals used for intersection with a VCF file are provided in stream object of chosen BED file.
-        This method returns a BedTool object of selected VCF features.
+        This method returns a BedTool object of selected VCF features or new VCF.Reader object
+        if vcf = new_vcf_filename is specified.
         Pybedtools and stream of gzipped file are required.'''
 
         if not pybedtools:
@@ -671,6 +678,11 @@ class Reader(object):
                 if verbose:
                     for d in features:
                         print(d)
+
+                if vcf:
+                    new_vcf = self.create_vcf(features, vcf)
+                    return new_vcf
+
                 return features
             else:
                 raise Exception("Did not find any SV in provided intervals")
@@ -682,15 +694,21 @@ class Reader(object):
                 if verbose:
                     for d in features:
                         print(d)
+
+                if vcf:
+                    new_vcf = self.create_vcf(features, vcf)
+                    return new_vcf
+
                 return features
             else:
                 raise Exception("Did not find any SV in provided intervals")
 
-    def fetch_multilocal(self, chrom, local_list, verbose = True):
+    def fetch_multilocal(self, chrom, local_list, verbose = False, vcf = None):
         """Fetches VCF records that correspond to intervals provided in 'local_list'.
         Local_list must be a list of tuples (start, end), where start and end coordinates are in in the
         zero-based, half-open coordinate system.
-        Function returns selected records as a BedTool object.
+        Function returns selected records as a BedTool object or new VCF.Reader object
+        if vcf = vcf_new_filename is specified.
         Chrom must be specified and pybedtools package is required."""
 
         if not pybedtools:
@@ -716,14 +734,20 @@ class Reader(object):
         if verbose:
             for r in result:
                 print(r)
+
+        if vcf:
+            new_vcf = self.create_vcf(result, vcf)
+            return new_vcf
+
         return result
 
-    def fetch(self, chrom, interval = None, verbose = True):
+    def fetch(self, chrom, interval = None, verbose = True, vcf=None):
         """Fetches those records from VCF file that correspond to selected chromosome and
         fit in selected interval (if provided).
         This method creates one-line pybedtool feature based on selected chromosome (and interval = [start,stop]),
         and then uses it in pybedtools intersection method.
-        Function returns BedTool object representing selected VCF records.
+        Function returns BedTool object representing selected VCF records or new VCF.Reader object
+        if vcf = new_vcf_filename is provided.
         Chrom must be specified and interval is optional. Pybedtools package is required."""
 
         if not pybedtools:
@@ -747,7 +771,13 @@ class Reader(object):
             if verbose:
                 for r in result:
                     print(r)
+
+            if vcf:
+                new_vcf = self.create_vcf(result, vcf)
+                return new_vcf
+
             return result
+
         else:
             description = chrom + " " + str(interval[0]) + " " + str(interval[1])
             feature = pybedtools.BedTool(description, from_string=True)
@@ -755,12 +785,17 @@ class Reader(object):
             if verbose:
                 for r in result:
                     print(r)
+
+            if vcf:
+                new_vcf = self.create_vcf(result, vcf)
+                return new_vcf
+
             return result
 
-    def fetch_gff(self, gff_file, chrom, feature_type, location = None, verbose = True):
+    def fetch_gff(self, gff_file, chrom, feature_type, location = None, verbose = False, vcf = None):
         """This method enables to select desired features from a GFF/GFF2/GFF3 file and fetch VCF records
         that correspond to position of those features. Fetch is based on pybedtools 'intersection' method and returns
-        a BedTool object of chosen VCF records.
+        a BedTool object of chosen VCF records or new VCF.Reader object if vcf = new_vcf_filename is provided.
         Gff file, chrom and feature type are required as well as pybedtools package.
         Selection of desired features from a GFF/GFF2/GFF3 file with a specified location is possible when
         provided optional parameter 'location=[start,end]'."""
@@ -826,12 +861,18 @@ class Reader(object):
         if verbose:
             for d in features:
                 print(d)
+
+        if vcf:
+            new_vcf = self.create_vcf(features, vcf)
+            return new_vcf
+
         return features
 
-    def fetch_gff_fsock(self, stream, chrom, feature_type, location = None, verbose = True):
+    def fetch_gff_fsock(self, stream, chrom, feature_type, location = None, verbose = False, vcf = None):
         '''This method works exactly the same as fetch_gff(), except the GFF file is not required.
         The GFF file is replaced with a stream object from chosen database.
-        Method returns a BedTool object of selected VCF records.
+        Method returns a BedTool object of selected VCF records or new VCF.Reader object
+        if vcf = new_vcf_filename is provided.
         Pybedtools and stream of gzipped file are required.'''
 
         thetarfile = stream
@@ -854,8 +895,35 @@ class Reader(object):
         if verbose:
             for r in result:
                 print(r)
+        if vcf:
+            new_vcf = self.create_vcf(result,vcf)
+            return new_vcf
 
         return result
+
+
+    def create_vcf(self,bedtool,vcf_name):
+        '''Method creates VCF.Reader object from provided pybedtools.BedTool object.
+        It is based on VCF.Writer class and uses Writer.write_record() method - new VCF file is saved to
+        bio-VCF/Bio/VCF directory.
+        BedTool object and name for new VCF file are required.
+        Method returns VCF.Reader object.'''
+        vcf_reader = self
+        name = vcf_name+'.vcf'
+        vcf_writer = Writer(open(name,'w'),vcf_reader)
+        vcf_writer.close()
+        f = open(name,'a')
+        for record in bedtool:
+            line = ""
+            for r in record.fields:
+                line += str(r) + " "
+            line = line[:-1]
+            line += "\n"
+            f.write(line)
+        f.close()
+        vcf = Reader(open(name))
+        return vcf
+
 
 
 class Writer(object):
