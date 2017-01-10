@@ -359,6 +359,12 @@ class TestFetch(unittest.TestCase):
             yy.append(i.start)
         assert yy == [110952750, 111182500]
 
+    def testCreateVCF(self):
+        reader = VCF.Reader(fh("VCF/chr13.vcf"))
+        t = reader.fetch('13')
+        reader.create_vcf(t,'test.vcf')
+        assert os.path.isfile('test.vcf')
+        os.system("rm -r test.vcf")
 
 class TestGatkOutput(unittest.TestCase):
     filename = 'gatk.vcf'
