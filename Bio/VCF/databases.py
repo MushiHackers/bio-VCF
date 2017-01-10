@@ -11,17 +11,41 @@ except ImportError:
     from urllib import urlretrieve
 
 
-def thousandgenomes(file='thaliana_strains.csv', name = None, ecotype = None, ecnumber = None, country = None):
+def thousandgenomes(name = None, ecotype = None, ecnumber = None, country = None, longitude = None, latitude = None):
     '''This method enables to search through '1001 Genomes' database for VCF file corresponding to selected
-    Arabidopsis Thaliana strain or origin coutnry of A. Thaliana data.
-    Country name must be chosen from: "USA", "FRA", "CZE", "AUT", "KGZ", "TJK", "SWE", "UK", "GER", "KAZ",
-    "BEL", "CPV", "ESP", "RUS", "NED", "FIN", "SUI", "ITA", "IRL", "POR", "EST", "DEN", "IND", "LTU", "JPN", "POL", "NOR",
-    "CAN", "UKR", "AZE", "GEO", "ARM", "MAR", "CRO", "BUL", "GRC", "SVK", "ROU", "UZB", "SRB", "CHN", "IRN", "LBN", "MAR",
-    "AFG".
+        Arabidopsis Thaliana strain, origin country or longitude and/or latitude where Arabidopsis Thaliana live.
 
-    Search is made based on provided strain name / Eco type / EC number or country name.
+        Country name must be chosen from: "USA", "FRA", "CZE", "AUT", "KGZ", "TJK", "SWE", "UK", "GER", "KAZ",
+        "BEL", "CPV", "ESP", "RUS", "NED", "FIN", "SUI", "ITA", "IRL", "POR", "EST", "DEN", "IND", "LTU", "JPN", "POL", "NOR",
+        "CAN", "UKR", "AZE", "GEO", "ARM", "MAR", "CRO", "BUL", "GRC", "SVK", "ROU", "UZB", "SRB", "CHN", "IRN", "LBN", "MAR",
+        "AFG".
 
-    Method returns VCF.Reader object of selected VCF file stream.'''
+        Longitude and latitude should be provided as an interval - longitude = (int1, int2), latitude = (int1,int2).
+
+        Search is made based on provided strain name / Eco type / EC number / country name / longitude / latitude.
+
+        Method returns VCF.Reader object of selected VCF file stream from 1001 Genomes Database.'''
+
+    if name:
+        return _thousandgenomes_more(name = name)
+    if ecotype:
+        return _thousandgenomes_more(ecotype = ecotype)
+    if ecnumber:
+        return _thousandgenomes_more(ecnumber=ecnumber)
+    if country:
+        return _thousandgenomes_more(country=country)
+    if longitude and not latitude:
+        return _thousandgenomes_geo(longitude=longitude)
+    if latitude and not longitude:
+        return _thousandgenomes_geo(latitude=latitude)
+    if latitude and longitude:
+        return _thousandgenomes_geo(latitude=latitude, longitude=longitude)
+    else:
+        raise Exception('You must provide at least one argument')
+
+
+def _thousandgenomes_more(file='thaliana_strains.csv', name = None, ecotype = None, ecnumber = None, country = None):
+    '''Function used to search through '1001 Genomes Dabatase' in thousandgenomes() method.'''
 
     if not (ecotype or name or ecnumber or country):
         raise Exception('You must provide strain name / eco type / EC number or country')
@@ -34,7 +58,7 @@ def thousandgenomes(file='thaliana_strains.csv', name = None, ecotype = None, ec
                     l=line.split(',')
                     ecotype = l[0]
             if not ecotype:
-                raise Exception('Provided name does not refer to any strain name in out database')
+                raise Exception('Provided name does not refer to any strain name in our database')
         if ecnumber:
             pattern = ','+str(ecnumber)+','
             f = open(file,"r+")
@@ -101,32 +125,27 @@ def thousandgenomes(file='thaliana_strains.csv', name = None, ecotype = None, ec
             return resulting_vcf
 
 
-def thousandgenomes_geo(file='thaliana_strains.csv', longitude = None, latitude = None):
-    '''This method enables to select VCF files corresponding to Arabidopsis Thaliana strains living at chosen
-    longitude and / or latitude.
-
-    Longitude and latitude should be provided as an interval (int1, int2).
-
-    Method returns list of VCF.Reader objects created from selected file streams. '''
+def _thousandgenomes_geo(file='thaliana_strains.csv', longitude = None, latitude = None):
+    '''Function used to search through '1001 Genomes Dabatase' in thousandgenomes() method.'''
 
     f = open(file, "r+")
     f.readline()
     e_list = []
-    if longitude and not latitude:
+    if (longitude and not latitude):
         for line in f:
             l = line.split(',')
             if l[5] != "":
                 if longitude[0] <= float(l[5]) <= longitude[1]:
                     e_list.append(l[0])
 
-    elif latitude and not longitude:
+    elif (latitude and not longitude):
         for line in f:
             l = line.split(',')
             if l[4]!="":
                 if latitude[0] <= float(l[4]) <= latitude[1]:
                     e_list.append(l[0])
 
-    else: #elif latitude and longitude:
+    elif (latitude and longitude):
         for line in f:
             l = line.split(',')
             if l[4]!= "" and l[5] != "":
