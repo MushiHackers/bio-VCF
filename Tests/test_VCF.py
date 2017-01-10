@@ -249,10 +249,9 @@ class Test1001Genomes(unittest.TestCase):
         assert t.samples == ['88']
         t = databases.thousandgenomes(file="VCF/thaliana_strains.csv", ecnumber="CS76790")
         assert t.samples == ['88']
-
-    def testThousandgenomesCountry(self):
-        t = databases.thousandgenomes_country(file="VCF/thaliana_strains.csv", name="UKR")
+        t = t = databases.thousandgenomes(file="VCF/thaliana_strains.csv", country="UKR")
         assert len(t) == 2
+
 
     def testThousandgenomesGeo(self):
         t = databases.thousandgenomes_geo(file="VCF/thaliana_strains.csv", latitude=(40.9063, 40.9064),
@@ -362,7 +361,7 @@ class TestFetch(unittest.TestCase):
     def testCreateVCF(self):
         reader = VCF.Reader(fh("VCF/chr13.vcf"))
         t = reader.fetch('13')
-        reader.create_vcf(t,'test.vcf')
+        reader.create_vcf(t,'test')
         assert os.path.isfile('test.vcf')
         os.system("rm -r test.vcf")
 
