@@ -11,21 +11,20 @@ except ImportError:
     from urllib import urlretrieve
 
 
-
-def thousandgenomes(file='thaliana_strains.csv', **kwargs):
+def thousandgenomes(file='thaliana_strains.csv', name = None, ecotype = None, ecnumber = None, country = None):
     '''This method enables to search through '1001 Genomes' database for VCF file corresponding to selected
-    Arabidopsis Thaliana strain.
+    Arabidopsis Thaliana strain or origin coutnry of A. Thaliana data.
+    Country name must be chosen from: "USA", "FRA", "CZE", "AUT", "KGZ", "TJK", "SWE", "UK", "GER", "KAZ",
+    "BEL", "CPV", "ESP", "RUS", "NED", "FIN", "SUI", "ITA", "IRL", "POR", "EST", "DEN", "IND", "LTU", "JPN", "POL", "NOR",
+    "CAN", "UKR", "AZE", "GEO", "ARM", "MAR", "CRO", "BUL", "GRC", "SVK", "ROU", "UZB", "SRB", "CHN", "IRN", "LBN", "MAR",
+    "AFG".
 
-    Search is made based on provided strain name or strain Eco type / EC number.
+    Search is made based on provided strain name / Eco type / EC number or country name.
 
     Method returns VCF.Reader object of selected VCF file stream.'''
 
-    name = kwargs.get('name',None)
-    ecotype = kwargs.get('ecotype',None)
-    ecnumber = kwargs.get('ecnumber',None)
-
-    if not (ecotype or name or ecnumber):
-        raise Exception('You must provide strain name or strain eco type / EC number')
+    if not (ecotype or name or ecnumber or country):
+        raise Exception('You must provide strain name / eco type / EC number or country')
     if not ecotype:
         if name:
             pattern = ','+str(name)+','
@@ -45,6 +44,15 @@ def thousandgenomes(file='thaliana_strains.csv', **kwargs):
                     ecotype = l[0]
             if not ecotype:
                 raise Exception('Provided EC number does not refer to any strain in out database')
+        if country:
+            f = open(file, "r+")
+            pattern = ',' + str(country) + ','
+            e_list = []
+            for line in f:
+                if pattern in line:
+                    l = line.split(',')
+                    e_list.append(l[0])
+
     if ecotype:
         tfile = "http://1001genomes.org/data/GMI-MPI/releases/v3.1/intersection_snp_short_indel_vcf_with_quality_reference/"
         filename = "_snp_short_indel_with_quality_reference.vcf.gz"
@@ -58,63 +66,42 @@ def thousandgenomes(file='thaliana_strains.csv', **kwargs):
             vcf = parser.Reader(contents,"r")
             vcf._stream = thetarfile
             return vcf
-        elif sys.version < '3':
+        else: # sys.version < '3':
             gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
             vcf = parser.Reader(gzip_f,"r")
             vcf._stream = thetarfile
             return vcf
+    if e_list:
+        tfile = "http://1001genomes.org/data/GMI-MPI/releases/v3.1/intersection_snp_short_indel_vcf_with_quality_reference/"
+        filename = "_snp_short_indel_with_quality_reference.vcf.gz"
+        if sys.version > '3':
+            resulting_vcf = []
+            for e in e_list:
+                thetarfile = tfile + e + filename
+                page = urlopen(thetarfile)
+                gzip_f = gzip.GzipFile(mode='rb', fileobj=page)
+                reader = codecs.getreader("utf-8")
+                contents = reader(gzip_f)
+                vcf = parser.Reader(contents, 'r')
+                vcf._stream = thetarfile
+                resulting_vcf.append(vcf)
+                #print(resulting_vcf)
+            return resulting_vcf
+        else: # sys.version < '3':
+            resulting_vcf = []
+            for e in e_list:
+                # print e
+                thetarfile = tfile + e + filename
+                page = urlopen(thetarfile)
+                gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
+                vcf = parser.Reader(gzip_f, "r")
+                vcf._stream = thetarfile
+                resulting_vcf.append(vcf)
+                print(resulting_vcf)
+            return resulting_vcf
 
 
-def thousandgenomes_country(name, file='thaliana_strains.csv'):
-    '''This method enables to search through '1001 Genomes' database for VCF files corresponding to selected origin country of
-    Arabidopsis Thaliana data.
-
-    Country name is required and must be chosen from: "USA", "FRA", "CZE", "AUT", "KGZ", "TJK", "SWE", "UK", "GER", "KAZ",
-    "BEL", "CPV", "ESP", "RUS", "NED", "FIN", "SUI", "ITA", "IRL", "POR", "EST", "DEN", "IND", "LTU", "JPN", "POL", "NOR",
-    "CAN", "UKR", "AZE", "GEO", "ARM", "MAR", "CRO", "BUL", "GRC", "SVK", "ROU", "UZB", "SRB", "CHN", "IRN", "LBN", "MAR",
-    "AFG".
-
-     Method returns list of VCF.Reader objectc of selected VCF file streams.'''
-
-    f = open(file,"r+")
-    f.readline()
-    pattern = ','+str(name) + ','
-    e_list=[]
-    for line in f:
-        if pattern in line:
-            l = line.split(',')
-            e_list.append(l[0])
-    tfile = "http://1001genomes.org/data/GMI-MPI/releases/v3.1/intersection_snp_short_indel_vcf_with_quality_reference/"
-    filename = "_snp_short_indel_with_quality_reference.vcf.gz"
-    if sys.version > '3':
-        resulting_vcf = []
-        for e in e_list:
-            thetarfile = tfile + e + filename
-            page = urlopen(thetarfile)
-            gzip_f = gzip.GzipFile(mode='rb', fileobj=page)
-            reader = codecs.getreader("utf-8")
-            contents = reader(gzip_f)
-            vcf = parser.Reader(contents,'r')
-            vcf._stream = thetarfile
-            resulting_vcf.append(vcf)
-            print (resulting_vcf)
-        return resulting_vcf
-    elif sys.version < '3':
-        resulting_vcf=[]
-        for e in e_list:
-            #print e
-            thetarfile = tfile + e + filename
-            page = urlopen(thetarfile)
-            gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
-            vcf = parser.Reader(gzip_f, "r")
-            vcf._stream = thetarfile
-            resulting_vcf.append(vcf)
-            print (resulting_vcf)
-        return resulting_vcf
-
-
-
-def thousandgenomes_geo(file='thaliana_strains.csv', **kwargs):
+def thousandgenomes_geo(file='thaliana_strains.csv', longitude = None, latitude = None):
     '''This method enables to select VCF files corresponding to Arabidopsis Thaliana strains living at chosen
     longitude and / or latitude.
 
@@ -122,8 +109,6 @@ def thousandgenomes_geo(file='thaliana_strains.csv', **kwargs):
 
     Method returns list of VCF.Reader objects created from selected file streams. '''
 
-    longitude = kwargs.get('longitude', None)
-    latitude = kwargs.get('latitude', None)
     f = open(file, "r+")
     f.readline()
     e_list = []
@@ -141,7 +126,7 @@ def thousandgenomes_geo(file='thaliana_strains.csv', **kwargs):
                 if latitude[0] <= float(l[4]) <= latitude[1]:
                     e_list.append(l[0])
 
-    elif latitude and longitude:
+    else: #elif latitude and longitude:
         for line in f:
             l = line.split(',')
             if l[4]!= "" and l[5] != "":
@@ -160,9 +145,9 @@ def thousandgenomes_geo(file='thaliana_strains.csv', **kwargs):
             vcf = parser.Reader(contents, 'r')
             vcf._stream = thetarfile
             resulting_vcf.append(vcf)
-            print(resulting_vcf)
+            #print(resulting_vcf)
         return resulting_vcf
-    elif sys.version < '3':
+    else: # sys.version < '3':
         resulting_vcf = []
         print (resulting_vcf)
         for e in e_list:
@@ -174,7 +159,7 @@ def thousandgenomes_geo(file='thaliana_strains.csv', **kwargs):
             vcf = parser.Reader(gzip_f, "r")
             vcf._stream = thetarfile
             resulting_vcf.append(vcf)
-            print(resulting_vcf)
+            #print(resulting_vcf)
         return resulting_vcf
 
 def download(vcf_reader, path_filename):
