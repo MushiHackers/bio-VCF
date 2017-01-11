@@ -28,7 +28,7 @@ except ImportError:
     pybedtools = None
 
 from Bio import VCF
-from Bio.VCF import model, utils, parser, databases
+from Bio.VCF import model, utils, parser, databases, phase
 
 IS_PYTHON2 = sys.version_info[0] == 2
 IS_NOT_PYPY = 'PyPy' not in sys.version
@@ -153,38 +153,120 @@ class TestVcfSpecs(unittest.TestCase):
                 assert contig.length == 3000
 
 
+class TestPhasedReader(unittest.TestCase):
+    def testReader(self):
+        t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+        assert t
+        assert len(t.haplotypes) == 12
+        t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        assert t
+        t = phase.PhasedReader(fsock=fh('VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz', 'rb'))
+        assert t
+        assert t.filedata == {'chrom': '10', 'region': 'yri', 'data_type': 'duos'}
+
+    def test_next(self):
+        t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        rec = t.next()
+        assert rec.rsID == 'rs12255619'
+        assert rec.pos == 88481
+        assert len(rec.samples) == 12
+        samp = t.next().samples
+        assert samp[3].nucleotide == 'T'
+        assert samp[1].exists == True
+        assert samp[6].is_unresolved == False
+        hap = t.next().samples[2].haplotype
+        assert hap.name == 'NA18855_NA18856'
+        assert hap.is_transmitted == True
+
+    def test_fetch_region(self):
+        t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        t2 = t.fetch(region='191761-112976029')
+        assert t
+        assert t2
+        rec = t.next()
+        assert rec.rsID == 'rs12255619'
+        rec = t2.next()
+        assert rec.rsID == 'rs17156316'
+
+    def test_fetch_file(self):
+        t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        t2 = t.fetch(fsock=fh('VCF/chr10.vcf'))
+        assert t
+        assert t2
+        rec = t.next()
+        assert rec.rsID == 'rs12255619'
+        rec = t2.next()
+        assert rec.rsID == 'rs12255619'
+        rec = t2.next()
+        assert rec.rsID == 'rs1904671'
+        assert rec.samples[1].is_not_matching_snp == True
+
+    def test_get_snp_with_specific_id(self):
+        # TODO Dejw
+        pass
+
+    def test_get_snp_within_range(self):
+        # TODO Dejw
+        pass
+
+
+class TestPhasedWriter(unittest.TestCase):
+    def testWriter(self):
+        r = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+        t = phase.PhasedWriter(fh('VCF/testfile.phased', 'w'), r)
+        assert t
+        t.flush()
+        t.close()
+
+    def test_write_record(self):
+        r = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+        out = StringIO()
+        t = phase.PhasedWriter(out, r)
+
+        for record in r:
+            t.write_record(record)
+        out.seek(0)
+        out_str = out.getvalue()
+        for line in out_str.split('\n')[:-1]:
+            assert not line.endswith('\t')
+            assert len(line.split('\t')) == 3
+            assert len(line.split(' ')) == 13
+
+        assert out_str.split('\n')[
+                   0] == 'rsID\tposition_b36\tNA18855_A NA18855_B NA18855_NA18856_A NA18511_A NA18511_B NA18511_0_A NA19093_A NA19093_B NA19093_NA19092_A NA18501_A NA18501_B NA18501_NA18502_A '
+        assert out_str.split('\n')[-2] == 'rs11528930\t135327873\tT T T T T T T T T T T T '
+
+
+class TestdbSNP(unittest.TestCase):
+    # TODO Zojka
+    pass
+
+
 class Test1001Genomes(unittest.TestCase):
 
     def testThousandgenomes(self):
-        t = databases.thousandgenomes(file='VCF/thaliana_strains.csv', ecotype = '88')
+        t = databases.thousandgenomes(ecotype='88')
         assert t
-        t = databases.thousandgenomes(file='VCF/thaliana_strains.csv', name = "CYR")
+        t = databases.thousandgenomes(name="CYR")
         assert t.samples == ['88']
-        t = databases.thousandgenomes(file="VCF/thaliana_strains.csv", ecnumber= "CS76790")
+        t = databases.thousandgenomes(ecnumber="CS76790")
         assert t.samples == ['88']
-
-
-    def testThousandgenomesCountry(self):
-        t = databases.thousandgenomes_country(file="VCF/thaliana_strains.csv", name="UKR")
+        t = databases.thousandgenomes(country="UKR")
         assert len(t) == 2
-
-
-    def testThousandgenomesGeo(self):
-        t = databases.thousandgenomes_geo(file="VCF/thaliana_strains.csv", latitude=(40.9063, 40.9064),
-                                          longitude=(-73.1494, -73.1492))
+        t = databases.thousandgenomes(latitude=(40.9063, 40.9064),longitude=(-73.1494, -73.1492))
         assert len(t) == 2
-        t = databases.thousandgenomes_geo(file="VCF/thaliana_strains.csv", latitude=(40.95,41))
+        t = databases.thousandgenomes(latitude=(40.95, 41))
         assert len(t) == 4
-        t = databases.thousandgenomes_geo(file="VCF/thaliana_strains.csv", longitude=(-87.736, -87.734))
-        assert len(t) ==  6
+        t = databases.thousandgenomes(longitude=(-87.736, -87.734))
+        assert len(t) == 6
 
 
-    def testDownload(self):
-        t = databases.thousandgenomes_geo(file = "VCF/thaliana_strains.csv",latitude=(40.9063, 40.9064), longitude=(-73.1494, -73.1492))
+    # commented out because takes to much time (download of big files)
+    '''def testDownload(self):
+        t = databases.thousandgenomes(latitude=(40.9063, 40.9064), longitude=(-73.1494, -73.1492))
         databases.download(t[0],'../database_download.gz')
         assert os.path.isfile('../database_download.gz')
-        os.system("rm -r ../database_download.gz")
-
+        os.system("rm -r ../database_download.gz")'''
 
 
 @unittest.skipUnless(pybedtools, "test requires installation of PyBedTools.")
@@ -219,17 +301,17 @@ class TestFetch(unittest.TestCase):
     def testFetch(self):
         reader = VCF.Reader(fh("VCF/chr13.vcf"))
         x = []
-        for i in reader.fetch('13', [46, 100000000]):
+        for i in reader.fetch('13', interval=[46, 100000000]):
             x.append(i.start)
         assert x == [50, 60, 85837130, 9542346]
         y = []
-        for i in reader.fetch('chr13', [46, 100000000]):
+        for i in reader.fetch('chr13', interval=[46, 100000000]):
             y.append(i.start)
         assert y == [50, 60, 85837130, 9542346]
-        z=[]
+        z = []
         for i in reader.fetch('13'):
             z.append(i.start)
-        assert len(x) == 10
+        assert len(z) == 10
         q = []
         for i in reader.fetch('chr13'):
             q.append(i.start)
@@ -275,6 +357,12 @@ class TestFetch(unittest.TestCase):
             yy.append(i.start)
         assert yy == [110952750, 111182500]
 
+    def testCreateVCF(self):
+        reader = VCF.Reader(fh("VCF/chr13.vcf"))
+        t = reader.fetch('13')
+        reader.create_vcf(t,'test')
+        assert os.path.isfile('test.vcf')
+        os.system("rm -r test.vcf")
 
 class TestGatkOutput(unittest.TestCase):
     filename = 'gatk.vcf'
@@ -1473,6 +1561,8 @@ class TestOpenMethods(unittest.TestCase):
         self.assertEqual(self.samples, r.samples)
 
 
+# TODO Zoanna to wyzej nizej, do poszukania i sprawdzenia czy dziala
+
 '''class TestSampleFilter(unittest.TestCase):
     @unittest.skipUnless(IS_PYTHON2, "test broken for Python 3")
     def testCLIListSamples(self):
@@ -1739,6 +1829,8 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRecord))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCall))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Test1001Genomes))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedReader))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedWriter))
 ##suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue201))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue234))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue246))

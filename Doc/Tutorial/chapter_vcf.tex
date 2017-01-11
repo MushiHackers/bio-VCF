@@ -1,0 +1,311 @@
+\chapter{Bio.VCF: handling VCF and phased files}
+
+\section{Retrieving records from VCF file}
+
+This chapter gives an overview of the functionality of fetch methods included in \verb|Bio.VCF| \verb|parser| module.
+Those functions enable users to retrieve particular records from VCF file describing structural variants,
+depending on provided argument - for example interval of positions within which we seek for structural variants, a list
+of such positions or feature type within which structural variants are present.
+
+
+Functionality of those fetch methods includes retrieving structural variants corresponding to ranges
+provided in BED files as well as features from GFF files. If you are not familiar with BED file format
+you might be interested in \href{http://www.ensembl.org/info/website/upload/bed.html}{BED} and
+\href{http://gmod.org/wiki/GFF3}{GFF}.
+
+
+Most of implementation is based on \verb|pybedtools| module - \href{https://daler.github.io/pybedtools/}{pybedtools},
+which support many file formats including VCF, BED and GFF, therefore \verb|pybedtools| package is required.
+
+
+Due to enormous sizes of some BED and GFF files, some fetch methods are intended to enable user to provide
+stream of particular GFF/BED file from chosen database. It is a beneficial solution allowing users to avoid
+the necessity of saving very big files to local disc.
+
+
+Below there is a brief description of each fetch method.
+All of them have arguments \verb|verbose| and \verb|vcf| specifying if result should be printed to stdout
+and whether new VCF.Reader object should be created, respectively.
+
+\begin{description}
+  \item[\texttt{fetch\_bed(bed\_file, verbose = True, vcf = None)}] \
+
+    Fetches VCF file records that correspond to regions included in a BED file.
+    Fetch is based on pybedtools 'intersect' method and returns a BedTool / VCF.Reader object of selected features.
+    BED file must be specified.
+
+  \item[\texttt{fetch\_bed\_fsock(stream, verbose = False, vcf=None)}] \
+
+    This fetch works exactly the same as fetch\_bed(), except the BED file is not required.
+    Intervals used for intersection with a VCF file are provided in stream object of chosen BED file.
+    This method returns a BedTool object of selected VCF features or new VCF.Reader object.
+    Stream of gzipped BED file is required.
+
+  \item[\texttt{fetch\_multilocal(chrom, local\_list, verbose = False, vcf = None)}] \
+
+    Fetches VCF records that correspond to intervals provided in 'local\_list'.
+    Local\_list must be a list of tuples (start, end), where start and end coordinates are in the
+    zero-based, half-open coordinate system. Function returns selected records as a BedTool object
+    or new VCF.Reader object. Chromosome must be specified.
+
+  \item[\texttt{fetch(chrom, interval = None, verbose = True, vcf=None)}] \
+
+    Fetches those records from VCF file that correspond to selected chromosome and
+    fit in selected interval (if provided).
+    This method creates one-line pybedtool feature based on selected chromosome (and interval = [start,stop]),
+    and then uses it in pybedtools intersection method.
+    Function returns BedTool object representing selected VCF records or new VCF.Reader object.
+    Chromosome must be specified and interval is optional.
+
+  \item[\texttt{fetch\_gff(gff\_file, chrom, feature\_type, location = None, verbose = False, vcf = None)}] \
+
+    This method enables to select desired features from a GFF/GFF2/GFF3 file and fetch VCF records
+    that correspond to position of those features. Fetch is based on pybedtools 'intersection' method and returns
+    a BedTool object of chosen VCF records or new VCF.Reader object.
+    Gff file, chromosome and feature type are required.
+    Selection of desired features from a GFF/GFF2/GFF3 file with a specified location is possible when
+    provided optional parameter 'location=[start,end]'.
+
+  \item[\texttt{fetch\_gff\_fsock(self, stream, chrom, feature\_type, location = None, verbose = False, vcf = None)}] \
+
+    This method works exactly the same as fetch\_gff(), except the GFF file is not required.
+    The GFF file is replaced with a stream object from chosen database.
+    Method returns a BedTool object of selected VCF records or new VCF.Reader object.
+    Stream of gzipped file must be provided.
+
+\end{description}
+
+
+The following sections present exemplary use of fetch methods.
+
+
+\subsection{Create VCF.Reader object}
+\label{sec:object}
+
+
+Since all fetch methods are included in VCF.Reader class, we need to create \verb|Reader| object. But first of all,
+we need to import Bio.VCF library:
+
+
+\begin{verbatim}
+>>> from Bio import VCF
+>>> from VCF import parser
+
+\end{verbatim}
+
+and then create a VCF.Reader obcject. We can either create object from a local file or we can provide fsock
+of corresponding VCF file:
+
+
+\begin{verbatim}
+>>> vcf=parser.Reader(open('Tests/VCF/chr13.vcf'))
+
+\end{verbatim}
+
+\subsubsection{Fetching records depending on BED/GFF file}
+
+
+Suppose we have a BED file with positions of CTCF motif binding sites. We want to collect all structural variants
+located within those sites. If we have this BED file locally on our computer, then we should simply run:
+
+
+\begin{verbatim}
+>>> vcf.fetch_bed('VCF/chr13bed.bed')
+
+\end{verbatim}
+
+
+or if we don't, we should provide a stream of chosen BED file and use:
+
+
+\begin{verbatim}
+>>> stream="ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/BED/bed_chr_13.bed.gz"
+>>> vcf.fetch_bed_fsock(stream)
+
+\end{verbatim}
+
+
+Selected structural variants are returned in BedTools object (if vcf = None) and can be easily accessed, for example
+if we want to see all information of every selected record:
+
+
+\begin{verbatim}
+>>> bed = vcf.fetch_bed('VCF/chr13bed.bed')
+>>> for b in bed:
+>>>     print (b.fields)
+['chr13', '10', '.', 'G', 'GGT', '.', 'PASS', 'DP=91;SS=1;SSC=2;GPV=3.0109E-23;SPV=5.8324E-1',
+'GT:GQ:DP:RD:AD:FREQ:DP4','0/1:.:36:13:22:62.86%:2,11,1,21']
+['chr13', '20', '.', 'GT', 'G', '.', 'PASS', 'DP=77;SS=1;SSC=2;GPV=2.4504E-29;SPV=6.0772E-1',
+'GT:GQ:DP:RD:AD:FREQ:DP4','1/1:.:28:5:22:81.48%:0,5,1,21']
+['chr13', '40', '.', 'AAAC', 'A', '.', 'PASS', 'DP=42;SS=1;SSC=12;GPV=7.3092E-18;SPV=6.278E-2',
+'GT:GQ:DP:RD:AD:FREQ:DP4','0/1:.:13:4:9:69.23%:4,0,9,0']
+['chr13', '50', '.', 'TC', 'T', '.', 'PASS', 'DP=41;SS=1;SSC=2;GPV=9.8874E-23;SPV=5.3659E-1',
+'GT:GQ:DP:RD:AD:FREQ:DP4','1/1:.:22:1:21:95.45%:1,0,15,6']
+['chr13', '60', '.', 'T', 'TTAA', '.', 'PASS', 'DP=27;SS=1;SSC=2;GPV=1.4382E-14;SPV=5.5556E-1',
+'GT:GQ:DP:RD:AD:FREQ:DP4','1/1:.:12:0:12:100%:0,0,0,12']
+\end{verbatim}
+
+
+Similarly, we can extract structural variants corresponding to positions of chosen features from GFF file. Suppose
+we have a GFF3 file of Homo sapiens, but we are interested only in variants located within pseudogenes
+at 13th chromosome. \verb|fetch_gff()| method is what we need:
+
+
+\begin{verbatim}
+>>> vcf.fetch_gff('VCF/HS_fetch_gff.gff3', '13', 'pseudogene')
+\end{verbatim}
+
+
+What is more, if we want variant within pseudogenes which are within specific positions, we can add
+\verb|location| argument:
+
+
+\begin{verbatim}
+>>> vcf.fetch_gff('VCF/HS_fetch_gff.gff3', '13', 'pseudogene', location=[1, 18270822])
+Finding SV corresponding to pseudogene and chosen position
+chr13	20	.	GT	G	.	PASS	DP=77;SS=1;SSC=2;GPV=2.4504E-29;SPV=6.0772E-1	GT:GQ:DP:RD:AD:FREQ:DP4
+1/1:.:28:5:22:81.48%:0,5,1,21
+chr13	30	.	AC	A	.	PASS	DP=22;SS=1;SSC=7;GPV=1.3117E-10;SPV=1.9481E-1	GT:GQ:DP:RD:AD:FREQ:DP4
+1/1:.:10:2:8:80%:0,2,0,8
+chr13	40	.	AAAC	A	.	PASS	DP=42;SS=1;SSC=12;GPV=7.3092E-18;SPV=6.278E-2	GT:GQ:DP:RD:AD:FREQ:DP4
+0/1:.:13:4:9:69.23%:4,0,9,0
+chr13	50	.	TC	T	.	PASS	DP=41;SS=1;SSC=2;GPV=9.8874E-23;SPV=5.3659E-1	GT:GQ:DP:RD:AD:FREQ:DP4
+1/1:.:22:1:21:95.45%:1,0,15,6
+chr13	60	.	T	TTAA	.	PASS	DP=27;SS=1;SSC=2;GPV=1.4382E-14;SPV=5.5556E-1	GT:GQ:DP:RD:AD:FREQ:DP4
+1/1:.:12:0:12:100%:0,0,0,12
+chr13	9542346	.	T	TTAA	.	PASS	DP=27;SS=1;SSC=2;GPV=1.4382E-14;SPV=5.5556E-1	GT:GQ:DP:RD:AD:FREQ:DP4
+1/1:.:12:0:12:100%:0,0,0,12
+\end{verbatim}
+
+
+As in case of fetch depending on BED file, we can use stream of GFF file instead of local file.
+
+
+\subsubsection{Fetching records depending on interval}
+
+
+We might have a VCF file which have records referring to different chromosomes. In such case, we want to be able to
+analyze only those variants that are located on chromosome of our interest. We can simply use \verb|fetch()| method
+on our \verb|vcf| object, but as we want to analyze fetched records further, we should use argument specifying
+new vcf.Reader object:
+
+
+\begin{verbatim}
+>>> v=vcf.fetch('chr13',vcf='new_vcf')
+>>> v
+<parser.Reader object at 0x7eff4df8f2b0>
+
+\end{verbatim}
+
+
+Now, when we have all variants located on chromosome 13, we can choose only those within specified intervals:
+
+
+\begin{verbatim}
+>>> v.fetch_multilocal('chr13',[[10, 30], [80, 100], [85837129, 100000000]])
+chr13	20	.	GT	G	.	PASS	DP=77;SS=1;SSC=2;GPV=2.4504E-29;SPV=6.0772E-1	GT:GQ:DP:RD:AD:FREQ:DP4
+1/1:.:28:5:22:81.48%:0,5,1,21
+chr13	30	.	AC	A	.	PASS	DP=22;SS=1;SSC=7;GPV=1.3117E-10;SPV=1.9481E-1	GT:GQ:DP:RD:AD:FREQ:DP4
+1/1:.:10:2:8:80%:0,2,0,8
+chr13	85837130	.	T	TTAA	.	PASS	DP=27;SS=1;SSC=2;GPV=1.4382E-14;SPV=5.5556E-1	GT:GQ:DP:RD:AD:FREQ:DP4
+1/1:.:12:0:12:100%:0,0,0,12
+<BedTool(/tmp/pybedtools.dbyw5lct.tmp)>
+
+\end{verbatim}
+
+
+VCF file created after \verb|vcf.fetch| is saved to local disc and can be easily achieved with
+VCF.Reader() anytime needed.
+
+\section{Available VCF Databases}
+
+Bio.VCF.databases is a Biopython module that supports \verb|1001 Genomes| and \verb|dbSNP| databases.
+Since most of VCF files are of enormous sizes, it is convenient to use streams instead of local files.
+Functionality of this package enables users to search through above-mentioned databases, and use selected streams
+of VCF files as VCF.Reader objects in further analysis.
+
+
+If you are not familiar with \verb|1001 Genomes| and \verb|dbSNP| databases you might be interested in
+\href{http://1001genomes.org/}{1001 Genomes} and \href{https://www.ncbi.nlm.nih.gov/SNP/}{dbSNP}. However, following
+sections provide brief description of methods searching through both databases as well as some information about them.
+
+
+\subsection{1001 Genomes database}
+\label{sec:object}
+
+
+\verb|1001 Genomes| database was launched to discover whole-genome variation of the \verb|Arabidopsis Thaliana| strains.
+\verb|Bio.VCf.databases| module supports current database's version which includes analysis of 1135 genomes achieved
+during the first phase of the project.
+Searching through the database can be based on strain's name, ec number, eco type, as well as on information of its
+origin - such as country, longitude or latitude.
+
+
+Below there is a brief description of \verb|thousandgenome()| methods:
+
+
+\begin{description}
+  \item[\texttt{thousandgenomes(name, ecotype, ecnumber, country, longitude, latitude)}] \
+
+    This method enables to search through \verb|1001 Genomes| database for VCF file corresponding to selected
+    Arabidopsis Thaliana strain, origin country or longitude and/or latitude where Arabidopsis Thaliana live.
+
+    Country name must be chosen from: "USA", "FRA", "CZE", "AUT", "KGZ", "TJK", "SWE", "UK", "GER", "KAZ",
+    "BEL", "CPV", "ESP", "RUS", "NED", "FIN", "SUI", "ITA", "IRL", "POR", "EST", "DEN", "IND", "LTU", "JPN", "POL", "NOR",
+    "CAN", "UKR", "AZE", "GEO", "ARM", "MAR", "CRO", "BUL", "GRC", "SVK", "ROU", "UZB", "SRB", "CHN", "IRN", "LBN", "MAR",
+    "AFG".
+    Longitude and latitude should be provided as an interval - longitude = (int1, int2), latitude = (int1,int2).
+    Strain names, eco types and ec numbers are unique, country, while longitude and latitude enables users to seek for
+    multiple VCF files corresponding to selected features.
+    Method returns VCF.Reader object of selected VCF file stream from 1001 Genomes Database or a list of
+    such VCF.Reader objects.
+
+\item[\texttt{download(vcf\_reader, path\_filename)}] \
+
+    Downloads VCF file corresponding to stream on which provided VCF.Reader object is initialized.
+    VCF.Reader object as well as download directory and filename are required.
+
+
+\end{description}
+
+Let's try some functionality of the module:
+
+Suppose we want to analyse structural variants identified in "CYR" strain of Arabidopsis Thaliana. First of all,
+we need to find VCF file corresponding to our selected strain. To do so, we can simply type:
+
+
+\begin{verbatim}
+>>> from Bio.VCF import databases
+>>> vcf = databases.thousandgenomes("CYR")
+>>> vcf
+<Bio.VCF.parser.Reader object at 0x7f4bf49feef0>
+
+\end{verbatim}
+
+
+Now, we can continue analysis for example by running methods from VCF.Reader class.
+
+
+We may also be interested in retrieving all structural variants that are identified in strains occupying a particular
+territory, such as area of longitude (-73.1494, -73.1492) and latitude (40.9063, 40.9064). Module's \verb|thousandgenomes()|
+method can manage this:
+
+
+\begin{verbatim}
+>>> vcf_list = databases.thousandgenomes(longitude=(-73.1494, -73.1492), latitude=(40.9063, 40.9064))
+>>> vcf_list
+[<Bio.VCF.parser.Reader object at 0x7f4bf4a0d978>, <Bio.VCF.parser.Reader object at 0x7f4bf4a1e080>]
+
+\end{verbatim}
+
+
+Method returned two VCF.Reader objects which we can analyse further or simply download to local disc:
+
+
+\begin{verbatim}
+>>> for v in vcf_list:
+>>>     databases.download(v,'database_download.gz')
+\end{verbatim}
+
+\subsection{dbSNP database}
+todo Zojka
