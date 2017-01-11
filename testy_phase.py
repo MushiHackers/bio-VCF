@@ -3,6 +3,13 @@ import re
 import pybedtools
 from Bio import VCF
 reader = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+reader2 = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+
+rec1 = reader.next()
+rec2 = reader2.next()
+
+print(rec1==rec2)
+sys.exit()
 ##to Ci daje caly plik wczytany jako obiekt reader
 # print(reader.filedata)
 # ##to informacje o pliku jesli sa dostepne

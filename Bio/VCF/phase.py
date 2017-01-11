@@ -15,8 +15,6 @@ except ImportError:
 class _Haplotype(object):
     """Haplotype info"""
 
-    # TODO equals
-
     def __init__(self, hap):
         self.is_transmitted = None
         if len(hap.split('_')) > 1:
@@ -37,14 +35,15 @@ class _Haplotype(object):
             self.is_transmitted = False
             # in the other case we do not now - stays as None
 
+    def __eq__(self,other):
+        return self.name==self.name and self.is_transmitted == self.is_transmitted
+
     def __str__(self):
         return "%(name)s, transmitted: %(is_transmitted)s" % self.__dict__
 
 
 class _Sample(object):
     """Sample info"""
-
-    # TODO equals
 
     def __init__(self, sample, haplotype, rsID):
         self.nucleotide = None
@@ -73,6 +72,10 @@ class _Sample(object):
                 self.is_unresolved = False
             self.nucleotide = sample
 
+    def __eq__(self, other):
+        return self.rsID == other.rsID and self.haplotype == other.haplotype and self.nucleotide == other.nucleotide and self.is_unresolved == other.is_unresolved and self.exists == other.exists
+        # the only thing not compares it is_not_matching_snp
+
     def __str__(self):
         if self.exists:
             return "%(nucleotide)s" % self.__dict__
@@ -92,8 +95,6 @@ class _PhasedRecord(object):
     - ``pos`` contains the physical position of these SNPs in the particular chromosome.
     """
 
-    # TODO equals
-
     def __init__(self, rsID, pos, samples=None):
         self.rsID = rsID
         self.pos = pos
@@ -101,6 +102,14 @@ class _PhasedRecord(object):
 
     def __iter__(self):
         return iter(self.samples)
+
+    def __eq__(self, other):
+        if len(self.samples)!= len(other.samples):
+            return False
+        if sorted(self.samples, key=lambda s: (s.haplotype.name, s.haplotype.is_transmitted)) != sorted(other.samples, key=lambda s: (s.haplotype.name, s.haplotype.is_transmitted)):
+            return False
+        return self.rsID == self.rsID and self.pos == self.pos
+
 
     def __str__(self):
         samples_string = ''
@@ -112,8 +121,6 @@ class _PhasedRecord(object):
 
 class PhasedReader(object):
     """ Reader for a phased files from HAPmap project, iterator """
-
-    # TODO equals
 
     def __init__(self, filename=None, fsock=None, compressed=None, encoding='ascii'):
         """ Create a new Reader for a phased file.
@@ -246,6 +253,8 @@ class PhasedReader(object):
             the alleles in vcf file.
         - other arguments are for a vcf reader.
 
+        WE TREAT PHASED FILES AS SORTED in fetch. Keep that in mind.
+
         filename/fsock fetching needs pybedtools
         """
         if not (filename or fsock or region):
@@ -265,11 +274,6 @@ class PhasedReader(object):
             start, end = region.split('-')
             start = int(start)
             end = int(end)
-
-            # TODO decide
-            # should we treat them as sorted as below (both VCF and phased)
-            # if not should we sort them first
-            # or should we treat them just as unsorted?
 
             while not eof:
                 try:
@@ -358,8 +362,6 @@ class PhasedReader(object):
                 except StopIteration:
                     eof = True
 
-        # TODO add checking the haplotypes and how it should be outputted (. or a letter or what)
-
         if verbose:
             for r in result:
                 print(r)
@@ -372,9 +374,6 @@ class PhasedReader(object):
         next(self.reader)
 
         resultreader.reader = (line for line in result)
-
-        # TODO check how it works with streams
-
         return resultreader
 
 
