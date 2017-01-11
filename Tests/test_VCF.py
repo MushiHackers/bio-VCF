@@ -262,7 +262,7 @@ class Test1001Genomes(unittest.TestCase):
 
     # commented out because takes to much time (download of big files)
     '''def testDownload(self):
-        t = databases.thousandgenomes_geo(file = "VCF/thaliana_strains.csv",latitude=(40.9063, 40.9064), longitude=(-73.1494, -73.1492))
+        t = databases.thousandgenomes(latitude=(40.9063, 40.9064), longitude=(-73.1494, -73.1492))
         databases.download(t[0],'../database_download.gz')
         assert os.path.isfile('../database_download.gz')
         os.system("rm -r ../database_download.gz")'''
