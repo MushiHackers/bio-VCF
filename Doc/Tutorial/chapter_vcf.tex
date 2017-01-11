@@ -1,4 +1,6 @@
-\chapter{Retrieving records from VCF file}
+\chapter{Bio.VCF: handling VCF and phased files}
+
+\section{Retrieving records from VCF file}
 
 This chapter gives an overview of the functionality of fetch methods included in \verb|Bio.VCF| \verb|parser| module.
 Those functions enable users to retrieve particular records from VCF file describing structural variants,
@@ -77,7 +79,7 @@ and whether new VCF.Reader object should be created, respectively.
 The following sections present exemplary use of fetch methods.
 
 
-\section{Create VCF.Reader object}
+\subsection{Create VCF.Reader object}
 \label{sec:object}
 
 
@@ -100,7 +102,7 @@ of corresponding VCF file:
 
 \end{verbatim}
 
-\subsection{Fetching records depending on BED/GFF file}
+\subsubsection{Fetching records depending on BED/GFF file}
 
 
 Suppose we have a BED file with positions of CTCF motif binding sites. We want to collect all structural variants
@@ -179,7 +181,7 @@ chr13	9542346	.	T	TTAA	.	PASS	DP=27;SS=1;SSC=2;GPV=1.4382E-14;SPV=5.5556E-1	GT:G
 As in case of fetch depending on BED file, we can use stream of GFF file instead of local file.
 
 
-\subsection{Fetching records depending on interval}
+\subsubsection{Fetching records depending on interval}
 
 
 We might have a VCF file which have records referring to different chromosomes. In such case, we want to be able to
@@ -214,3 +216,96 @@ chr13	85837130	.	T	TTAA	.	PASS	DP=27;SS=1;SSC=2;GPV=1.4382E-14;SPV=5.5556E-1	GT:
 
 VCF file created after \verb|vcf.fetch| is saved to local disc and can be easily achieved with
 VCF.Reader() anytime needed.
+
+\section{Available VCF Databases}
+
+Bio.VCF.databases is a Biopython module that supports \verb|1001 Genomes| and \verb|dbSNP| databases.
+Since most of VCF files are of enormous sizes, it is convenient to use streams instead of local files.
+Functionality of this package enables users to search through above-mentioned databases, and use selected streams
+of VCF files as VCF.Reader objects in further analysis.
+
+
+If you are not familiar with \verb|1001 Genomes| and \verb|dbSNP| databases you might be interested in
+\href{http://1001genomes.org/}{1001 Genomes} and \href{https://www.ncbi.nlm.nih.gov/SNP/}{dbSNP}. However, following
+sections provide brief description of methods searching through both databases as well as some information about them.
+
+
+\subsection{1001 Genomes database}
+\label{sec:object}
+
+
+\verb|1001 Genomes| database was launched to discover whole-genome variation of the \verb|Arabidopsis Thaliana| strains.
+\verb|Bio.VCf.databases| module supports current database's version which includes analysis of 1135 genomes achieved
+during the first phase of the project.
+Searching through the database can be based on strain's name, ec number, eco type, as well as on information of its
+origin - such as country, longitude or latitude.
+
+
+Below there is a brief description of \verb|thousandgenome()| methods:
+
+
+\begin{description}
+  \item[\texttt{thousandgenomes(name, ecotype, ecnumber, country, longitude, latitude)}] \
+
+    This method enables to search through \verb|1001 Genomes| database for VCF file corresponding to selected
+    Arabidopsis Thaliana strain, origin country or longitude and/or latitude where Arabidopsis Thaliana live.
+
+    Country name must be chosen from: "USA", "FRA", "CZE", "AUT", "KGZ", "TJK", "SWE", "UK", "GER", "KAZ",
+    "BEL", "CPV", "ESP", "RUS", "NED", "FIN", "SUI", "ITA", "IRL", "POR", "EST", "DEN", "IND", "LTU", "JPN", "POL", "NOR",
+    "CAN", "UKR", "AZE", "GEO", "ARM", "MAR", "CRO", "BUL", "GRC", "SVK", "ROU", "UZB", "SRB", "CHN", "IRN", "LBN", "MAR",
+    "AFG".
+    Longitude and latitude should be provided as an interval - longitude = (int1, int2), latitude = (int1,int2).
+    Strain names, eco types and ec numbers are unique, country, while longitude and latitude enables users to seek for
+    multiple VCF files corresponding to selected features.
+    Method returns VCF.Reader object of selected VCF file stream from 1001 Genomes Database or a list of
+    such VCF.Reader objects.
+
+\item[\texttt{download(vcf\_reader, path\_filename)}] \
+
+    Downloads VCF file corresponding to stream on which provided VCF.Reader object is initialized.
+    VCF.Reader object as well as download directory and filename are required.
+
+
+\end{description}
+
+Let's try some functionality of the module:
+
+Suppose we want to analyse structural variants identified in "CYR" strain of Arabidopsis Thaliana. First of all,
+we need to find VCF file corresponding to our selected strain. To do so, we can simply type:
+
+
+\begin{verbatim}
+>>> from Bio.VCF import databases
+>>> vcf = databases.thousandgenomes("CYR")
+>>> vcf
+<Bio.VCF.parser.Reader object at 0x7f4bf49feef0>
+
+\end{verbatim}
+
+
+Now, we can continue analysis for example by running methods from VCF.Reader class.
+
+
+We may also be interested in retrieving all structural variants that are identified in strains occupying a particular
+territory, such as area of longitude (-73.1494, -73.1492) and latitude (40.9063, 40.9064). Module's \verb|thousandgenomes()|
+method can manage this:
+
+
+\begin{verbatim}
+>>> vcf_list = databases.thousandgenomes(longitude=(-73.1494, -73.1492), latitude=(40.9063, 40.9064))
+>>> vcf_list
+[<Bio.VCF.parser.Reader object at 0x7f4bf4a0d978>, <Bio.VCF.parser.Reader object at 0x7f4bf4a1e080>]
+
+\end{verbatim}
+
+
+Method returned two VCF.Reader objects which we can analyse further or simply download to local disc:
+
+
+\begin{verbatim}
+>>> for v in vcf_list:
+>>>     databases.download(v,'database_download.gz')
+\end{verbatim}
+
+\subsection{dbSNP database}
+todo Zojka
