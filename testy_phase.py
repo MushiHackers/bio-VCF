@@ -39,6 +39,9 @@ sys.exit()
 #reader.get_snp_with_specific_id('rs10400036')
 ##sprawdza, czy SNP o danym rsID jest w pliku - jezeli jest, to zwraca caly record z nim, jezeli nie - informacje, ze nie ma takiego w pliku
 #reader.get_snp_within_range(418076, 504032)
+##wypisuje wszystkie snpy w danym zakresie (zakres: >= i <)
+#reader.get_snp_with_specific_sample('NA18855_B', 'T')
+##wypisuje wszystkie snpy z dana probka
 #plik = open('plikphased.phased','w')
 #writer = VCF.PhasedWriter(plik, reader)
 #for record in reader.fetch(region='191761-112976029'):
