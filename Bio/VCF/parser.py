@@ -916,7 +916,7 @@ class Reader(object):
         for record in bedtool:
             line = ""
             for r in record.fields:
-                line += str(r) + " "
+                line += str(r) + "\t"
             line = line[:-1]
             line += "\n"
             f.write(line)
