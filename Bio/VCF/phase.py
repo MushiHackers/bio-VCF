@@ -51,10 +51,17 @@ class _Sample(object):
         self.is_unresolved = None
         self.exists = None
         self.haplotype = haplotype
+        self.is_not_matching_snp = None
         self._get_nucleotide(sample)
         self.rsID = rsID
 
     def _get_nucleotide(self, sample):
+        if len(sample)>=2:
+            self.is_not_matching_snp = True
+            sample = sample[0]
+        else:
+            self.is_not_matching_snp = False
+
         if sample == '-':
             self.exists = False
             self.is_unresolved = False
@@ -226,7 +233,7 @@ class PhasedReader(object):
                 pass
 
     def fetch(self, chrom=None, region=None, fsock=None, filename=None, compressed=None, prepend_chr=False,
-              strict_whitespace=False, encoding='ascii', verbose = True):
+              strict_whitespace=False, encoding='ascii', verbose = True, vcf= None, not_matching_snp = "."):
         """
         Fetches snps from VCF or from a region (positions)
         - filename is a filename of the VCF
@@ -234,6 +241,9 @@ class PhasedReader(object):
         - region is positions in a string format 'pos1-pos2',
             ex.: '1102-49658'
         - verbose if true prints all the fetched records
+        - vcf is a filename if a  fetched working file vcf should be saved
+        - not_matching_snp is a one letter string that should be put after the snp nucleotide not matching
+            the alleles in vcf file.
         - other arguments are for a vcf reader.
 
         filename/fsock fetching needs pybedtools
@@ -241,12 +251,15 @@ class PhasedReader(object):
         if not (filename or fsock or region):
             raise Exception('You must provide at least filename or fsock or region')
 
-        result = []
-        eof = False
+        if not_matching_snp and isinstance(not_matching_snp, str) and len(not_matching_snp)>1:
+            raise Exception('not_matching_snp should be string of length 1')
 
         if chrom and self.filedata['chrom'] and chrom != self.filedata['chrom']:
             raise Exception('This file is for chrom ' + str(
                 self.filedata['chrom']) + ' and you wanted to search for chrom ' + chrom)
+
+        result = []
+        eof = False
 
         if region:
             start, end = region.split('-')
@@ -285,29 +298,58 @@ class PhasedReader(object):
             vfile = VCFReader(fsock, filename, compressed, prepend_chr, strict_whitespace, encoding)
 
             if self.filedata['chrom']:
-                vfile = vfile.fetch(self.filedata['chrom'], verbose = False)
+                vfile = vfile.fetch(self.filedata['chrom'], verbose = False, vcf=vcf)
+
+            snplist=[]
+
+            for v in vfile:
+                if isinstance(vfile, pybedtools.bedtool.BedTool):
+                    if len(v[3]) > 1:
+                        continue
+                    else:
+                        _alt_pattern = re.compile('[\[\]]')
+                        alter = v[4].split(',')
+                        for alt in alter:
+                            if _alt_pattern.search(alt) is not None:
+                                continue
+                            elif alt[0] == '.' and len(alt) > 1:
+                                continue
+                            elif alt[-1] == '.' and len(alt) > 1:
+                                continue
+                            elif alt[0] == "<" and alt[-1] == ">":
+                                continue
+                            elif alt not in ['A', 'C', 'G', 'T', 'N', '*']:
+                                continue
+                            else:
+                                snplist.append(v)
+                else:
+                    if v.is_snp:
+                        snplist.append(v)
 
             rec = self.next()
             while not eof:
                 try:
                     added = False
-                    for v in vfile:
+                    for v in snplist:
                         added = False
                         if isinstance(vfile, pybedtools.bedtool.BedTool):
                             start = int(v[1]) - 1
-                            end = start + len(v[3])
                         else:
                             start = v.start
-                            end = v.end
-                        if rec.pos < start or rec.pos > end:
+
+                        if rec.pos < start or rec.pos > start+1:
                             continue
-                        if rec.pos >= start and rec.pos < end:
+                        if rec.pos == start:
+                            alleles = [v[3]] + v[4].split(',')
                             rec_string = rec.rsID + '\t' + str(rec.pos) + '\t'
                             for sample in rec.samples:
                                 if not sample.exists:
                                     rec_string += '- '
                                 else:
-                                    rec_string += sample.nucleotide + ' '
+                                    if not_matching_snp and sample.nucleotide not in alleles:
+                                        rec_string += sample.nucleotide + not_matching_snp + ' '
+                                    else:
+                                        rec_string += sample.nucleotide + ' '
                             result.append(rec_string)
                             rec = self.next()
                             added = True
@@ -315,6 +357,8 @@ class PhasedReader(object):
                         rec = self.next()
                 except StopIteration:
                     eof = True
+
+        # TODO add checking the haplotypes and how it should be outputted (. or a letter or what)
 
         if verbose:
             for r in result:
@@ -353,14 +397,17 @@ class PhasedWriter(object):
             header += hap.name + suffix + ' '  # there is always a space at the end of the line in original files
         self.stream.write(header + '\n')
 
-    def write_record(self, record):
+    def write_record(self, record, not_matching_snp='.'):
         """Write a record (SNPs) to the file """
         rec = record.rsID + '\t' + str(record.pos) + '\t'
         for sample in record.samples:
             if not sample.exists:
                 rec += '- '
             else:
-                rec += sample.nucleotide + ' '
+                if not_matching_snp and sample.is_not_matching_snp:
+                    rec += sample.nucleotide + not_matching_snp + ' '
+                else:
+                    rec += sample.nucleotide + ' '
         self.stream.write(rec + '\n')
 
     def close(self):
