@@ -219,6 +219,38 @@ class PhasedReader(object):
                 print('No SNP within given range was found.')
             else:
                 pass
+                
+    def get_snp_with_specific_sample(self, haplotype, nucleotide):
+        """Returns SNP/SNPs with given sample."""
+        record = self.next()
+        searched_haplotype = _Haplotype(haplotype)
+        total = int()
+        hap_found = False
+        for hap in record.samples:
+            if hap.haplotype.is_transmitted == searched_haplotype.is_transmitted and hap.haplotype.name == searched_haplotype.name:
+                found = False
+                hap_found = True
+                hap_index = record.samples.index(hap)
+                break
+        if hap_found:
+            print('Given haplotype is included in the given file...')
+            try:
+                while record is not None:
+                    if ((record.samples)[hap_index]).exists and ((record.samples)[hap_index]).is_unresolved is False:
+                        if ((record.samples)[hap_index]).nucleotide == str(nucleotide):
+                            if found is False:
+                                found = True
+                                print('SNPs with given sample:')
+                            total += 1
+                            print(str(record.rsID) + '\t' + str(record.pos))
+                    record = self.next()
+            except StopIteration:
+                if not found:
+                    print('No SNP with given sample was found.')
+                else:
+                    print('\n' + 'In total found: ' + str(total))
+        else:
+            print('Given haplotype is not included in the given file.')
 
     def fetch(self, chrom = None, region=None, fsock= None, filename=None, compressed = None, prepend_chr=False,
                  strict_whitespace=False,  encoding = 'ascii'):
