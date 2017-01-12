@@ -1,15 +1,15 @@
 import sys
 import re
-import pybedtools
+#import pybedtools
 from Bio import VCF
 reader = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
 reader2 = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
 
-rec1 = reader.next()
-rec2 = reader2.next()
+'''rec1 = reader.next()
+rec2 = reader2.next()'''
 
-print(rec1==rec2)
-sys.exit()
+'''print(rec1==rec2)
+sys.exit()'''
 ##to Ci daje caly plik wczytany jako obiekt reader
 # print(reader.filedata)
 # ##to informacje o pliku jesli sa dostepne
@@ -36,12 +36,16 @@ sys.exit()
 #reader2 = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_asw.unr.phased.gz')
 ##radzi sobie tez z gzipowanymi
 ##streamow jeszcze nie robilam i nie testowalam
-#reader.get_snp_with_specific_id('rs10400036')
+#reader.get_snp_with_specific_id('rs104006')
 ##sprawdza, czy SNP o danym rsID jest w pliku - jezeli jest, to zwraca caly record z nim, jezeli nie - informacje, ze nie ma takiego w pliku
 #reader.get_snp_within_range(418076, 504032)
 ##wypisuje wszystkie snpy w danym zakresie (zakres: >= i <)
 #reader.get_snp_with_specific_sample('NA18855_B', 'T')
 ##wypisuje wszystkie snpy z dana probka
+#reader.get_nucleotides_from_snps_in_specific_hap('NA18855_NA18856_A')
+##wypisuje wszystkie snpy w danym haplotypie
+#reader.get_sample_from_specific_snp('rs11252546', 'NA18855_NA18856_A')
+##wypisuje zasade w danym snpie w danym haplotypie
 #plik = open('plikphased.phased','w')
 #writer = VCF.PhasedWriter(plik, reader)
 #for record in reader.fetch(region='191761-112976029'):
@@ -51,10 +55,10 @@ sys.exit()
 
 
 
-print('-a-a-a-a-a-a-')
+'''print('-a-a-a-a-a-a-')
 plik = open('pliczko.phased','w')
 plikvcf = open('Tests/VCF/chr10.vcf')
-writer = VCF.PhasedWriter(plik, reader)
+writer = VCF.PhasedWriter(plik, reader)'''
 # read = VCF.Reader(plikvcf,prepend_chr=True)
 # read = read.fetch(chrom='1',verbose=False, vcf='temp')
 #
@@ -88,9 +92,9 @@ writer = VCF.PhasedWriter(plik, reader)
 # sys.exit()
 
 
-newr = reader.fetch(fsock=plikvcf, verbose=False)
+'''newr = reader.fetch(fsock=plikvcf, verbose=False)
 for record in newr:
-    writer.write_record(record)
+    writer.write_record(record)'''
 
 #newr = reader.fetch(region='191761-112976029')
 #print(newr.filedata)
@@ -117,7 +121,7 @@ for record in newr:
 ## wszystkie informacje dostepne dla probki
 sys.exit()
 
-print('--------------')
+'''print('--------------')
 
 print(reader.filedata)
 ##to informacje o pliku jesli sa dostepne
@@ -138,4 +142,4 @@ print(record.samples)
 for s in record.samples:
     print(str(s))
 ##tak sa wypisywanie probki
-print(record.samples[0].exists,record.samples[0].is_unresolved,record.samples[0].nucleotide,record.samples[0].haplotype)
+print(record.samples[0].exists,record.samples[0].is_unresolved,record.samples[0].nucleotide,record.samples[0].haplotype)'''
