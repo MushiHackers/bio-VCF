@@ -12,6 +12,7 @@ except ImportError:
     pybedtools = None
 
 
+
 class _Haplotype(object):
     """Haplotype info"""
 
@@ -34,7 +35,7 @@ class _Haplotype(object):
         elif suffix == 'B':
             self.is_transmitted = False
             # in the other case we do not now - stays as None
-
+            
     def __eq__(self,other):
         return self.name==self.name and self.is_transmitted == self.is_transmitted
 
@@ -71,11 +72,10 @@ class _Sample(object):
             else:
                 self.is_unresolved = False
             self.nucleotide = sample
-
     def __eq__(self, other):
         return self.rsID == other.rsID and self.haplotype == other.haplotype and self.nucleotide == other.nucleotide and self.is_unresolved == other.is_unresolved and self.exists == other.exists
         # the only thing not compares it is_not_matching_snp
-
+            
     def __str__(self):
         if self.exists:
             return "%(nucleotide)s" % self.__dict__
@@ -102,14 +102,13 @@ class _PhasedRecord(object):
 
     def __iter__(self):
         return iter(self.samples)
-
+    
     def __eq__(self, other):
         if len(self.samples)!= len(other.samples):
             return False
         if sorted(self.samples, key=lambda s: (s.haplotype.name, s.haplotype.is_transmitted)) != sorted(other.samples, key=lambda s: (s.haplotype.name, s.haplotype.is_transmitted)):
             return False
         return self.rsID == self.rsID and self.pos == self.pos
-
 
     def __str__(self):
         samples_string = ''
@@ -210,7 +209,7 @@ class PhasedReader(object):
     __next__ = next  # Python 3.X compatibility
 
     def get_snp_with_specific_id(self, rsID):
-        """Returns SNP with given rsID."""
+        """Returns SNP with user-given rsID."""
         record = self.next()
         found = False
         try:
@@ -221,64 +220,140 @@ class PhasedReader(object):
                 else:
                     record = self.next()
         except StopIteration:
-            print('SNP with given rsID was not found.')
-
+            print('SNP with searched rsID was not found.')
+            
     def get_snp_within_range(self, pos1, pos2):
-        """Returns SNP/SNPs within given range. Condition: pos1 must be smaller than pos2."""
+        """Returns SNPs within user-given range. Condition: pos1 must be smaller than pos2."""
         record = self.next()
         found = False
+        total = int()
         try:
             while record is not None:
                 if int(record.pos) >= int(pos1) and int(record.pos) < int(pos2):
-                    found = True
+                    if found is False:
+                        found = True
+                        print('SNPs within given range:')
+                    total += 1
                     print(record)
                 record = self.next()
         except StopIteration:
             if not found:
                 print('No SNP within given range was found.')
             else:
-                pass
+                print('\n' + 'In total found: ' + str(total))
                 
     def get_snp_with_specific_sample(self, haplotype, nucleotide):
-        """Returns SNP/SNPs with given sample."""
+        """Returns SNPs containing user-given sample."""
         record = self.next()
         searched_haplotype = _Haplotype(haplotype)
-        total = int()
         hap_found = False
         for hap in record.samples:
             if hap.haplotype.is_transmitted == searched_haplotype.is_transmitted and hap.haplotype.name == searched_haplotype.name:
                 found = False
+                total = int()
                 hap_found = True
                 hap_index = record.samples.index(hap)
                 break
         if hap_found:
-            print('Given haplotype is included in the given file...')
+            print('Searched haplotype is included in the given file...')
             try:
                 while record is not None:
                     if ((record.samples)[hap_index]).exists and ((record.samples)[hap_index]).is_unresolved is False:
                         if ((record.samples)[hap_index]).nucleotide == str(nucleotide):
                             if found is False:
                                 found = True
-                                print('SNPs with given sample:')
+                                print('SNPs with searched sample:')
                             total += 1
                             print(str(record.rsID) + '\t' + str(record.pos))
+                    elif ((record.samples)[hap_index]).exists is False:
+                        not_existing += 1
+                    elif ((record.samples)[hap_index]).is_unresolved:
+                        unresolved += 1
                     record = self.next()
             except StopIteration:
                 if not found:
-                    print('No SNP with given sample was found.')
+                    print('No SNP with searched sample was found.')
                 else:
                     print('\n' + 'In total found: ' + str(total))
         else:
-            print('Given haplotype is not included in the given file.')
+            print('Searched haplotype is not included in the given file.')
+            
+    def get_nucleotides_from_snps_in_specific_hap(self, haplotype):
+        """Returns SNPs within user-given haplotype."""
+        record = self.next()
+        searched_haplotype = _Haplotype(haplotype)
+        hap_found = False
+        for hap in record.samples:
+            if hap.haplotype.is_transmitted == searched_haplotype.is_transmitted and hap.haplotype.name == searched_haplotype.name:
+                found = False
+                total = int()
+                unresolved = int()
+                not_existing = int()
+                hap_found = True
+                hap_index = record.samples.index(hap)
+                break
+        if hap_found:
+            print('Searched haplotype is included in the given file...')
+            try:
+                while record is not None:
+                    if record.samples[hap_index].is_unresolved:
+                        unresolved += 1
+                    elif record.samples[hap_index].exists is False:
+                        not_existing += 1
+                    else:
+                        if found is False:
+                            found = True
+                            print('SNPs within given haplotype:')
+                        total += 1
+                        print(str(record.rsID) + '\t' + str(((record.samples)[hap_index]).nucleotide))
+                    record = self.next()
+            except StopIteration:
+                if not found:
+                    print('No SNPs were found for searched haplotype.')
+                    print('SNPs found unresolved: ' + str(unresolved))
+                    print('SNPs found not existing: ' + str(not_existing))                       
+                else:
+                    print('\n' + 'In total found: ' + str(total))
+                    print('\n' + 'Found unresolved: ' + str(unresolved))
+                    print('Found not existing: ' + str(not_existing))
+        else:
+            print('Searched haplotype is not included in the given file.')
+            
+    def get_sample_from_specific_snp(self, rsID, haplotype):
+        record = self.next()
+        searched_haplotype = _Haplotype(haplotype)
+        found = False
+        hap_found = False
+        for hap in record.samples:
+            if hap.haplotype.is_transmitted == searched_haplotype.is_transmitted and hap.haplotype.name == searched_haplotype.name:
+                hap_found = True
+                hap_index = record.samples.index(hap)
+                break
+        if hap_found:
+            print('Searched haplotype is included in the given file...')
+            try:
+                while not found:
+                    if str(record.rsID) == str(rsID):
+                        found = True
+                        if record.samples[hap_index].is_unresolved:
+                            print('The sample for searched SNP is unresolved.')
+                        elif record.samples[hap_index].exists is False:
+                            print('The sample for searched SNP does not exist.')
+                        else:
+                            print(str(((record.samples)[hap_index]).nucleotide))
+                    else:
+                        record = self.next()
+            except StopIteration:
+                print('SNP with searched rsID is not included in the given file.')
+        else:
+            print('Searched haplotype is not included in the given file.')
 
     def fetch(self, chrom=None, region=None, fsock=None, filename=None, compressed=None, prepend_chr=False,
               strict_whitespace=False, encoding='ascii', verbose = True, vcf= None, not_matching_snp = "."):
         """
-        Fetches snps from VCF or from a region (positions)
+        Fetches snps from VCF
         - filename is a filename of the VCF
         - fsock is a stream to the file
-        - region is positions in a string format 'pos1-pos2',
-            ex.: '1102-49658'
         - verbose if true prints all the fetched records
         - vcf is a filename if a  fetched working file vcf should be saved
         - not_matching_snp is a one letter string that should be put after the snp nucleotide not matching
@@ -289,124 +364,92 @@ class PhasedReader(object):
 
         filename/fsock fetching needs pybedtools
         """
-        if not (filename or fsock or region):
-            raise Exception('You must provide at least filename or fsock or region')
-
+        if not (filename or fsock):
+            raise Exception('You must provide at least filename or fsock')
+            
         if not_matching_snp and isinstance(not_matching_snp, str) and len(not_matching_snp)>1:
             raise Exception('not_matching_snp should be string of length 1')
-
-        if chrom and self.filedata['chrom'] and chrom != self.filedata['chrom']:
-            raise Exception('This file is for chrom ' + str(
-                self.filedata['chrom']) + ' and you wanted to search for chrom ' + chrom)
-
+            
+        eof=False
         result = []
-        eof = False
 
-        if region:
-            start, end = region.split('-')
-            start = int(start)
-            end = int(end)
+        if not pybedtools:
+            raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
-            while not eof:
-                try:
-                    rec = self.next()
-                    if rec.pos < start:
-                        rec = self.next()
-                    if rec.pos > end:
-                        eof = True
+        vfile = VCFReader(fsock, filename, compressed, prepend_chr, strict_whitespace, encoding)
+
+        if self.filedata['chrom']:
+            vfile = vfile.fetch(self.filedata['chrom'], verbose = False, vcf=vcf)
+
+        snplist=[]
+
+        for v in vfile:
+            if isinstance(vfile, pybedtools.bedtool.BedTool):
+                if len(v[3]) > 1:
+                    continue
+                else:
+                    _alt_pattern = re.compile('[\[\]]')
+                    alter = v[4].split(',')
+                    for alt in alter:
+                        if _alt_pattern.search(alt) is not None:
+                            continue
+                        elif alt[0] == '.' and len(alt) > 1:
+                            continue
+                        elif alt[-1] == '.' and len(alt) > 1:
+                            continue
+                        elif alt[0] == "<" and alt[-1] == ">":
+                            continue
+                        elif alt not in ['A', 'C', 'G', 'T', 'N', '*']:
+                            continue
+                        else:
+                            snplist.append(v)
+            else:
+                if v.is_snp:
+                    snplist.append(v)
+        rec = self.next()
+        while not eof:
+             try:
+                added = False
+                for v in snplist:
+                    added = False
+                    if isinstance(vfile, pybedtools.bedtool.BedTool):
+                        start = int(v[1]) - 1
+                    else:
+                        start = v.start
+
+                    if rec.pos < start or rec.pos > start+1:
                         continue
-                    if rec.pos >= start and rec.pos < end:
+                    if rec.pos == start:
+                        alleles = [v[3]] + v[4].split(',')
                         rec_string = rec.rsID + '\t' + str(rec.pos) + '\t'
                         for sample in rec.samples:
                             if not sample.exists:
                                 rec_string += '- '
                             else:
-                                rec_string += sample.nucleotide + ' '
-                        result.append(rec_string)
-                except StopIteration:
-                    eof = True
-
-        elif filename or fsock:
-
-            if not pybedtools:
-                raise Exception('pybedtools not available, try "pip install pybedtools"?')
-
-            vfile = VCFReader(fsock, filename, compressed, prepend_chr, strict_whitespace, encoding)
-
-            if self.filedata['chrom']:
-                vfile = vfile.fetch(self.filedata['chrom'], verbose = False, vcf=vcf)
-
-            snplist=[]
-
-            for v in vfile:
-                if isinstance(vfile, pybedtools.bedtool.BedTool):
-                    if len(v[3]) > 1:
-                        continue
-                    else:
-                        _alt_pattern = re.compile('[\[\]]')
-                        alter = v[4].split(',')
-                        for alt in alter:
-                            if _alt_pattern.search(alt) is not None:
-                                continue
-                            elif alt[0] == '.' and len(alt) > 1:
-                                continue
-                            elif alt[-1] == '.' and len(alt) > 1:
-                                continue
-                            elif alt[0] == "<" and alt[-1] == ">":
-                                continue
-                            elif alt not in ['A', 'C', 'G', 'T', 'N', '*']:
-                                continue
-                            else:
-                                snplist.append(v)
-                else:
-                    if v.is_snp:
-                        snplist.append(v)
-
-            rec = self.next()
-            while not eof:
-                try:
-                    added = False
-                    for v in snplist:
-                        added = False
-                        if isinstance(vfile, pybedtools.bedtool.BedTool):
-                            start = int(v[1]) - 1
-                        else:
-                            start = v.start
-
-                        if rec.pos < start or rec.pos > start+1:
-                            continue
-                        if rec.pos == start:
-                            alleles = [v[3]] + v[4].split(',')
-                            rec_string = rec.rsID + '\t' + str(rec.pos) + '\t'
-                            for sample in rec.samples:
-                                if not sample.exists:
-                                    rec_string += '- '
+                                if not_matching_snp and sample.nucleotide not in alleles:
+                                    rec_string += sample.nucleotide + not_matching_snp + ' '
                                 else:
-                                    if not_matching_snp and sample.nucleotide not in alleles:
-                                        rec_string += sample.nucleotide + not_matching_snp + ' '
-                                    else:
-                                        rec_string += sample.nucleotide + ' '
-                            result.append(rec_string)
-                            rec = self.next()
-                            added = True
-                    if not added:
+                                    rec_string += sample.nucleotide + ' '
+                        result.append(rec_string)
                         rec = self.next()
-                except StopIteration:
-                    eof = True
-
-        if verbose:
-            for r in result:
-                print(r)
-        origin = self._reader
-        self.reader, self._reader = None,None
-        resultreader = deepcopy(self)
-        origin.seek(0)
-        self._reader = origin
-        self.reader = (line.strip() for line in self._reader if line.strip())
-        next(self.reader)
-
-        resultreader.reader = (line for line in result)
-        return resultreader
+                        added = True
+                if not added:
+                    rec = self.next()
+            except StopIteration:
+                eof = True
+        
+    if verbose:
+        for r in result:
+            print(r)
+    origin = self._reader
+    self.reader, self._reader = None,None
+    resultreader = deepcopy(self)
+    origin.seek(0)
+    self._reader = origin
+    self.reader = (line.strip() for line in self._reader if line.strip())
+    next(self.reader)
+    resultreader.reader = (line for line in result)
+    return resultreader
 
 
 class PhasedWriter(object):
