@@ -1,16 +1,20 @@
 import codecs
 import gzip
 import sys
-
 import re
+from copy import deepcopy
 
 from Bio.VCF.parser import VCFReader
+
+try:
+    import pybedtools
+except ImportError:
+    pybedtools = None
+
 
 
 class _Haplotype(object):
     """Haplotype info"""
-
-    # TODO equals
 
     def __init__(self, hap):
         self.is_transmitted = None
@@ -31,25 +35,33 @@ class _Haplotype(object):
         elif suffix == 'B':
             self.is_transmitted = False
             # in the other case we do not now - stays as None
+            
+    def __eq__(self,other):
+        return self.name==self.name and self.is_transmitted == self.is_transmitted
 
     def __str__(self):
-        return "/%(name)s, transmitted: %(is_transmitted)s/" % self.__dict__
+        return "%(name)s, transmitted: %(is_transmitted)s" % self.__dict__
 
 
 class _Sample(object):
     """Sample info"""
-
-    # TODO equals
 
     def __init__(self, sample, haplotype, rsID):
         self.nucleotide = None
         self.is_unresolved = None
         self.exists = None
         self.haplotype = haplotype
+        self.is_not_matching_snp = None
         self._get_nucleotide(sample)
         self.rsID = rsID
 
     def _get_nucleotide(self, sample):
+        if len(sample)>=2:
+            self.is_not_matching_snp = True
+            sample = sample[0]
+        else:
+            self.is_not_matching_snp = False
+
         if sample == '-':
             self.exists = False
             self.is_unresolved = False
@@ -60,7 +72,10 @@ class _Sample(object):
             else:
                 self.is_unresolved = False
             self.nucleotide = sample
-
+    def __eq__(self, other):
+        return self.rsID == other.rsID and self.haplotype == other.haplotype and self.nucleotide == other.nucleotide and self.is_unresolved == other.is_unresolved and self.exists == other.exists
+        # the only thing not compares it is_not_matching_snp
+            
     def __str__(self):
         if self.exists:
             return "%(nucleotide)s" % self.__dict__
@@ -80,9 +95,6 @@ class _PhasedRecord(object):
     - ``pos`` contains the physical position of these SNPs in the particular chromosome.
     """
 
-    # TODO equals
-
-
     def __init__(self, rsID, pos, samples=None):
         self.rsID = rsID
         self.pos = pos
@@ -90,18 +102,24 @@ class _PhasedRecord(object):
 
     def __iter__(self):
         return iter(self.samples)
+    
+    def __eq__(self, other):
+        if len(self.samples)!= len(other.samples):
+            return False
+        if sorted(self.samples, key=lambda s: (s.haplotype.name, s.haplotype.is_transmitted)) != sorted(other.samples, key=lambda s: (s.haplotype.name, s.haplotype.is_transmitted)):
+            return False
+        return self.rsID == self.rsID and self.pos == self.pos
 
     def __str__(self):
         samples_string = ''
         for sample in self.samples:
             samples_string += (str(sample) + ', ')
         samples_string = samples_string[:-2]
-        return "%(rsID)s\t%(pos)s\t" % self.__dict__ + samples_string + ""
+        return "Record(%(rsID)s at %(pos)s: " % self.__dict__ + samples_string + ")"
 
 
 class PhasedReader(object):
     """ Reader for a phased files from HAPmap project, iterator """
-    # TODO equals
 
     def __init__(self, filename=None, fsock=None, compressed=None, encoding='ascii'):
         """ Create a new Reader for a phased file.
@@ -131,7 +149,7 @@ class PhasedReader(object):
             if sys.version > '3':
                 self._reader = codecs.getreader(encoding)(self._reader)
 
-        self._row_pattern = re.compile('\t| +')
+        #self._row_pattern = re.compile('\t| +')
 
         self.reader = (line.strip() for line in self._reader if line.strip())
         self.haplotypes = None
@@ -152,7 +170,7 @@ class PhasedReader(object):
         """
         line = next(self.reader)
         if line.startswith('rsID'):
-            row = self._row_pattern.split(line.rstrip())
+            row = list(filter(None, re.split("\s+",line.rstrip())))
             self._position = row[1]
             self.haplotypes = []
             for hap in row[2:]:
@@ -179,7 +197,7 @@ class PhasedReader(object):
     def next(self):
         """Return the next record in the file."""
         line = next(self.reader)
-        row = self._row_pattern.split(line.rstrip())
+        row = list(filter(None, re.split("\s+",line.rstrip())))
         rsID = row[0]
         pos = int(row[1])
         samples = []
@@ -330,56 +348,108 @@ class PhasedReader(object):
         else:
             print('Searched haplotype is not included in the given file.')
 
-    def fetch(self, chrom = None, region=None, fsock= None, filename=None, compressed = None, prepend_chr=False,
-                 strict_whitespace=False,  encoding = 'ascii'):
+    def fetch(self, chrom=None, region=None, fsock=None, filename=None, compressed=None, prepend_chr=False,
+              strict_whitespace=False, encoding='ascii', verbose = True, vcf= None, not_matching_snp = "."):
         """
-        Fetches snps from VCF or from a region (positions)
+        Fetches snps from VCF
         - filename is a filename of the VCF
-        - region is positions in a string format 'pos1-pos2',
-            ex.: '1102-49658'
+        - fsock is a stream to the file
+        - verbose if true prints all the fetched records
+        - vcf is a filename if a  fetched working file vcf should be saved
+        - not_matching_snp is a one letter string that should be put after the snp nucleotide not matching
+            the alleles in vcf file.
         - other arguments are for a vcf reader.
-        """
-        if not (filename or fsock or region):
-            raise Exception('You must provide at least filename or fsock or region')
 
+        WE TREAT PHASED FILES AS SORTED in fetch. Keep that in mind.
+
+        filename/fsock fetching needs pybedtools
+        """
+        if not (filename or fsock):
+            raise Exception('You must provide at least filename or fsock')
+            
+        if not_matching_snp and isinstance(not_matching_snp, str) and len(not_matching_snp)>1:
+            raise Exception('not_matching_snp should be string of length 1')
+            
+        eof=False
         result = []
 
-        if chrom and self.filedata['chrom'] and chrom!=self.filedata['chrom']:
-            raise Exception('This file is for chrom '+str(self.filedata['chrom'])+' and you wanted to search for chrom '+chrom)
+        if not pybedtools:
+            raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
-        if region:
-            start,end = region.split('-')
-            start = int(start)
-            end = int(end)
-            eof = False
+        vfile = VCFReader(fsock, filename, compressed, prepend_chr, strict_whitespace, encoding)
 
-            # TODO decide
-            # should we treat them as unsorted as below
-            # if so should we sort them first
-            # or should we treat them as unsorted?
+        if self.filedata['chrom']:
+            vfile = vfile.fetch(self.filedata['chrom'], verbose = False, vcf=vcf)
 
-            while not eof:
-                try:
+        snplist=[]
+
+        for v in vfile:
+            if isinstance(vfile, pybedtools.bedtool.BedTool):
+                if len(v[3]) > 1:
+                    continue
+                else:
+                    _alt_pattern = re.compile('[\[\]]')
+                    alter = v[4].split(',')
+                    for alt in alter:
+                        if _alt_pattern.search(alt) is not None:
+                            continue
+                        elif alt[0] == '.' and len(alt) > 1:
+                            continue
+                        elif alt[-1] == '.' and len(alt) > 1:
+                            continue
+                        elif alt[0] == "<" and alt[-1] == ">":
+                            continue
+                        elif alt not in ['A', 'C', 'G', 'T', 'N', '*']:
+                            continue
+                        else:
+                            snplist.append(v)
+            else:
+                if v.is_snp:
+                    snplist.append(v)
+        rec = self.next()
+        while not eof:
+             try:
+                added = False
+                for v in snplist:
+                    added = False
+                    if isinstance(vfile, pybedtools.bedtool.BedTool):
+                        start = int(v[1]) - 1
+                    else:
+                        start = v.start
+
+                    if rec.pos < start or rec.pos > start+1:
+                        continue
+                    if rec.pos == start:
+                        alleles = [v[3]] + v[4].split(',')
+                        rec_string = rec.rsID + '\t' + str(rec.pos) + '\t'
+                        for sample in rec.samples:
+                            if not sample.exists:
+                                rec_string += '- '
+                            else:
+                                if not_matching_snp and sample.nucleotide not in alleles:
+                                    rec_string += sample.nucleotide + not_matching_snp + ' '
+                                else:
+                                    rec_string += sample.nucleotide + ' '
+                        result.append(rec_string)
+                        rec = self.next()
+                        added = True
+                if not added:
                     rec = self.next()
-                    if rec.pos >= start and rec.pos < end:
-                        result.append(rec)
-                except StopIteration:
-                    eof = True
-        elif filename or fsock:
-            vcf = VCFReader(fsock,filename,compressed, prepend_chr,strict_whitespace,encoding)
-            rec = self.next()
-            vcfrec = vcf.next()
-            if self.filedata['chrom']:
-                pass
-                # TODO tooo
-                # filtrowanie chromem
-                # a potem pracujemy na vcfie wyfiltrowanym chromem
-
-            # TODO write fetch vcf
-
+            except StopIteration:
+                eof = True
+        
+    if verbose:
         for r in result:
             print(r)
-        return result
+    origin = self._reader
+    self.reader, self._reader = None,None
+    resultreader = deepcopy(self)
+    origin.seek(0)
+    self._reader = origin
+    self.reader = (line.strip() for line in self._reader if line.strip())
+    next(self.reader)
+    resultreader.reader = (line for line in result)
+    return resultreader
 
 
 class PhasedWriter(object):
@@ -401,26 +471,29 @@ class PhasedWriter(object):
             header += hap.name + suffix + ' '  # there is always a space at the end of the line in original files
         self.stream.write(header + '\n')
 
-    def write_record(self, record):
+    def write_record(self, record, not_matching_snp='.'):
         """Write a record (SNPs) to the file """
         rec = record.rsID + '\t' + str(record.pos) + '\t'
         for sample in record.samples:
             if not sample.exists:
                 rec += '- '
             else:
-                rec += sample.nucleotide + ' '
+                if not_matching_snp and sample.is_not_matching_snp:
+                    rec += sample.nucleotide + not_matching_snp + ' '
+                else:
+                    rec += sample.nucleotide + ' '
         self.stream.write(rec + '\n')
 
     def close(self):
         """Try closing the writer"""
         try:
             self.stream.close()
-        except:
+        except AttributeError:
             pass
 
     def flush(self):
         """Try flushing the writer"""
         try:
             self.stream.flush()
-        except:
+        except AttributeError:
             pass
