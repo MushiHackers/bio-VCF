@@ -348,8 +348,8 @@ class PhasedReader(object):
         else:
             print('Searched haplotype is not included in the given file.')
 
-    def fetch(self, chrom=None, region=None, fsock=None, filename=None, compressed=None, prepend_chr=False,
-              strict_whitespace=False, encoding='ascii', verbose = True, vcf= None, not_matching_snp = "."):
+    def fetch(self, fsock=None, filename=None, compressed=None, prepend_chr=False,
+              strict_whitespace=False, encoding='ascii', verbose = True, vcf = None, not_matching_snp = "."):
         """
         Fetches snps from VCF
         - filename is a filename of the VCF
@@ -406,9 +406,10 @@ class PhasedReader(object):
             else:
                 if v.is_snp:
                     snplist.append(v)
+
         rec = self.next()
         while not eof:
-             try:
+            try:
                 added = False
                 for v in snplist:
                     added = False
@@ -416,12 +417,12 @@ class PhasedReader(object):
                         start = int(v[1]) - 1
                     else:
                         start = v.start
-
                     if rec.pos < start or rec.pos > start+1:
                         continue
                     if rec.pos == start:
                         alleles = [v[3]] + v[4].split(',')
                         rec_string = rec.rsID + '\t' + str(rec.pos) + '\t'
+
                         for sample in rec.samples:
                             if not sample.exists:
                                 rec_string += '- '
@@ -438,18 +439,18 @@ class PhasedReader(object):
             except StopIteration:
                 eof = True
         
-    if verbose:
-        for r in result:
-            print(r)
-    origin = self._reader
-    self.reader, self._reader = None,None
-    resultreader = deepcopy(self)
-    origin.seek(0)
-    self._reader = origin
-    self.reader = (line.strip() for line in self._reader if line.strip())
-    next(self.reader)
-    resultreader.reader = (line for line in result)
-    return resultreader
+        if verbose:
+            for r in result:
+                print(r)
+        origin = self._reader
+        self.reader, self._reader = None,None
+        resultreader = deepcopy(self)
+        origin.seek(0)
+        self._reader = origin
+        self.reader = (line.strip() for line in self._reader if line.strip())
+        next(self.reader)
+        resultreader.reader = (line for line in result)
+        return resultreader
 
 
 class PhasedWriter(object):

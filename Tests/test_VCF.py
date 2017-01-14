@@ -178,16 +178,6 @@ class TestPhasedReader(unittest.TestCase):
         assert hap.name == 'NA18855_NA18856'
         assert hap.is_transmitted == True
 
-    def test_fetch_region(self):
-        t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
-        t2 = t.fetch(region='191761-112976029')
-        assert t
-        assert t2
-        rec = t.next()
-        assert rec.rsID == 'rs12255619'
-        rec = t2.next()
-        assert rec.rsID == 'rs17156316'
-
     def test_fetch_file(self):
         t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
         t2 = t.fetch(fsock=fh('VCF/chr10.vcf'))
@@ -213,7 +203,8 @@ class TestPhasedReader(unittest.TestCase):
 class TestPhasedWriter(unittest.TestCase):
     def testWriter(self):
         r = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
-        t = phase.PhasedWriter(fh('VCF/testfile.phased', 'w'), r)
+        out = StringIO()
+        t = phase.PhasedWriter(out, r)
         assert t
         t.flush()
         t.close()
