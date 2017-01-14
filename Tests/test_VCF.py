@@ -198,7 +198,8 @@ class TestPhasedReader(unittest.TestCase):
         rec = t2.next()
         assert rec.rsID == 'rs12255619'
         rec = t2.next()
-        assert rec.rsID == 'rs2066314'
+        assert rec.rsID == 'rs1904671'
+        assert rec.samples[1].is_not_matching_snp == True
 
     def test_get_snp_with_specific_id(self):
         # TODO Dejw
