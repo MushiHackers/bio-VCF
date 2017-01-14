@@ -2,8 +2,9 @@
 import sys
 import argparse
 import pkg_resources
+#import vcf
 
-import Bio.VCF
+from Bio import VCF
 from Bio.VCF.parser import _Filter
 
 def create_filt_parser(name):
@@ -126,7 +127,7 @@ def main():
         parser.print_help()
         parser.exit()
 
-    inp = vcf.Reader(args.input)
+    inp = VCF.Reader(args.input)
 
     # build filter chain
     chain = []
@@ -139,7 +140,7 @@ def main():
         inp.filters[f.filter_name()] = _Filter(f.filter_name(), short_doc)
 
     # output must be created after all the filter records have been added
-    output = vcf.Writer(args.output, inp)
+    output = VCF.Writer(args.output, inp)
 
     # apply filters
     short_circuit = not args.no_short_circuit
