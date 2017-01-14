@@ -229,8 +229,11 @@ class TestPhasedWriter(unittest.TestCase):
 
 
 class TestdbSNP(unittest.TestCase):
-    # TODO Zojka
-    pass
+    
+    def testdbsnp(self):
+        t = databases.dbSNP_download(organism_taxon = 'grape_29760', chromosome = 1)
+        assert t 
+        assert next(t).POS == 12469 
 
 
 class Test1001Genomes(unittest.TestCase):
