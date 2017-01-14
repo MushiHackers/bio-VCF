@@ -1,29 +1,344 @@
 \chapter{Bio.VCF: handling VCF and phased files}
 
+Since new functionality added to \verb|Biopython| version ILEŚTAM NAPISAĆ ILE BO NIE WIEM is based on \verb|pyVCF|
+package, this chapter is partly based on the original \verb|pyVCF| documentation. Not all of the original functionality
+is described below, therefore for further details of \verb|Bio.VCF| module, pleas see
+\href{http://pyvcf.readthedocs.io/en/latest/INTRO.html}{pyVCF}.
+
+\section{VCF.Reader class}
+
+\verb|Bio.VCF.Reader| class takes a file-like object and acts as reader. It is intended to parse the content of each record
+based on the data types specified in the meta-information lines – specifically the \verb|##INFO| and \verb|##FORMAT| lines.
+If these lines are missing or incomplete it will check against the reserved types mentioned in the spec.
+Failing that, it will just return strings.
+
+\noindent The attributes of a \verb|Record| object are the 8 fixed fields from the VCF spec: \
+
+\
+
+\verb|Record.CHROM|, \verb|Record.POS|, \verb|Record.ID|, \verb|Record.REF|, \verb|Record.ALT|, \verb|Record.QUAL| \
+  \verb|Record.FILTER|, \verb|Record.INFO|
+
+\
+
+\noindent plus attributes to handle genotype information:
+
+\
+
+\verb|Record.FORMAT|, \verb|Record.samples|, \verb|Record.genotype|.
+
+\
+
+\noindent Regarding the coordinates associated with each instance:
+
+\begin{description}
+  \item[\texttt{POS}] \
+
+    per VCF specification, is the one-based index (the first base of the contig has an index of 1)
+    of the first base of the \verb|REF| sequence
+
+  \item[\texttt{start}{ end}] \
+
+    denote the coordinates of the entire \verb|REF| sequence in the zero-based, half-open coordinate
+    system (see \href{http://genomewiki.ucsc.edu/index.php/Coordinate_Transforms}{Coordinate\_Transforms}), where
+    the first base of the contig has an index of 0, and the interval runs up to, but does not include, the base
+    at the end index. This indexing scheme is analagous to Python slice notation.
+
+  \item[\texttt{affected\_start}{ affected\_end}] \
+
+    are also in the zero-based, half-open coordinate system. These coordinates indicate the precise region
+    of the reference genome actually affected by the events denoted in \verb|ALT| (i.e., the minimum
+    \verb|affected_start| and maximum \verb|affected_end|).
+    For SNPs and structural variants, the affected region includes all bases of \verb|REF|, including the
+    first base (i.e., \verb|affected_start| = \verb|start| = \verb|POS| - 1).
+    For deletions, the region includes all bases of \verb|REF| except the first base, which flanks
+    upstream the actual deletion event, per VCF specification.
+    For insertions, the \verb|affected_start| and \verb|affected_end| coordinates represent a
+    0 bp-length region between the two flanking bases (i.e., \verb|affected_start| = \verb|affected_end|).
+    This is analagous to Python slice notation (see \href{http://stackoverflow.com/a/2947881/38140}{Stackoverflow}).
+    Neither the upstream nor downstream flanking bases are included in the region.
+
+\end{description}
+
+\noindent \verb|samples| and \verb|genotype|, not being the title of any column, are left lowercase. The format of the fixed
+fields is from the spec. Comma-separated lists in the \verb|VCF| are converted to lists. In particular,
+one-entry \verb|VCF| lists are converted to one-entry Python lists (see, e.g., \verb|Record.ALT|).
+Semicolon-delimited lists of key=value pairs are converted to Python dictionaries, with flags being given a True value.
+
+
+\noindent This module supports
+
+
+\noindent Metadata regarding the VCF file itself can be investigated through the following attributes:
+
+\
+
+\verb|Record.metadata|, \verb|Record.infos|, \verb|Record.filters|, \verb|Record.formats|, \verb|Record.samples|.
+
+\
+
+
+
+\noindent Suppose we have a VCF file and want to see all the records in it. We might simply create a Bio.VCF.Reader object:
+
+\begin{verbatim}
+>>> from Bio.VCF import parser
+>>> vcf_reader = parser.Reader(open('VCF/example-4.0.vcf', 'r'))
+>>> for record in vcf_reader:
+...     print record
+Record(CHROM=20, POS=14370, REF=G, ALT=[A])
+Record(CHROM=20, POS=17330, REF=T, ALT=[A])
+Record(CHROM=20, POS=1110696, REF=A, ALT=[G, T])
+Record(CHROM=20, POS=1230237, REF=T, ALT=[None])
+Record(CHROM=20, POS=1234567, REF=GTCT, ALT=[G, GTACT])
+\end{verbatim}
+
+
+\noindent Now, we are interested in position and alteration type of the first record from the VCF file. We can
+obtain the information by typing:
+
+\begin{verbatim}
+>>> record = next(vcf_reader)
+>>> print record.POS
+14370
+>>> print record.ALT
+[A]
+>>> print record.INFO['AF']
+[0.5]
+\end{verbatim}
+
+\noindent Moreover there are a number of convenience methods and properties for each \verb|Bio.VCF.Record| object
+allowing you to examine properties of interest:
+
+\begin{verbatim}
+>>> print record.num_called, record.call_rate, record.num_unknown
+3 1.0 0
+>>> print record.num_hom_ref, record.num_het, record.num_hom_alt
+1 1 1
+>>> print record.nucl_diversity, record.aaf, record.heterozygosity
+0.6 [0.5] 0.5
+>>> print record.get_hets()
+[Call(sample=NA00002, CallData(GT=1|0, GQ=48, DP=8, HQ=[51, 51]))]
+>>> print record.is_snp, record.is_indel, record.is_transition, record.is_deletion
+True False True False
+>>> print record.var_type, record.var_subtype
+snp ts
+>>> print record.is_monomorphic
+False
+\end{verbatim}
+
+\verb|record.FORMAT| will be a string specifying the format of the genotype fields. In case the \verb|FORMAT|
+ column does not exist, \verb|record.FORMAT| is None. Finally, \verb|record.samples| is a list of dictionaries
+ containing the parsed sample column and \verb|record.genotype| is a way of looking up genotypes by sample name:
+
+ \begin{verbatim}
+>>> record = next(vcf_reader)
+>>> for sample in record.samples:
+...     print sample['GT']
+0|0
+0|1
+0/0
+>>> print record.genotype('NA00001')['GT']
+0|0
+\end{verbatim}
+
+\noindent The genotypes are represented by \verb|Call| objects, which have three attributes: the corresponding \verb|Record|
+\verb|site|, the sample name in \verb|sample| and a dictionary of call data in \verb|data|:
+
+\begin{verbatim}
+>>> call = record.genotype('NA00001')
+>>> print call.site
+Record(CHROM=20, POS=17330, REF=T, ALT=[A])
+>>> print call.sample
+NA00001
+>>> print call.data
+CallData(GT=0|0, GQ=49, DP=3, HQ=[58, 50])
+\end{verbatim}
+
+\noindent There are also a number of methods for \verb|Call| objects:
+
+\begin{verbatim}
+>>> print call.called, call.gt_type, call.gt_bases, call.phased
+True 0 T|T True
+\end{verbatim}
+
+\noindent User can be interested in some details of the VCF file, for example file's creation date, samples included
+and filters. The functionality of this module supports retrieval of such data:
+
+\begin{verbatim}
+>>> vcf_reader.metadata['fileDate']
+'20090805'
+>>> vcf_reader.samples
+['NA00001', 'NA00002', 'NA00003']
+>>> vcf_reader.filters
+OrderedDict([('q10', Filter(id='q10', desc='Quality below 10')), \
+('s50', Filter(id='s50', desc='Less than 50% of samples have data'))])
+>>> vcf_reader.infos['AA'].desc
+'Ancestral Allele'
+\end{verbatim}
+
+\noindent When you are interested in \verb|ALT| records, you can interrogate them to achieve information:
+
+\begin{verbatim}
+>>> reader = parser.Reader(open('VCF/example-4.1-bnd.vcf'))
+>>> _ = next(reader); row = next(reader)
+>>> print row
+Record(CHROM=1, POS=2, REF=T, ALT=[T[2:3[])
+>>> bnd = row.ALT[0]
+>>> print bnd.withinMainAssembly, bnd.orientation, bnd.remoteOrientation, bnd.connectingSequence
+True False True T
+\end{verbatim}
+
+\subsection{Record parameters}
+
+\noindent Below there is a brief description of other methods and parameters available for Reader's records.
+
+\begin{description}
+  \item[\texttt{aaf}] \
+
+   A list of allele frequencies of alternate alleles. NOTE: Denominator calc’ed from \_called\_ genotypes.
+
+  \item[\texttt{alleles}] \
+
+   list of alleles. [0] = REF, [1:] = ALTS
+
+  \item[\texttt{call\_rate}] \
+
+  The fraction of genotypes that were actually called.
+
+  \item[\texttt{end}] \
+
+  zero-based, half-open end coordinate of \verb|REF|.
+
+  \item[\texttt{get\_hets()}] \
+
+    The list of het genotypes.
+
+  \item[\texttt{get\_hom\_alts()}] \
+
+    The list of hom alt genotypes.
+
+  \item[\texttt{get\_hom\_refs()}] \
+
+    The list of hom ref genotypes.
+
+  \item[\texttt{heterozygosity}] \
+
+    Heterozygosity of a site. Heterozygosity gives the probability that two randomly chosen chromosomes from the
+    population have different alleles, giving a measure of the degree of polymorphism in a population.
+    If there are i alleles with frequency p\_i, H=1-sum\_i(p\_i\^2)
+
+\end{description}
+
+\noindent There are also a number of boolean methods, such as:
+
+\verb|is_deletion|, \verb|is_filtered|, \verb|is_indel|, \verb|is_monomorphic|, \verb|is_snp|, \verb|is_svp|, \verb|is_transition|.
+
+\subsection{Additional utilities}
+
+\noindent Below there is a brief description of additional utilities for VCF files.
+
+
+\begin{description}
+
+    \item[\texttt{utils.walk\_together(*readers, **kwargs)}] \
+
+    Simultaneously iteratate over two or more \verb|VCF| readers. For each genomic position with a variant,
+    return a list of size equal to the number of VCF readers. This list contains the \verb|VCF| record from
+    readers that have this variant, and None for readers that don’t have it. The caller must make sure
+    that inputs are sorted in the same way and use the same reference otherwise behaviour is undefined.
+
+    \verb|Args|:
+            \verb|vcf_record_sort_key|: \
+
+    function that takes a VCF record and returns a
+    tuple that can be used as a key for comparing and sorting \verb|VCF| records across all readers.
+    This tuple defines what it means for two variants to be equal (eg. whether it’s only their
+    position or also their allele values), and implicitly determines the chromosome ordering since
+    the tuple’s 1st element is typically the chromosome name (or calculated from it).
+
+
+    \item[\texttt{vcf.utils.trim\_common\_suffix(*sequences)}] \
+
+    Trim a list of sequences by removing the longest common suffix while leaving all of them at least one
+    character in length. Standard convention with VCF is to place an indel at the left-most position,
+    but some tools add additional context to the right of the sequences (e.g. samtools).
+    These common suffixes are undesirable when comparing variants, for example in variant databases.
+
+    \begin{verbatim}
+    >>> trim_common_suffix('TATATATA', 'TATATA')
+    ['TAT', 'T']
+    \end{verbatim}
+
+
+    \begin{verbatim}
+    >>> trim_common_suffix('ACCCCC', 'ACCCCCCCC', 'ACCCCCCC', 'ACCCCCCCCC')
+    ['A', 'ACCC', 'ACC', 'ACCCC']
+    \end{verbatim}
+
+    \
+
+    \item[\texttt{vcf\_melt}] \
+
+    This script converts a \verb|VCF| file from wide format (many calls per row) to a long format
+    (one call per row). This is useful if you want to grep per sample or for really quick
+    import into, say, a spreadsheet:
+
+    \begin{verbatim}
+    $ vcf_melt < vcf/test/gatk.vcf
+    SAMPLE      AD      DP      GQ      GT      PL      FILTER  CHROM   POS     REF     ...
+    BLANK       6,0     6       18.04   0/0     0,18,211        .       chr22   42522392        ...
+    NA12878     138,107 250     99.0    0/1     1961,0,3049     .       chr22   42522392        ...
+    NA12891     169,77  250     99.0    0/1     1038,0,3533     .       chr22   42522392        ...
+    NA12892     249,0   250     99.0    0/0     0,600,5732      .       chr22   42522392        ...
+    ...
+    \end{verbatim}
+
+    \end{description}
+
+\section{VCF.Writer class}
+
+\noindent The \verb|Bio.VCF.Writer| class provides a way of writing a VCF file.
+\verb|Bio.VCF.parser| module supports \verb|close()|, \verb|flush()| and \verb|write_record()| methods.
+
+\noindent Currently, when writing new VCF file you must specify a template \verb|Bio.VCF.Reader| object
+which provides the metadata, like this:
+
+\begin{verbatim}
+>>> from Bio.VCF import parser
+>>> vcf_reader = parser.Reader(filename='VCF/tb.vcf.gz')
+>>> vcf_writer = parser.Writer(open('/dev/null', 'w'), vcf_reader)
+>>> for record in vcf_reader:
+...     vcf_writer.write_record(record)
+\end{verbatim}
+
+
+
+
 \section{Retrieving records from VCF file}
 
-This chapter gives an overview of the functionality of fetch methods included in \verb|Bio.VCF| \verb|parser| module.
+\noindent This chapter gives an overview of the functionality of fetch methods included in \verb|Bio.VCF| \verb|parser| module.
 Those functions enable users to retrieve particular records from VCF file describing structural variants,
 depending on provided argument - for example interval of positions within which we seek for structural variants, a list
 of such positions or feature type within which structural variants are present.
 
 
-Functionality of those fetch methods includes retrieving structural variants corresponding to ranges
+\noindent Functionality of those fetch methods includes retrieving structural variants corresponding to ranges
 provided in BED files as well as features from GFF files. If you are not familiar with BED file format
 you might be interested in \href{http://www.ensembl.org/info/website/upload/bed.html}{BED} and
 \href{http://gmod.org/wiki/GFF3}{GFF}.
 
 
-Most of implementation is based on \verb|pybedtools| module - \href{https://daler.github.io/pybedtools/}{pybedtools},
+\noindent Most of implementation is based on \verb|pybedtools| module - \href{https://daler.github.io/pybedtools/}{pybedtools},
 which support many file formats including VCF, BED and GFF, therefore \verb|pybedtools| package is required.
 
 
-Due to enormous sizes of some BED and GFF files, some fetch methods are intended to enable user to provide
+\noindent Due to enormous sizes of some BED and GFF files, some fetch methods are intended to enable user to provide
 stream of particular GFF/BED file from chosen database. It is a beneficial solution allowing users to avoid
 the necessity of saving very big files to local disc.
 
 
-Below there is a brief description of each fetch method.
+\noindent Below there is a brief description of each fetch method.
 All of them have arguments \verb|verbose| and \verb|vcf| specifying if result should be printed to stdout
 and whether new VCF.Reader object should be created, respectively.
 
@@ -76,14 +391,14 @@ and whether new VCF.Reader object should be created, respectively.
 \end{description}
 
 
-The following sections present exemplary use of fetch methods.
+\noindent The following sections present exemplary use of fetch methods.
 
 
 \subsection{Create VCF.Reader object}
 \label{sec:object}
 
 
-Since all fetch methods are included in VCF.Reader class, we need to create \verb|Reader| object. But first of all,
+\noindent Since all fetch methods are included in VCF.Reader class, we need to create \verb|Reader| object. But first of all,
 we need to import Bio.VCF library:
 
 
@@ -105,7 +420,7 @@ of corresponding VCF file:
 \subsubsection{Fetching records depending on BED/GFF file}
 
 
-Suppose we have a BED file with positions of CTCF motif binding sites. We want to collect all structural variants
+\noindent Suppose we have a BED file with positions of CTCF motif binding sites. We want to collect all structural variants
 located within those sites. If we have this BED file locally on our computer, then we should simply run:
 
 
@@ -125,7 +440,7 @@ or if we don't, we should provide a stream of chosen BED file and use:
 \end{verbatim}
 
 
-Selected structural variants are returned in BedTools object (if vcf = None) and can be easily accessed, for example
+\noindent Selected structural variants are returned in BedTools object (if vcf = None) and can be easily accessed, for example
 if we want to see all information of every selected record:
 
 
@@ -146,7 +461,7 @@ if we want to see all information of every selected record:
 \end{verbatim}
 
 
-Similarly, we can extract structural variants corresponding to positions of chosen features from GFF file. Suppose
+\noindent Similarly, we can extract structural variants corresponding to positions of chosen features from GFF file. Suppose
 we have a GFF3 file of Homo sapiens, but we are interested only in variants located within pseudogenes
 at 13th chromosome. \verb|fetch_gff()| method is what we need:
 
@@ -156,7 +471,7 @@ at 13th chromosome. \verb|fetch_gff()| method is what we need:
 \end{verbatim}
 
 
-What is more, if we want variant within pseudogenes which are within specific positions, we can add
+\noindent What is more, if we want variant within pseudogenes which are within specific positions, we can add
 \verb|location| argument:
 
 
@@ -178,13 +493,13 @@ chr13	9542346	.	T	TTAA	.	PASS	DP=27;SS=1;SSC=2;GPV=1.4382E-14;SPV=5.5556E-1	GT:G
 \end{verbatim}
 
 
-As in case of fetch depending on BED file, we can use stream of GFF file instead of local file.
+\noindent As in case of fetch depending on BED file, we can use stream of GFF file instead of local file.
 
 
 \subsubsection{Fetching records depending on interval}
 
 
-We might have a VCF file which have records referring to different chromosomes. In such case, we want to be able to
+\noindent We might have a VCF file which have records referring to different chromosomes. In such case, we want to be able to
 analyze only those variants that are located on chromosome of our interest. We can simply use \verb|fetch()| method
 on our \verb|vcf| object, but as we want to analyze fetched records further, we should use argument specifying
 new vcf.Reader object:
@@ -198,7 +513,7 @@ new vcf.Reader object:
 \end{verbatim}
 
 
-Now, when we have all variants located on chromosome 13, we can choose only those within specified intervals:
+\noindent Now, when we have all variants located on chromosome 13, we can choose only those within specified intervals:
 
 
 \begin{verbatim}
@@ -214,18 +529,18 @@ chr13	85837130	.	T	TTAA	.	PASS	DP=27;SS=1;SSC=2;GPV=1.4382E-14;SPV=5.5556E-1	GT:
 \end{verbatim}
 
 
-VCF file created after \verb|vcf.fetch| is saved to local disc and can be easily achieved with
+\noindent VCF file created after \verb|vcf.fetch| is saved to local disc and can be easily achieved with
 VCF.Reader() anytime needed.
 
 \section{Available VCF Databases}
 
-Bio.VCF.databases is a Biopython module that supports \verb|1001 Genomes| and \verb|dbSNP| databases.
+\noindent Bio.VCF.databases is a Biopython module that supports \verb|1001 Genomes| and \verb|dbSNP| databases.
 Since most of VCF files are of enormous sizes, it is convenient to use streams instead of local files.
 Functionality of this package enables users to search through above-mentioned databases, and use selected streams
 of VCF files as VCF.Reader objects in further analysis.
 
 
-If you are not familiar with \verb|1001 Genomes| and \verb|dbSNP| databases you might be interested in
+\noindent If you are not familiar with \verb|1001 Genomes| and \verb|dbSNP| databases you might be interested in
 \href{http://1001genomes.org/}{1001 Genomes} and \href{https://www.ncbi.nlm.nih.gov/SNP/}{dbSNP}. However, following
 sections provide brief description of methods searching through both databases as well as some information about them.
 
@@ -241,7 +556,7 @@ Searching through the database can be based on strain's name, ec number, eco typ
 origin - such as country, longitude or latitude.
 
 
-Below there is a brief description of \verb|thousandgenome()| methods:
+\noindent Below there is a brief description of \verb|thousandgenome()| methods:
 
 
 \begin{description}
@@ -268,9 +583,9 @@ Below there is a brief description of \verb|thousandgenome()| methods:
 
 \end{description}
 
-Let's try some functionality of the module:
+\noindent Let's try some functionality of the module:
 
-Suppose we want to analyse structural variants identified in "CYR" strain of Arabidopsis Thaliana. First of all,
+\noindent Suppose we want to analyse structural variants identified in "CYR" strain of Arabidopsis Thaliana. First of all,
 we need to find VCF file corresponding to our selected strain. To do so, we can simply type:
 
 
@@ -283,10 +598,10 @@ we need to find VCF file corresponding to our selected strain. To do so, we can 
 \end{verbatim}
 
 
-Now, we can continue analysis for example by running methods from VCF.Reader class.
+\noindent Now, we can continue analysis for example by running methods from VCF.Reader class.
 
 
-We may also be interested in retrieving all structural variants that are identified in strains occupying a particular
+\noindent We may also be interested in retrieving all structural variants that are identified in strains occupying a particular
 territory, such as area of longitude (-73.1494, -73.1492) and latitude (40.9063, 40.9064). Module's \verb|thousandgenomes()|
 method can manage this:
 
@@ -299,7 +614,7 @@ method can manage this:
 \end{verbatim}
 
 
-Method returned two VCF.Reader objects which we can analyse further or simply download to local disc:
+\noindent Method returned two VCF.Reader objects which we can analyse further or simply download to local disc:
 
 
 \begin{verbatim}

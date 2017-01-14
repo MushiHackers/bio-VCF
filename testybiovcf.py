@@ -73,6 +73,3 @@ print(VCF.trim_common_suffix('TATATATA', 'TATATA'))
 print(VCF.trim_common_suffix('ACCCCC', 'ACCCCCCCC', 'ACCCCCCC', 'ACCCCCCCCC'))
 
 
-print('MELT')
-"""do przemyslenia"""
-print('todo')
