@@ -244,6 +244,7 @@ class PhasedReader(object):
                 
     def get_snp_with_specific_sample(self, haplotype, nucleotide):
         """Returns SNPs containing user-given sample."""
+        #TODO Dejw, cos jest nie tak
         record = self.next()
         searched_haplotype = _Haplotype(haplotype)
         hap_found = False

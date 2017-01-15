@@ -10,7 +10,7 @@ except ImportError:
     from urllib2 import urlopen
     from urllib import urlretrieve
 
-
+# ThousandGenomes
 def thousandgenomes(name = None, ecotype = None, ecnumber = None, country = None, longitude = None, latitude = None):
     '''This method enables to search through '1001 Genomes' database for VCF file corresponding to selected
         Arabidopsis Thaliana strain, origin country or longitude and/or latitude where Arabidopsis Thaliana live.
@@ -189,6 +189,88 @@ def download(vcf_reader, path_filename):
     urlretrieve(vcf_reader._stream, path_filename)
     return
 
+# dbSNP
+
+def dbSNP_download(organism_taxon, chromosome = None):
+    '''This method enable you to search VCF files corresponding to given species, taxon identifier and chromosome.
+    
+    You can find avaiable organisms and taxon identifiers in file organisms.txt
+    
+    If you want to check dbSNP for updates, or newly added organisms or VCF files use function check_VCF.
+    
+    Attention: human VCF file is not divided by chromosomes. You can download collective file for all chromosomes 
+    but remember it's almost 350GB
+    
+    '''
+    
+    baseURL = "ftp://ftp.ncbi.nih.gov/snp/organisms/"
+    if organism_taxon.split('_')[0] != 'human':
+        if chromosome == None:
+            vcf_url = baseURL + organism_taxon + '/' + 'VCF/' + '00-All.vcf.gz'
+        else:
+            vcf_url = baseURL + organism_taxon + '/' + 'VCF/' + 'vcf_chr_' + str(chromosome) + '.vcf.gz'
+    else:
+        search_url = baseURL + organism_taxon + '/' + 'VCF/'
+        search = urlopen(search_url)
+        for i in search:
+            line = i.strip().split()[-1]
+            name = line.split('_')
+            if name[0] == 'All' and name[1].split('.')[-1] == 'gz' and name[1].split('.')[-2] == 'vcf':
+                filename = line
+        vcf_url = baseURL + organism_taxon + '/' + 'VCF/' + filename
+     
+
+    response = urlopen(vcf_url)
+    
+    if sys.version > '3':
+        gzip_f = gzip.GzipFile(mode='rb', fileobj=response)
+        reader = codecs.getreader("utf-8")
+        contents = reader(gzip_f)
+        vcf = parser.Reader(contents,"r")
+        return vcf
+    else: # sys.version < '3':
+        gzip_f = gzip.GzipFile(fileobj=io.BytesIO(response.read()))
+        vcf = parser.Reader(gzip_f,"r")
+        return vcf
+
+def check_VCF():
+    
+    '''This method updates the list of organisms in organisms.txt'''
+    
+    fullurl = "ftp://ftp.ncbi.nih.gov/snp/organisms/"
+    print('Connecting to database...')
+    database_list = urlopen(fullurl)
+    organisms_list = []
+    vcf_organism = []
+    for i in database_list:
+        a = i.strip().split()
+        organisms_list.append(a[-1])
+        
+    for organism in organisms_list:
+        print ('Searching for VCF files...')
+        if organism == 'FTP_MAINTENENCE_NOTICE.txt':
+            pass
+        else:
+            organism_url = fullurl + organism + '/'
+            check_organism = urlopen(organism_url)
+            for line in check_organism:
+                b = line.strip().split()
+                if b[-1] == 'VCF':
+                    #org = organism.split('_')
+                    organism_vcf_url = organism_url + 'VCF/'
+                    check_vcf = urlopen(organism_vcf_url)
+                    file_list = []
+                    for i in check_vcf:
+                        file_list.append(i)
+                    if len(file_list) > 2:
+                        vcf_organism.append(organism)
+                        
+                    
+    result = open('organisms.txt','w+')
+    for record in vcf_organism:
+        result.write(record + '\n')
+    result.close()
+    print('List updated.')
 
 
 
