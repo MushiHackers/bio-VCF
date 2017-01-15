@@ -1,0 +1,52 @@
+P_download():
+    '''This method enable you to search .vcf files corresponding to given species, taxon identifier ond chromosome.
+    
+    Avaiable organisms and taxon identifiers:
+    
+    fruitfly: 7227
+    
+    
+    '''
+    
+    baseURL = "ftp://ftp.ncbi.nih.gov/snp/organisms/primates_61853/VCF/"
+    filename_1 = "vcf_chr_"
+    chromosome_number = "10"
+    filename_2 = ".vcf.gz"
+    
+    filename = baseURL + filename_1 + chromosome_number + filename_2
+    outFilePath = filename_1 + chromosome_number + filename_2
+    
+    response = urlopen(filename)
+    
+    compressedFile = StringIO.StringIO(response.read())
+    decompressedFile = gzip.GzipFile(fileobj=compressedFile)
+    print decompressedFile.read()
+
+def check_VCF():
+    
+    '''This method gives you a list of organisms for which you can download vcf files from dbSNP'''
+    fullurl = "ftp://ftp.ncbi.nih.gov/snp/organisms/"
+    database_list = urlopen(fullurl)
+    organisms_list = []
+    vcf_organism = []
+    for i in database_list:
+        a = i.strip().split()
+        organisms_list.append(a[-1])
+        
+    for organism in organisms_list:
+        if organism == 'FTP_MAINTENENCE_NOTICE.txt':
+            pass
+        else:
+            organism_url = fullurl + organism + '/'
+            check_vcf = urlopen(organism_url)
+            for line in check_vcf:
+                b = line.strip().split()
+                if b[-1] == 'VCF':
+                    #org = organism.split('_')
+                    vcf_organism.append(organism)
+                        
+                    
+    result = open('organisms.txt','w+')
+    for record in vcf_organism:
+        result.write(record + '\n')
+    res

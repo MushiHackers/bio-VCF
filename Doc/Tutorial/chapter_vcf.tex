@@ -1,33 +1,18 @@
 \chapter{Bio.VCF: handling VCF and phased files}
 
-Since new functionality added to \verb|Biopython| version ILEŚTAM NAPISAĆ ILE BO NIE WIEM is based on \verb|pyVCF|
+Since new functionality added to \verb|Biopython| is based on \verb|pyVCF|
 package, this chapter is partly based on the original \verb|pyVCF| documentation. Not all of the original functionality
-is described below, therefore for further details of \verb|Bio.VCF| module, pleas see
+is described below, therefore for further details of \verb|Bio.VCF| module, please see
 \href{http://pyvcf.readthedocs.io/en/latest/INTRO.html}{pyVCF}.
 
 \section{VCF.Reader class}
 
-\verb|Bio.VCF.Reader| class takes a file-like object and acts as reader. It is intended to parse the content of each record
+\verb|VCF.Reader| class takes a file-like object and acts as reader. It is intended to parse the content of each record
 based on the data types specified in the meta-information lines – specifically the \verb|##INFO| and \verb|##FORMAT| lines.
 If these lines are missing or incomplete it will check against the reserved types mentioned in the spec.
 Failing that, it will just return strings.
 
-\noindent The attributes of a \verb|Record| object are the 8 fixed fields from the VCF spec: \
 
-\
-
-\verb|Record.CHROM|, \verb|Record.POS|, \verb|Record.ID|, \verb|Record.REF|, \verb|Record.ALT|, \verb|Record.QUAL| \
-  \verb|Record.FILTER|, \verb|Record.INFO|
-
-\
-
-\noindent plus attributes to handle genotype information:
-
-\
-
-\verb|Record.FORMAT|, \verb|Record.samples|, \verb|Record.genotype|.
-
-\
 
 \noindent Regarding the coordinates associated with each instance:
 
@@ -35,7 +20,8 @@ Failing that, it will just return strings.
   \item[\texttt{POS}] \
 
     per VCF specification, is the one-based index (the first base of the contig has an index of 1)
-    of the first base of the \verb|REF| sequence
+    of the first base of the \verb|REF| sequence. Positions are sorted numerically,
+    in increasing order.
 
   \item[\texttt{start}{ end}] \
 
@@ -73,17 +59,32 @@ Semicolon-delimited lists of key=value pairs are converted to Python dictionarie
 
 \
 
-\verb|Record.metadata|, \verb|Record.infos|, \verb|Record.filters|, \verb|Record.formats|, \verb|Record.samples|.
+\verb|Reader.metadata|, \verb|Reader.infos|, \verb|Reader.filters|, \verb|Reader.formats|, \verb|Reader.samples|.
 
 \
 
+\noindent The attributes of a \verb|Record| object are the 8 fixed fields from the VCF spec: \
 
+\
 
-\noindent Suppose we have a VCF file and want to see all the records in it. We might simply create a Bio.VCF.Reader object:
+\verb|Record.CHROM|, \verb|Record.POS|, \verb|Record.ID|, \verb|Record.REF|, \verb|Record.ALT|, \verb|Record.QUAL| \
+  \verb|Record.FILTER|, \verb|Record.INFO|
+
+\
+
+\noindent plus attributes to handle genotype information:
+
+\
+
+\verb|Record.FORMAT|, \verb|Record.samples|, \verb|Record.genotype|.
+
+\
+
+\noindent Suppose we have a VCF file and want to see all the records in it. We might simply create a VCF.Reader object:
 
 \begin{verbatim}
 >>> from Bio.VCF import parser
->>> vcf_reader = parser.Reader(open('VCF/example-4.0.vcf', 'r'))
+>>> vcf_reader = parser.Reader(open('example-4.0.vcf', 'r'))
 >>> for record in vcf_reader:
 ...     print record
 Record(CHROM=20, POS=14370, REF=G, ALT=[A])
@@ -94,8 +95,7 @@ Record(CHROM=20, POS=1234567, REF=GTCT, ALT=[G, GTACT])
 \end{verbatim}
 
 
-\noindent Now, we are interested in position and alteration type of the first record from the VCF file. We can
-obtain the information by typing:
+\noindent Now, we are interested in position and alteration type of the first record from the VCF file. We can obtain the information by typing:
 
 \begin{verbatim}
 >>> record = next(vcf_reader)
@@ -107,8 +107,7 @@ obtain the information by typing:
 [0.5]
 \end{verbatim}
 
-\noindent Moreover there are a number of convenience methods and properties for each \verb|Bio.VCF.Record| object
-allowing you to examine properties of interest:
+\noindent Moreover there are a number of convenience methods and properties for each \verb|VCF.Record| object allowing you to analyse VCF object:
 
 \begin{verbatim}
 >>> print record.num_called, record.call_rate, record.num_unknown
@@ -180,7 +179,7 @@ OrderedDict([('q10', Filter(id='q10', desc='Quality below 10')), \
 \noindent When you are interested in \verb|ALT| records, you can interrogate them to achieve information:
 
 \begin{verbatim}
->>> reader = parser.Reader(open('VCF/example-4.1-bnd.vcf'))
+>>> reader = parser.Reader(open('example-4.1-bnd.vcf'))
 >>> _ = next(reader); row = next(reader)
 >>> print row
 Record(CHROM=1, POS=2, REF=T, ALT=[T[2:3[])
@@ -278,35 +277,19 @@ True False True T
 
     \
 
-    \item[\texttt{vcf\_melt}] \
-
-    This script converts a \verb|VCF| file from wide format (many calls per row) to a long format
-    (one call per row). This is useful if you want to grep per sample or for really quick
-    import into, say, a spreadsheet:
-
-    \begin{verbatim}
-    $ vcf_melt < vcf/test/gatk.vcf
-    SAMPLE      AD      DP      GQ      GT      PL      FILTER  CHROM   POS     REF     ...
-    BLANK       6,0     6       18.04   0/0     0,18,211        .       chr22   42522392        ...
-    NA12878     138,107 250     99.0    0/1     1961,0,3049     .       chr22   42522392        ...
-    NA12891     169,77  250     99.0    0/1     1038,0,3533     .       chr22   42522392        ...
-    NA12892     249,0   250     99.0    0/0     0,600,5732      .       chr22   42522392        ...
-    ...
-    \end{verbatim}
-
     \end{description}
 
 \section{VCF.Writer class}
 
-\noindent The \verb|Bio.VCF.Writer| class provides a way of writing a VCF file.
-\verb|Bio.VCF.parser| module supports \verb|close()|, \verb|flush()| and \verb|write_record()| methods.
+\noindent The \verb|VCF.Writer| class provides a way of writing a VCF file.
+\verb|VCF.parser| module supports \verb|close()|, \verb|flush()| and \verb|write_record()| methods.
 
-\noindent Currently, when writing new VCF file you must specify a template \verb|Bio.VCF.Reader| object
+\noindent Currently, when writing new VCF file you must specify a template \verb|VCF.Reader| object
 which provides the metadata, like this:
 
 \begin{verbatim}
 >>> from Bio.VCF import parser
->>> vcf_reader = parser.Reader(filename='VCF/tb.vcf.gz')
+>>> vcf_reader = parser.Reader(filename='tb.vcf.gz')
 >>> vcf_writer = parser.Writer(open('/dev/null', 'w'), vcf_reader)
 >>> for record in vcf_reader:
 ...     vcf_writer.write_record(record)
@@ -317,7 +300,7 @@ which provides the metadata, like this:
 
 \section{Retrieving records from VCF file}
 
-\noindent This chapter gives an overview of the functionality of fetch methods included in \verb|Bio.VCF| \verb|parser| module.
+\noindent This chapter gives an overview of the functionality of fetch methods included in \verb|VCF| \verb|parser| module.
 Those functions enable users to retrieve particular records from VCF file describing structural variants,
 depending on provided argument - for example interval of positions within which we seek for structural variants, a list
 of such positions or feature type within which structural variants are present.
