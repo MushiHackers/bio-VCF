@@ -205,7 +205,10 @@ def dbSNP_download(organism_taxon, chromosome = None):
     
     baseURL = "ftp://ftp.ncbi.nih.gov/snp/organisms/"
     if organism_taxon.split('_')[0] != 'human':
-       vcf_url = baseURL + organism_taxon + '/' + 'VCF/' + 'vcf_chr_' + str(chromosome) + '.vcf.gz'
+        if chromosome == None:
+            vcf_url = baseURL + organism_taxon + '/' + 'VCF/' + '00-All.vcf.gz'
+        else:
+            vcf_url = baseURL + organism_taxon + '/' + 'VCF/' + 'vcf_chr_' + str(chromosome) + '.vcf.gz'
     else:
         search_url = baseURL + organism_taxon + '/' + 'VCF/'
         search = urlopen(search_url)
@@ -235,6 +238,7 @@ def check_VCF():
     '''This method updates the list of organisms in organisms.txt'''
     
     fullurl = "ftp://ftp.ncbi.nih.gov/snp/organisms/"
+    print('Connecting to database...')
     database_list = urlopen(fullurl)
     organisms_list = []
     vcf_organism = []
@@ -243,6 +247,7 @@ def check_VCF():
         organisms_list.append(a[-1])
         
     for organism in organisms_list:
+        print ('Searching for VCF files...')
         if organism == 'FTP_MAINTENENCE_NOTICE.txt':
             pass
         else:
@@ -265,7 +270,7 @@ def check_VCF():
     for record in vcf_organism:
         result.write(record + '\n')
     result.close()
- 
+    print('List updated.')
 
 
 

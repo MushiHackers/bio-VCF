@@ -623,8 +623,73 @@ method can manage this:
 \end{verbatim}
 
 \subsection{dbSNP database}
-todo Zojka
 
+\verb|dbSNP| Is the NCBI Short Genetic Variations database. It catalogs short variations in nucleotide sequences froma wide range of organisms. 
+\verb|Bio.VCf.databases| module can be used to obtain avaiable VCF files from dbSNP. List of organism for which VCF files exists can be found in supplementary file \verb|organisms.txt|. The database is regulary updated. User can update list od organisms using attached methods. Searching through the database can be based on organism and taxon ID proposed in file \verb|organisms.txt| and a chosen chromosome. Unfortunatelly dbSNP does not contain human SNPs divided into chromosomes. User can operate only on a very big file (350GB).
+
+\noindent Below there is a brief description of \verb|dbSNP| methods:
+
+\begin{description}
+  \item[\texttt{dbSNP_download(organism_taxon, chromosome = None)}] \
+
+    This method enables to search through \verb|dbSNP| database for VCF file corresponding to selected
+    organism, taxon and chromosome.
+    
+    Organism and corresponding taxon ID must be chosen from list of organisms in \verb|organisms.txt|. User can update this list by running
+    \verb|check_VCF()| method.
+    
+    Chromosome must be chosen from existing chromosomes in given organism. Leaving \verb|chromosome=None| will cause loading VCF file
+    containing all the chromosomes (but not every organism has this file).
+    
+    Method returns VCF.Reader object of selected VCF file stream from dbSNP.
+    
+    \item[\texttt{check_VCF()}] \
+    
+    This method enables to update organisms list in \verb|organisms.txt|. dbSNP is regullary updated. If you can't find chosen organisms in 
+    the list we recommend running this method. 
+    
+\end{description}
+    
+\noindent Let's try some functionality of the module:
+
+\noindent Suppose we want to analyse SNPs found in chromosome 2R in fruitfly. We check \verb|organisms.txt| where we can find identifier 
+fruitfly_7227.
+
+\begin{verbatim}
+>>> from Bio.VCF import databases
+>>> vcf = databases.dbSNP_download('fruitfly_7227',chromosome='2R')
+>>> vcf
+<Bio.VCF.parser.Reader object at 0x7f1d813f14d0>
+\end{verbatim}
+
+\noindent Now we can continue our analysis using methods proposed in VCF.Reader class.
+
+\noindent We can also want to analyse all SNPs found for flycatcher:
+
+\begin{verbatim}
+>>> vcf = databases.dbSNP_download('flycatcher_59894')
+>>> vcf
+<Bio.VCF.parser.Reader object at 0x7f1d82c83ad0>
+\end{verbatim}
+
+\noindent If you want to check if new VCF files are avaiable just run:
+
+\begin{verbatim}
+>>> from Bio.VCF import databases
+>>> databases.check_VCF()
+Connecting to database...
+Searching for VCF files...
+Searching for VCF files...
+Searching for VCF files...
+Searching for VCF files...
+Searching for VCF files...
+.
+.
+.
+List updated.
+\end{verbatim}
+    
+    
 \section {Retrieving records from phasing files}
 %todo Hans
 
