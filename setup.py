@@ -486,6 +486,14 @@ setup_args = {
     "url": 'http://www.biopython.org/',
     "description": 'Freely available tools for computational molecular biology.',
     "download_url": 'http://biopython.org/DIST/',
+    "entry_points": {"vcf.filters":[
+              'site_quality = Bio.VCF.filters:SiteQuality',
+            'vgq = Bio.VCF.filters:VariantGenotypeQuality',
+            'eb = Bio.VCF.filters:ErrorBiasFilter',
+            'dps = Bio.VCF.filters:DepthPerSample',
+            'avg-dps = Bio.VCF.filters:AvgDepthPerSample',
+            'snp-only = Bio.VCF.filters:SnpOnly',
+          ]},
     "cmdclass": {
         "install": install_biopython,
         "build_py": build_py_biopython,

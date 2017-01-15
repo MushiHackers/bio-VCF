@@ -15,13 +15,10 @@ except:
     pickle = None
 from Bio._py3k import StringIO  ##
 from Bio._py3k import getstatusoutput  ##
-import subprocess
+from subprocess import Popen, PIPE
 import sys
 
-# try:
-#    import pysam
-# except ImportError:
-#    pysam = None
+
 try:
     import pybedtools
 except ImportError:
@@ -259,7 +256,7 @@ class Test1001Genomes(unittest.TestCase):
         assert os.path.isfile('../database_download.gz')
         os.system("rm -r ../database_download.gz")'''
 
-
+'''
 @unittest.skipUnless(pybedtools, "test requires installation of PyBedTools.")
 class TestFetch(unittest.TestCase):
     def testFetchBed(self):
@@ -353,7 +350,7 @@ class TestFetch(unittest.TestCase):
         t = reader.fetch('13')
         reader.create_vcf(t,'test')
         assert os.path.isfile('test.vcf')
-        os.system("rm -r test.vcf")
+        os.system("rm -r test.vcf") '''
 
 class TestGatkOutput(unittest.TestCase):
     filename = 'gatk.vcf'
@@ -1500,33 +1497,32 @@ class TestOpenMethods(unittest.TestCase):
         self.assertEqual(self.samples, r.samples)
 
 
-# TODO Zoanna to wyzej nizej, do poszukania i sprawdzenia czy dziala
 
 class TestSampleFilter(unittest.TestCase):
-    @unittest.skipUnless(IS_PYTHON2, "test broken for Python 3")
+
     def testCLIListSamples(self):
-        proc = subprocess.Popen('python ../Bio/VCF/scripts/vcf_sample_filter.py VCF/test/example-4.1.vcf', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = Popen('python ../Bio/VCF/scripts/vcf_sample_filter.py VCF/example-4.1.vcf', shell=True, stdout=PIPE, stderr=PIPE)
         out, err = proc.communicate()
         self.assertEqual(proc.returncode, 0)
         self.assertFalse(err)
-        expected_out = ['Samples:', '0: NA00001', '1: NA00002', '2: NA00003']
+        expected_out = [b'Samples:', b'0: NA00001', b'1: NA00002', b'2: NA00003']
         self.assertEqual(out.splitlines(), expected_out)
-    @unittest.skipUnless(IS_PYTHON2, "test broken for Python 3")
+
     def testCLIWithFilter(self):
-        proc = subprocess.Popen('python ../Bio/VCF/scripts/vcf_sample_filter.py VCF/test/example-4.1.vcf -f 1,2 --quiet', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = Popen('python ../Bio/VCF/scripts/vcf_sample_filter.py VCF/example-4.1.vcf -f 1,2 --quiet', shell=True, stdout=PIPE, stderr=PIPE)
         out, err = proc.communicate()
         self.assertEqual(proc.returncode, 0)
         self.assertTrue(out)
         self.assertFalse(err)
         buf = StringIO()
-        buf.write(out)
+        buf.write(out.decode("utf-8"))
         buf.seek(0)
         #print(buf.getvalue())
         reader = VCF.Reader(buf)
         self.assertEqual(reader.samples, ['NA00001'])
         rec = next(reader)
         self.assertEqual(len(rec.samples), 1)
-    @unittest.skipUnless(IS_NOT_PYPY, "test broken for PyPy")
+
     def testSampleFilterModule(self):
         # init filter with filename, get list of samples
         filt = VCF.SampleFilter('VCF/example-4.1.vcf')
@@ -1547,12 +1543,14 @@ class TestSampleFilter(unittest.TestCase):
         self.assertEqual(reader.samples, ['NA00001'])
         rec = next(reader)
         self.assertEqual(len(rec.samples), 1)
+
 class TestFilter(unittest.TestCase):
     @unittest.skip("test currently broken")
     def testApplyFilter(self):
         # FIXME: broken with distribute
-        s, out = getstatusoutput('python scripts/vcf_filter.py --site-quality 30 test/example-4.0.vcf sq')
-        #print(out)
+        #'python ../Bio/VCF/scripts/vcf_filter.py --site-quality 30 VCF/example-4.0.vcf sq'
+        s, out = getstatusoutput('python ../Bio/VCF/scripts/vcf_filter.py sq 30 VCF/example-4.0.vcf')
+        # print(out)
         self.assertEqual(s, 0)
         buf = StringIO()
         buf.write(out)
@@ -1574,8 +1572,9 @@ class TestFilter(unittest.TestCase):
     @unittest.skip("test currently broken")
     def testApplyMultipleFilters(self):
         # FIXME: broken with distribute
-        s, out = getstatusoutput('python scripts/vcf_filter.py --site-quality 30 '
-        '--genotype-quality 50 test/example-4.0.vcf sq mgq')
+        #'python ../Bio/VCF/scripts/vcf_filter.py --site-quality 30 --genotype-quality 50 VCF/example-4.0.vcf sq mgq'
+        s, out = getstatusoutput('python ../Bio/VCF/scripts/vcf_filter.py --site-quality 30 --genotype-quality 50 VCF/example-4.0.vcf sq mgq')
+        #print(out)
         self.assertEqual(s, 0)
         #print(out)
         buf = StringIO()
@@ -1744,7 +1743,6 @@ class TestStrelka(unittest.TestCase):
         n = next(reader)
         assert n is not None
 
-
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestVcfSpecs))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGatkOutput))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFreebayesOutput))
@@ -1766,17 +1764,17 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMetadataWhitespac
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMixedFiltering))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRecord))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCall))
-suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
-suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Test1001Genomes))
-suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedReader))
-suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedWriter))
+#suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
+#suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Test1001Genomes))
+#suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedReader))
+#suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedWriter))
 ##suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue201))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue234))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue246))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIsFiltered))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestOpenMethods))
-# suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSampleFilter))
-# suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFilter))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestSampleFilter))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFilter))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRegression))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestUtils))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestGATKMeta))
