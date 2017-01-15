@@ -618,8 +618,8 @@ method can manage this:
 
 
 \begin{verbatim}
->>> for v in vcf\_list:
->>>     databases.download(v,'database\_download.gz')
+>>> for v in vcf_list:
+>>>     databases.download(v,'database_download.gz')
 \end{verbatim}
 
 \subsection{dbSNP database}
@@ -658,8 +658,8 @@ We can read it in several ways, in example supporting only the filename:
 
 \begin{verbatim}
 >>> from Bio.VCF import PhasedReader
->>> phase\_reader = PhasedReader('hapmap3\_r2\_b36\_fwd.consensus.qc.poly.chr10\_yri.D.phased')
->>> phase\_reader
+>>> phase_reader = PhasedReader('hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> phase_reader
 <Bio.VCF.phase.PhasedReader object at 0x7fee0c0445c0>
 
 \end{verbatim}
@@ -668,9 +668,9 @@ We can read it in several ways, in example supporting only the filename:
 
 \begin{verbatim}
 >>> from Bio.VCF import PhasedReader
->>> phase\_file = open('hapmap3\_r2\_b36\_fwd.consensus.qc.poly.chr10\_yri.D.phased')
->>> phase\_reader = PhasedReader(fsock = phase\_file)
->>> phase\_reader
+>>> phase_file = open('hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> phase_reader = PhasedReader(fsock = phase_file)
+>>> phase_reader
 <Bio.VCF.phase.PhasedReader object at 0x7fee0c04bd30>
 
 \end{verbatim}
@@ -680,17 +680,103 @@ to true:
 
 \begin{verbatim}
 >>> from Bio.VCF import PhasedReader
->>> phase\_reader = PhasedReader('hapmap3\_r2\_b36\_fwd.consensus.qc.poly.chr10\_yri.D.phased.gz',compressed=True)
->>> phase\_reader
+>>> phase_reader = PhasedReader('hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz',
+compressed=True)
+>>> phase_reader
 <Bio.VCF.phase.PhasedReader object at 0x7fedf6df1278>
 
 \end{verbatim}
 
-\subsubsection{Exploring data held by VCF.PhasedReader extracted from the filename}
+\subsubsection{Exploring data held by VCF.PhasedReader}
 
+\noindent Data extracted from the filename is stored in the VCF.PhasedReader.filedata dict.
 
+\begin{verbatim}
+>>> phase_reader.filedata
+{'region': 'yri', 'chrom': '10', 'data_type': 'duos'}
+
+\end{verbatim}
+
+\noindent It is possible to get to the particular information by calling its key from dict:
+
+\begin{verbatim}
+>>> phase_reader.filedata['region']
+'yri'
+>>> phase_reader.filedata['chrom']
+'10'
+>>> phase_reader.filedata['data_type']
+'duos'
+
+\end{verbatim}
+
+\noindent Haplotypes included in the file are stored in the haplotypes list, as \_Haplotype objects:
+
+\begin{verbatim}
+>>> phase_reader.haplotypes
+[<Bio.VCF.phase._Haplotype object at 0x7fb16ed6e828>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6e898>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6e908>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6e940>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6e9b0>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6ea20>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6ea58>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6eac8>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6eb38>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6eb70>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6ebe0>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6ec50>]
+
+\end{verbatim}
+
+\noindent Let's see the first haplotype in the file:
+
+\begin{verbatim}
+>>> phase_reader.haplotypes[0]
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6e828>
+>>> print(phase_reader.haplotypes[0])
+NA18855, transmitted: True
+
+\end{verbatim}
+
+\noindent The _Haplotype object holds information about the name of haplotype and if it is transmitted:
+
+\begin{verbatim}
+>>> phase_reader.haplotypes[0].name
+'NA18855'
+>>> phase_reader.haplotypes[0].is_transmitted
+True
+
+\end{verbatim}
 
 \subsubsection{Parsing phasing files with VCF.PhasedReader}
+
+\noindent To get the first (and then next, and then next...) line of the file, you just call next() on the PhasedReader:
+
+\begin{verbatim}
+>>> rec = next(phase_reader)
+>>> rec
+<Bio.VCF.phase._PhasedRecord object at 0x7fb16ed7f6d8>
+>>> print(rec)
+Record(rs12255619 at 88481: C, A, A, A, A, A, A, A, A, A, A, A)
+
+\end{verbatim}
+
+\noindent Parsing the phasing file by iterating over it is also possible:
+
+\begin{verbatim}
+>>> for rec in phase_reader:
+...     print(rec)
+...
+Record(rs12255619 at 88481: C, A, A, A, A, A, A, A, A, A, A, A)
+Record(rs11252546 at 94427: T, T, T, T, T, T, T, T, C, T, T, T)
+Record(rs17156316 at 191762: T, T, T, T, T, T, T, C, C, T, T, T)
+Record(rs10903451 at 193471: A, A, A, A, G, G, A, A, A, A, A, G)
+Record(rs11250575 at 199448: T, C, C, C, C, C, C, C, C, C, C, C)
+.......
+
+\end{verbatim}
+
+\noindent Let's explore what is stored in the \_PhasedRecord
 
 o \_PhasedRecord
 next()
