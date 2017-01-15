@@ -7,7 +7,7 @@ is described below, therefore for further details of \verb|Bio.VCF| module, plea
 
 \section{VCF.Reader class}
 
-\verb|Bio.VCF.Reader| class takes a file-like object and acts as reader. It is intended to parse the content of each record
+\verb|VCF.Reader| class takes a file-like object and acts as reader. It is intended to parse the content of each record
 based on the data types specified in the meta-information lines – specifically the \verb|##INFO| and \verb|##FORMAT| lines.
 If these lines are missing or incomplete it will check against the reserved types mentioned in the spec.
 Failing that, it will just return strings.
@@ -630,7 +630,7 @@ method can manage this:
 \noindent Below there is a brief description of \verb|dbSNP| methods:
 
 \begin{description}
-  \item[\texttt{dbSNP_download(organism_taxon, chromosome = None)}] \
+  \item[\texttt{dbSNP\_download(organism\_taxon, chromosome = None)}] \
 
     This method enables to search through \verb|dbSNP| database for VCF file corresponding to selected
     organism, taxon and chromosome.
@@ -643,17 +643,17 @@ method can manage this:
     
     Method returns VCF.Reader object of selected VCF file stream from dbSNP.
     
-    \item[\texttt{check_VCF()}] \
+    \item[\texttt{check\_VCF()}] \
     
     This method enables to update organisms list in \verb|organisms.txt|. dbSNP is regullary updated. If you can't find chosen organisms in 
     the list we recommend running this method. 
-    
+
 \end{description}
-    
+
 \noindent Let's try some functionality of the module:
 
 \noindent Suppose we want to analyse SNPs found in chromosome 2R in fruitfly. We check \verb|organisms.txt| where we can find identifier 
-fruitfly_7227.
+fruitfly\_7227.
 
 \begin{verbatim}
 >>> from Bio.VCF import databases
@@ -803,7 +803,7 @@ NA18855, transmitted: True
 
 \end{verbatim}
 
-\noindent The _Haplotype object holds information about the name of haplotype and if it is transmitted:
+\noindent The \_Haplotype object holds information about the name of haplotype and if it is transmitted:
 
 \begin{verbatim}
 >>> phase_reader.haplotypes[0].name
