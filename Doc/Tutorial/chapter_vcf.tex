@@ -618,9 +618,100 @@ method can manage this:
 
 
 \begin{verbatim}
->>> for v in vcf_list:
->>>     databases.download(v,'database_download.gz')
+>>> for v in vcf\_list:
+>>>     databases.download(v,'database\_download.gz')
 \end{verbatim}
 
 \subsection{dbSNP database}
 todo Zojka
+
+\section {Retrieving records from phasing files}
+%todo Hans
+
+This chapter gives an overview of the usage of phasing files parser included in \verb|Bio.VCF| \verb|phase| module.
+This module makes handling haplotype data easier, allowing users to retrieve particular records from phasing files
+and even filtering SNPs by matching them to those included in VCF file.
+
+The whole module is specifficaly written for handling data from \href{ftp://ftp.hapmap.org/hapmap/phasing/2009-02\_phaseIII/HapMap3\_r2/}{HapMap 3} project.
+Format of the data handled by functions is as staded in \href{ftp://ftp.hapmap.org/hapmap/phasing/2009-02\_phaseIII/HapMap3\_r2/hapmap3\_r2\_phasing\_summary.doc}{hapmap3\_r2\_phasing\_summary.doc},
+but also assuming that SNPs in those files are sorted increasingly by position.
+
+
+\subsection{Parsing and reading phasing files}
+
+Phasing data can be read as \verb|VCF.PhasedReader| object. It is similiar to \verb|VCF.Reader| class - works with both compressed (.gz) and
+uncompressed files, can take fsocks (streams) and filenames as input, with specified encoding (default is ascii).
+\verb|VCF.PhasedReader| holds information extracted from the name of the file (if available), haplotypes, and SNP's in form of \verb|VCF._PhasedRecord| objects.
+It also contains several useful functions explained further in the coresponding subsections in \verb|VCF.PhasedReader functions| section below.
+Important thing is, if you are downloading the .phased file to your computer, rather not change the file name as it gives important
+information not stated anywhere in the file. Files without original name will be parsed normally but will lack in information like:
+\begin{enumerate}
+  \item chromosome
+  \item region
+  \item if the file is for unrelated haplotypes, duos or trios.
+\end{enumerate}
+
+\subsubsection{Creating VCF.PhasedReader objects}
+
+\noindent Suppose we have a phasing file downloaded from the \href{ftp://ftp.hapmap.org/hapmap/phasing/2009-02\_phaseIII/HapMap3\_r2/}{HapMap 3} site.
+We can read it in several ways, in example supporting only the filename:
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> phase\_reader = PhasedReader('hapmap3\_r2\_b36\_fwd.consensus.qc.poly.chr10\_yri.D.phased')
+>>> phase\_reader
+<Bio.VCF.phase.PhasedReader object at 0x7fee0c0445c0>
+
+\end{verbatim}
+
+\noindent or with opening the file first:
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> phase\_file = open('hapmap3\_r2\_b36\_fwd.consensus.qc.poly.chr10\_yri.D.phased')
+>>> phase\_reader = PhasedReader(fsock = phase\_file)
+>>> phase\_reader
+<Bio.VCF.phase.PhasedReader object at 0x7fee0c04bd30>
+
+\end{verbatim}
+
+\noindent If the file is compressed (.gz), the parser will try to guess it and uncompress it without stating anything, but it is advised that the uncompressed argument is set
+to true:
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> phase\_reader = PhasedReader('hapmap3\_r2\_b36\_fwd.consensus.qc.poly.chr10\_yri.D.phased.gz',compressed=True)
+>>> phase\_reader
+<Bio.VCF.phase.PhasedReader object at 0x7fedf6df1278>
+
+\end{verbatim}
+
+\subsubsection{Exploring data held by VCF.PhasedReader extracted from the filename}
+
+
+
+\subsubsection{Parsing phasing files with VCF.PhasedReader}
+
+o \_PhasedRecord
+next()
+
+o \_Sample
+o \_Haplotype
+
+
+\subsubsection{}
+
+
+
+
+
+\subsection{VCF.PhasedReader functions}
+
+\subsubsection{VCF.PhasedReader.fetch() - Fetching SNP's from VCF file}
+
+\subsubsection{}
+%TODO DEJW dla kazdego ma byc subsubsections, w klamrze ma byc info co to za funkcja i co robi
+
+
+
+
