@@ -1,6 +1,6 @@
 \chapter{Bio.VCF: handling VCF and phased files}
 
-Since new functionality added to \verb|Biopython| is based on \verb|pyVCF|
+Since this functionality is based on \verb|pyVCF|
 package, this chapter is partly based on the original \verb|pyVCF| documentation. Not all of the original functionality
 is described below, therefore for further details of \verb|Bio.VCF| module, please see
 \href{http://pyvcf.readthedocs.io/en/latest/INTRO.html}{pyVCF}.
@@ -8,7 +8,7 @@ is described below, therefore for further details of \verb|Bio.VCF| module, plea
 \section{VCF.Reader class}
 
 \verb|VCF.Reader| class takes a file-like object and acts as reader. It is intended to parse the content of each record
-based on the data types specified in the meta-information lines – specifically the \verb|##INFO| and \verb|##FORMAT| lines.
+based on the data types specified in the meta-information lines, specifically the \verb|##INFO| and \verb|##FORMAT| lines.
 If these lines are missing or incomplete it will check against the reserved types mentioned in the spec.
 Failing that, it will just return strings.
 
@@ -766,13 +766,9 @@ compressed=True)
 <Bio.VCF.phase._Haplotype object at 0x7fb16ed6e908>,
 <Bio.VCF.phase._Haplotype object at 0x7fb16ed6e940>,
 <Bio.VCF.phase._Haplotype object at 0x7fb16ed6e9b0>,
-<Bio.VCF.phase._Haplotype object at 0x7fb16ed6ea20>,
-<Bio.VCF.phase._Haplotype object at 0x7fb16ed6ea58>,
-<Bio.VCF.phase._Haplotype object at 0x7fb16ed6eac8>,
-<Bio.VCF.phase._Haplotype object at 0x7fb16ed6eb38>,
-<Bio.VCF.phase._Haplotype object at 0x7fb16ed6eb70>,
-<Bio.VCF.phase._Haplotype object at 0x7fb16ed6ebe0>,
-<Bio.VCF.phase._Haplotype object at 0x7fb16ed6ec50>]
+.
+.
+.
 
 \end{verbatim}
 
@@ -820,28 +816,106 @@ Record(rs11252546 at 94427: T, T, T, T, T, T, T, T, C, T, T, T)
 Record(rs17156316 at 191762: T, T, T, T, T, T, T, C, C, T, T, T)
 Record(rs10903451 at 193471: A, A, A, A, G, G, A, A, A, A, A, G)
 Record(rs11250575 at 199448: T, C, C, C, C, C, C, C, C, C, C, C)
-.......
+.
+.
+.
 
 \end{verbatim}
 
-\noindent Let's explore what is stored in the \_PhasedRecord
+\noindent Let's explore what is stored in the \_PhasedRecord:
+\begin{enumerate}
+\item rsID of the SNP
+\begin{verbatim}
+>>> rec.rsID
+'rs12255619'
+\end{verbatim}
 
-o \_PhasedRecord
-next()
+\item record position on the chromosome:
+\begin{verbatim}
+>>> rec.pos
+88481
+\end{verbatim}
 
-o \_Sample
-o \_Haplotype
+\item samples included in the record (as list of \_Sample objects):
+\begin{verbatim}
+>>> rec.samples
+[<Bio.VCF.phase._Sample object at 0x7f38a3d20a90>,
+<Bio.VCF.phase._Sample object at 0x7f38a3d3d048>,
+<Bio.VCF.phase._Sample object at 0x7f38a3d3d080>,
+<Bio.VCF.phase._Sample object at 0x7f38a3d3d0b8>,
+<Bio.VCF.phase._Sample object at 0x7f38a3d3d160>,
+.
+.
+.
+\end{verbatim}
+\end{enumerate}
 
+\noindent The \_Sample object corresponds to the nucleotide in the particular haplotype for the particular SNP:
 
-\subsubsection{}
+\begin{verbatim}
+>>> rec.samples[0]
+<Bio.VCF.phase._Sample object at 0x7f38a3d20a90>
+>>> rec.samples[0].rsID, rec.samples[0].haplotype.name, rec.samples[0].nucleotide
+('rs12255619', 'NA18855', 'C')
+\end{verbatim}
 
+\noindent \_Sample also holds information if the particular SNP for the haplotype exists and if it's unresolved:
 
+\begin{verbatim}
+>>> rec.samples[0].exists, rec.samples[0].is_unresolved
+(True, False)
+\end{verbatim}
 
-
+\noindent There is also the is\_not\_matching\_snp argument, but it is further discussed in the \verb|VCF.PhasedReader.fetch()|
+section.
 
 \subsection{VCF.PhasedReader functions}
 
 \subsubsection{VCF.PhasedReader.fetch() - Fetching SNP's from VCF file}
+
+\noindent The fetch metod retrieves SNPs corresponding to those in provided VCF file. It creates \verb|VCF.Reader|
+and filters it to have only the SNP's, then finds the matching ones in the phasing file. It returns the next PhasedReader object, but only with matching records.
+It takes the same arguments as VCF.Reader when it is created (see in the section about \verb|VCF.Reader| above) and a few more:
+
+\begin{enumerate}
+  \item verbose (default True) - if the found records should be printed out
+  \item vcf (default None) - the argument for VCF.Reader.fetch, see above
+  \item not\_matching\_snp (default ".") - what should be put after the nucleotide not matching any of the alleles in the VCF.
+  If None, nucleotide is outputted normally.
+\end{enumerate}
+
+\noindent Remember that all the functions in the PhasedReader objects, especially fetch, treats the phasing file as sorted by position.
+\\
+
+\noindent Suppose you wanted to filter the SNPs in the phasing files with the VCF file with some records for the same chromosome.
+First you need to create the PhasedReader object, and then fetch it by supplying the same arguments as you would when creating the VCF.Reader object.
+
+\begin{verbatim}
+>>> phase_reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz',
+compressed = True)
+>>> phase_reader.fetch(filename = 'Tests/VCF/chr10.vcf',compressed = True)
+rs12255619	88481	C A A A A A A A A A A A
+rs1904671	1004603	A G. A A A A G. G. A A A A
+rs11812734	31713857	A G A A G G G G A G G G
+<Bio.VCF.phase.PhasedReader object at 0x7f38a3d3d128>
+\end{verbatim}
+
+\noindent If you don't want dots, or any sign after the not-matching SNPs, set not\_matching\_snp to None:
+
+\begin{verbatim}
+>>> phase_reader.fetch(filename = 'Tests/VCF/chr10.vcf',not_matching_snp = None)
+rs12255619	88481	C A A A A A A A A A A A
+rs1904671	1004603	A G A A A A G G A A A A
+rs11812734	31713857	A G A A G G G G A G G G
+<Bio.VCF.phase.PhasedReader object at 0x7f38a3d20b70>
+\end{verbatim}
+
+\noindent Or if you don't want the lines to be printed and just have the new reader, simply change the verbose to False:
+
+\begin{verbatim}
+>>> phase_reader.fetch(filename = 'Tests/VCF/chr10.vcf',verbose=False)
+<Bio.VCF.phase.PhasedReader object at 0x7f38a3d3d518>
+\end{verbatim}
 
 \subsubsection{}
 %TODO DEJW dla kazdego ma byc subsubsections, w klamrze ma byc info co to za funkcja i co robi
