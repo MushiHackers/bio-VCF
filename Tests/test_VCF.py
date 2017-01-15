@@ -231,9 +231,13 @@ class TestPhasedWriter(unittest.TestCase):
 class TestdbSNP(unittest.TestCase):
     
     def testdbsnp(self):
+        t = databases.dbSNP_download(organism_taxon = 'goat_9925', chromosome = 19)
+        assert t
         t = databases.dbSNP_download(organism_taxon = 'grape_29760', chromosome = 1)
-        assert t 
         assert next(t).POS == 12469 
+        t = databases.dbSNP_download(organism_taxon = 'chicken_9031', chromosome = 10)
+        assert next(t).resID == 'rs735347598'
+        
 
 
 class Test1001Genomes(unittest.TestCase):
