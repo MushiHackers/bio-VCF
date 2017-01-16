@@ -36,13 +36,13 @@ sys.exit()'''
 #reader2 = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_asw.unr.phased.gz')
 ##radzi sobie tez z gzipowanymi
 ##streamow jeszcze nie robilam i nie testowalam
-#reader.get_snp_with_specific_id('rs104006')
+#print reader.get_snp_with_specific_id('rs2066314')
 ##sprawdza, czy SNP o danym rsID jest w pliku - jezeli jest, to zwraca caly record z nim, jezeli nie - informacje, ze nie ma takiego w pliku
-#reader.get_snp_within_range(418076, 504032)
+#print reader.get_snp_within_range(418076, 504032)
 ##wypisuje wszystkie snpy w danym zakresie (zakres: >= i <)
-#reader.get_snp_with_specific_sample('NA18855_B', 'T')
+#print reader.get_snp_with_specific_sample('NA18855_B', 'T')
 ##wypisuje wszystkie snpy z dana probka
-#reader.get_nucleotides_from_snps_in_specific_hap('NA18855_NA18856_A')
+#print reader.get_samples_in_specific_hap('NA18855_NA18856_A')
 ##wypisuje wszystkie snpy w danym haplotypie
 #reader.get_sample_from_specific_snp('rs11252546', 'NA18855_NA18856_A')
 ##wypisuje zasade w danym snpie w danym haplotypie
