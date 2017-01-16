@@ -23,14 +23,14 @@ Failing that, it will just return strings.
     of the first base of the \verb|REF| sequence. Positions are sorted numerically,
     in increasing order.
 
-  \item[\texttt{start}{,}{ end}] \
+  \item[\texttt{start, end}] \
 
     denote the coordinates of the entire \verb|REF| sequence in the zero-based, half-open coordinate
     system (see \href{http://genomewiki.ucsc.edu/index.php/Coordinate_Transforms}{Coordinate\_Transforms}), where
     the first base of the contig has an index of 0, and the interval runs up to, but does not include, the base
     at the end index. This indexing scheme is analagous to Python slice notation.
 
-  \item[\texttt{affected\_start}{,}{ affected\_end}] \
+  \item[\texttt{affected\_start, affected\_end}] \
 
     are also in the zero-based, half-open coordinate system. These coordinates indicate the precise region
     of the reference genome actually affected by the events denoted in \verb|ALT| (i.e., the minimum
@@ -47,6 +47,7 @@ Failing that, it will just return strings.
 \end{description}
 
 \noindent \verb|samples| and \verb|genotype|\\
+
 not being the title of any column, are left lowercase. The format of the fixed
 fields is from the spec. Comma-separated lists in the \verb|VCF| are converted to lists. In particular,
 one-entry \verb|VCF| lists are converted to one-entry Python lists (see, e.g., \verb|Record.ALT|).
@@ -869,6 +870,33 @@ Record(rs11250575 at 199448: T, C, C, C, C, C, C, C, C, C, C, C)
 \noindent There is also the is\_not\_matching\_snp argument, but it is further discussed in the \verb|VCF.PhasedReader.fetch()|
 section.
 
+\subsection{Writing phasing files with VCF.PhasedWriter}
+
+\noindent The VCF.PhasedWriter works similarily to the VCF.Writer. You need to supply the stream to save the contents and
+the template (PhasedReader object):
+
+\begin{verbatim}
+>>> phase_reader = PhasedReader('hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> out = open('somenewname.phased','w')
+>>> phase_writer = PhasedWriter(stream = out, template = phase_reader)
+>>> phase_writer
+<Bio.VCF.phase.PhasedWriter object at 0x7f991e9ba4e0>
+\end{verbatim}
+
+\noindent and then, you write in the records you want, i.e fetched from the VCF file:
+
+\begin{verbatim}
+>>> for rec in phase_reader.fetch(filename = './Tests/VCF/chr10.vcf'):
+...     phase_writer.write(rec)
+...
+rs12255619	88481	C A A A A A A A A A A A
+rs1904671	1004603	A G. A A A A G. G. A A A A
+rs11812734	31713857	A G A A G G G G A G G G
+
+\end{verbatim}
+
+\noindent The output in this case should be stored in the somenewname.phased file.
+
 \subsection{VCF.PhasedReader functions}
 
 \subsubsection{VCF.PhasedReader.fetch() - Fetching SNP's from VCF file}
@@ -952,6 +980,3 @@ SNPs found: 3
 
 \noindent haplotype argument gives the information of the name of the haplotype which is of user's interest.
 nucleotide argument gives the information on the specific nucleotide ('A', 'T', 'G', 'C') ......
-
-
-

@@ -430,9 +430,11 @@ class PhasedReader(object):
                     if rec.pos < start or rec.pos > start+1:
                         continue
                     if rec.pos == start:
-                        alleles = [v[3]] + v[4].split(',')
+                        if isinstance(vfile, pybedtools.bedtool.BedTool):
+                            alleles = [v[3]] + v[4].split(',')
+                        else:
+                            alleles = v.alleles
                         rec_string = rec.rsID + '\t' + str(rec.pos) + '\t'
-
                         for sample in rec.samples:
                             if not sample.exists:
                                 rec_string += '- '
@@ -494,6 +496,8 @@ class PhasedWriter(object):
                 else:
                     rec += sample.nucleotide + ' '
         self.stream.write(rec + '\n')
+
+    write = write_record
 
     def close(self):
         """Try closing the writer"""
