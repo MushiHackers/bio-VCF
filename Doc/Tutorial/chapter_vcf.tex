@@ -186,8 +186,9 @@ OrderedDict([('q10', Filter(id='q10', desc='Quality below 10')), \
 >>> print row
 Record(CHROM=1, POS=2, REF=T, ALT=[T[2:3[])
 >>> bnd = row.ALT[0]
->>> print bnd.withinMainAssembly, bnd.orientation, bnd.remoteOrientation, bnd.connectingSequence
-True False True T
+>>> print bnd.withinMainAssembly, bnd.orientation, bnd.remoteOrientation,
+bnd.connectingSequence
+True False True True
 \end{verbatim}
 
 \subsection{Record parameters}
