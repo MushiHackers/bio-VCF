@@ -917,7 +917,7 @@ rs11812734	31713857	A G A A G G G G A G G G
 <Bio.VCF.phase.PhasedReader object at 0x7f38a3d3d518>
 \end{verbatim}
 
-\subsubsection{VCF.PhasedReader.get_snp_with_specific_id(rsID) - Getting SNP with user-given rsID}
+\subsubsection{VCF.PhasedReader.get\_snp\_with\_specific\_id() - Getting SNP with user-given rsID}
 
 \begin{verbatim}
 >>> from Bio.VCF import PhasedReader
@@ -930,7 +930,7 @@ Record(rs2066314 at 504032: C, C, C, G, C, G, C, C, C, C, C, C)
 
 \end{verbatim}
 
-\subsubsection{VCF.PhasedReader.get_snp_within_range(self, pos1, pos2) - Getting SNPs within user-given range of positions}
+\subsubsection{VCF.PhasedReader.get\_snp\_within\_range() - Getting SNPs within user-given range of positions}
 
 \noindent pos1 and pos2 arguments stand for a beginning and an ending position of the range (respectively) within which we are looking for SNPs.
 
@@ -940,11 +940,14 @@ Record(rs2066314 at 504032: C, C, C, G, C, G, C, C, C, C, C, C)
 >>> reader.get_snp_within_range(418076, 504032)
 SNPs found: 3
 
-[<Bio.VCF.phase._PhasedRecord object at 0x7f3e13b30dd0>, <Bio.VCF.phase._PhasedRecord object at 0x7f3e13b30750>, <Bio.VCF.phase._PhasedRecord object at 0x7f3e13b33150>]
+[<Bio.VCF.phase._PhasedRecord object at 0x7f3e13b30dd0>,
+<Bio.VCF.phase._PhasedRecord object at 0x7f3e13b30750>,
+<Bio.VCF.phase._PhasedRecord object at 0x7f3e13b33150>]
 
 \end{verbatim}
 
-\subsection{VCF.PhasedReader.get_snp_with_specific_sample(haplotype, nucleotide) - Getting SNPs with user-given details of the searched sample}
+\subsection{VCF.PhasedReader.get\_snp\_with\_specific\_sample() - Getting SNPs with user-given details of the searched sample}
+
 
 
 \noindent haplotype argument gives the information of the name of the haplotype which is of user's interest.
