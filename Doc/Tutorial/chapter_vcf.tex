@@ -11,8 +11,8 @@ is described below, therefore for further details of \verb|Bio.VCF| module, plea
 based on the data types specified in the meta-information lines, specifically the \verb|##INFO| and \verb|##FORMAT| lines.
 If these lines are missing or incomplete it will check against the reserved types mentioned in the spec.
 Failing that, it will just return strings.
-
-
+\\
+\\
 
 \noindent Regarding the coordinates associated with each instance:
 
@@ -23,14 +23,14 @@ Failing that, it will just return strings.
     of the first base of the \verb|REF| sequence. Positions are sorted numerically,
     in increasing order.
 
-  \item[\texttt{start}{ end}] \
+  \item[\texttt{start, end}] \
 
     denote the coordinates of the entire \verb|REF| sequence in the zero-based, half-open coordinate
     system (see \href{http://genomewiki.ucsc.edu/index.php/Coordinate_Transforms}{Coordinate\_Transforms}), where
     the first base of the contig has an index of 0, and the interval runs up to, but does not include, the base
     at the end index. This indexing scheme is analagous to Python slice notation.
 
-  \item[\texttt{affected\_start}{ affected\_end}] \
+  \item[\texttt{affected\_start, affected\_end}] \
 
     are also in the zero-based, half-open coordinate system. These coordinates indicate the precise region
     of the reference genome actually affected by the events denoted in \verb|ALT| (i.e., the minimum
@@ -46,13 +46,16 @@ Failing that, it will just return strings.
 
 \end{description}
 
-\noindent \verb|samples| and \verb|genotype|, not being the title of any column, are left lowercase. The format of the fixed
+\noindent \verb|samples| and \verb|genotype|\\
+
+not being the title of any column, are left lowercase. The format of the fixed
 fields is from the spec. Comma-separated lists in the \verb|VCF| are converted to lists. In particular,
 one-entry \verb|VCF| lists are converted to one-entry Python lists (see, e.g., \verb|Record.ALT|).
 Semicolon-delimited lists of key=value pairs are converted to Python dictionaries, with flags being given a True value.
 
+\
+\
 
-\noindent This module supports
 
 
 \noindent Metadata regarding the VCF file itself can be investigated through the following attributes:
@@ -72,7 +75,7 @@ Semicolon-delimited lists of key=value pairs are converted to Python dictionarie
 
 \
 
-\noindent plus attributes to handle genotype information:
+\noindent Plus attributes to handle genotype information:
 
 \
 
@@ -184,7 +187,8 @@ OrderedDict([('q10', Filter(id='q10', desc='Quality below 10')), \
 >>> print row
 Record(CHROM=1, POS=2, REF=T, ALT=[T[2:3[])
 >>> bnd = row.ALT[0]
->>> print bnd.withinMainAssembly, bnd.orientation, bnd.remoteOrientation, bnd.connectingSequence
+>>> print bnd.withinMainAssembly, bnd.orientation, bnd.remoteOrientation,
+bnd.connectingSequence
 True False True T
 \end{verbatim}
 
@@ -246,11 +250,11 @@ True False True T
     return a list of size equal to the number of VCF readers. This list contains the \verb|VCF| record from
     readers that have this variant, and None for readers that don’t have it. The caller must make sure
     that inputs are sorted in the same way and use the same reference otherwise behaviour is undefined.
-
+    \
     \verb|Args|:
             \verb|vcf_record_sort_key|: \
 
-    function that takes a VCF record and returns a
+    Function that takes a VCF record and returns a
     tuple that can be used as a key for comparing and sorting \verb|VCF| records across all readers.
     This tuple defines what it means for two variants to be equal (eg. whether it’s only their
     position or also their allele values), and implicitly determines the chromosome ordering since
@@ -269,21 +273,19 @@ True False True T
     ['TAT', 'T']
     \end{verbatim}
 
-
     \begin{verbatim}
     >>> trim_common_suffix('ACCCCC', 'ACCCCCCCC', 'ACCCCCCC', 'ACCCCCCCCC')
     ['A', 'ACCC', 'ACC', 'ACCCC']
     \end{verbatim}
 
-    \
-
+   
     \end{description}
 
 \section{VCF.Writer class}
 
 \noindent The \verb|VCF.Writer| class provides a way of writing a VCF file.
 \verb|VCF.parser| module supports \verb|close()|, \verb|flush()| and \verb|write_record()| methods.
-
+\
 \noindent Currently, when writing new VCF file you must specify a template \verb|VCF.Reader| object
 which provides the metadata, like this:
 
@@ -304,22 +306,22 @@ which provides the metadata, like this:
 Those functions enable users to retrieve particular records from VCF file describing structural variants,
 depending on provided argument - for example interval of positions within which we seek for structural variants, a list
 of such positions or feature type within which structural variants are present.
-
+\
 
 \noindent Functionality of those fetch methods includes retrieving structural variants corresponding to ranges
 provided in BED files as well as features from GFF files. If you are not familiar with BED file format
 you might be interested in \href{http://www.ensembl.org/info/website/upload/bed.html}{BED} and
 \href{http://gmod.org/wiki/GFF3}{GFF}.
 
-
+\
 \noindent Most of implementation is based on \verb|pybedtools| module - \href{https://daler.github.io/pybedtools/}{pybedtools},
 which support many file formats including VCF, BED and GFF, therefore \verb|pybedtools| package is required.
-
+\
 
 \noindent Due to enormous sizes of some BED and GFF files, some fetch methods are intended to enable user to provide
 stream of particular GFF/BED file from chosen database. It is a beneficial solution allowing users to avoid
 the necessity of saving very big files to local disc.
-
+\
 
 \noindent Below there is a brief description of each fetch method.
 All of them have arguments \verb|verbose| and \verb|vcf| specifying if result should be printed to stdout
@@ -356,7 +358,6 @@ and whether new VCF.Reader object should be created, respectively.
     Chromosome must be specified and interval is optional.
 
   \item[\texttt{fetch\_gff(gff\_file, chrom, feature\_type, location = None, verbose = False, vcf = None)}] \
-
     This method enables to select desired features from a GFF/GFF2/GFF3 file and fetch VCF records
     that correspond to position of those features. Fetch is based on pybedtools 'intersection' method and returns
     a BedTool object of chosen VCF records or new VCF.Reader object.
@@ -391,7 +392,7 @@ we need to import Bio.VCF library:
 
 \end{verbatim}
 
-and then create a VCF.Reader obcject. We can either create object from a local file or we can provide fsock
+\noindent and then create a VCF.Reader obcject. We can either create object from a local file or we can provide fsock
 of corresponding VCF file:
 
 
@@ -413,7 +414,7 @@ located within those sites. If we have this BED file locally on our computer, th
 \end{verbatim}
 
 
-or if we don't, we should provide a stream of chosen BED file and use:
+\noindent or if we don't, we should provide a stream of chosen BED file and use:
 
 
 \begin{verbatim}
@@ -428,7 +429,7 @@ if we want to see all information of every selected record:
 
 
 \begin{verbatim}
->>> bed = vcf.fetch_bed('VCF/chr13bed.bed')
+>>> bed = vcf.fetch_bed('chr13bed.bed')
 >>> for b in bed:
 >>>     print (b.fields)
 ['chr13', '10', '.', 'G', 'GGT', '.', 'PASS', 'DP=91;SS=1;SSC=2;GPV=3.0109E-23;SPV=5.8324E-1',
@@ -450,7 +451,7 @@ at 13th chromosome. \verb|fetch_gff()| method is what we need:
 
 
 \begin{verbatim}
->>> vcf.fetch_gff('VCF/HS_fetch_gff.gff3', '13', 'pseudogene')
+>>> vcf.fetch_gff('HS_fetch_gff.gff3', '13', 'pseudogene')
 \end{verbatim}
 
 
@@ -459,7 +460,7 @@ at 13th chromosome. \verb|fetch_gff()| method is what we need:
 
 
 \begin{verbatim}
->>> vcf.fetch_gff('VCF/HS_fetch_gff.gff3', '13', 'pseudogene', location=[1, 18270822])
+>>> vcf.fetch_gff('HS_fetch_gff.gff3', '13', 'pseudogene', location=[1, 18270822])
 Finding SV corresponding to pseudogene and chosen position
 chr13	20	.	GT	G	.	PASS	DP=77;SS=1;SSC=2;GPV=2.4504E-29;SPV=6.0772E-1	GT:GQ:DP:RD:AD:FREQ:DP4
 1/1:.:28:5:22:81.48%:0,5,1,21
@@ -539,7 +540,7 @@ Searching through the database can be based on strain's name, ec number, eco typ
 origin - such as country, longitude or latitude.
 
 
-\noindent Below there is a brief description of \verb|thousandgenome()| methods:
+\noindent Below there is a brief description of \verb|thousandgenomes()| methods:
 
 
 \begin{description}
@@ -869,9 +870,37 @@ Record(rs11250575 at 199448: T, C, C, C, C, C, C, C, C, C, C, C)
 \noindent There is also the is\_not\_matching\_snp argument, but it is further discussed in the \verb|VCF.PhasedReader.fetch()|
 section.
 
+\subsection{Writing phasing files with VCF.PhasedWriter}
+
+\noindent The VCF.PhasedWriter works similarily to the VCF.Writer. You need to supply the stream to save the contents and
+the template (PhasedReader object):
+
+\begin{verbatim}
+>>> phase_reader = PhasedReader('hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> out = open('somenewname.phased','w')
+>>> phase_writer = PhasedWriter(stream = out, template = phase_reader)
+>>> phase_writer
+<Bio.VCF.phase.PhasedWriter object at 0x7f991e9ba4e0>
+\end{verbatim}
+
+\noindent and then, you write in the records you want, i.e fetched from the VCF file:
+
+\begin{verbatim}
+>>> for rec in phase_reader.fetch(filename = './Tests/VCF/chr10.vcf'):
+...     phase_writer.write(rec)
+...
+rs12255619	88481	C A A A A A A A A A A A
+rs1904671	1004603	A G. A A A A G. G. A A A A
+rs11812734	31713857	A G A A G G G G A G G G
+
+\end{verbatim}
+
+\noindent The output in this case should be stored in the somenewname.phased file.
+
 \subsection{VCF.PhasedReader functions}
 
 \subsubsection{VCF.PhasedReader.fetch() - Fetching SNP's from VCF file}
+
 \noindent The fetch metod retrieves SNPs corresponding to those in provided VCF file. It creates \verb|VCF.Reader|
 and filters it to have only the SNP's, then finds the matching ones in the phasing file. It returns the next PhasedReader object, but only with matching records.
 It takes the same arguments as VCF.Reader when it is created (see in the section about \verb|VCF.Reader| above) and a few more:
@@ -916,7 +945,11 @@ rs11812734	31713857	A G A A G G G G A G G G
 <Bio.VCF.phase.PhasedReader object at 0x7f38a3d3d518>
 \end{verbatim}
 
+<<<<<<< HEAD
 \subsubsection{VCF.PhasedReader.get_snp_with_specific_id(rsID) - Getting SNP with user-given rsID}
+=======
+\subsubsection{VCF.PhasedReader.get\_snp\_with\_specific\_id() - Getting SNP with user-given rsID}
+>>>>>>> bdbb6e1a64db09e7b3f3d01c6f904ade69ebcce6
 
 \begin{verbatim}
 >>> from Bio.VCF import PhasedReader
@@ -929,7 +962,7 @@ Record(rs2066314 at 504032: C, C, C, G, C, G, C, C, C, C, C, C)
 
 \end{verbatim}
 
-\subsubsection{VCF.PhasedReader.get_snp_within_range(self, pos1, pos2) - Getting SNPs within user-given range of positions}
+\subsubsection{VCF.PhasedReader.get\_snp\_within\_range() - Getting SNPs within user-given range of positions}
 
 \noindent pos1 and pos2 arguments stand for a beginning and an ending position of the range (respectively) within which we are looking for SNPs.
 
@@ -939,15 +972,23 @@ Record(rs2066314 at 504032: C, C, C, G, C, G, C, C, C, C, C, C)
 >>> reader.get_snp_within_range(418076, 504032)
 SNPs found: 3
 
-[<Bio.VCF.phase._PhasedRecord object at 0x7f3e13b30dd0>, <Bio.VCF.phase._PhasedRecord object at 0x7f3e13b30750>, <Bio.VCF.phase._PhasedRecord object at 0x7f3e13b33150>]
+[<Bio.VCF.phase._PhasedRecord object at 0x7f3e13b30dd0>,
+<Bio.VCF.phase._PhasedRecord object at 0x7f3e13b30750>,
+<Bio.VCF.phase._PhasedRecord object at 0x7f3e13b33150>]
 
 \end{verbatim}
 
+<<<<<<< HEAD
 \subsection{VCF.PhasedReader.get_snp_with_specific_sample(haplotype, nucleotide) - Getting SNPs with user-given details of the searched sample}
 
 
 \noindent haplotype argument gives the information of the name of the haplotype which is of user's interest.
 nucleotide argument gives the information on the specific nucleotide ('A', 'T', 'G', 'C') ......
+=======
+\subsection{VCF.PhasedReader.get\_snp\_with\_specific\_sample() - Getting SNPs with user-given details of the searched sample}
+>>>>>>> bdbb6e1a64db09e7b3f3d01c6f904ade69ebcce6
 
 
 
+\noindent haplotype argument gives the information of the name of the haplotype which is of user's interest.
+nucleotide argument gives the information on the specific nucleotide ('A', 'T', 'G', 'C') ......

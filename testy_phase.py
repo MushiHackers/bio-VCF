@@ -55,10 +55,21 @@ sys.exit()'''
 
 
 
-'''print('-a-a-a-a-a-a-')
+print('-a-a-a-a-a-a-')
 plik = open('pliczko.phased','w')
 plikvcf = open('Tests/VCF/chr10.vcf')
-writer = VCF.PhasedWriter(plik, reader)'''
+writer = VCF.PhasedWriter(plik, reader)
+
+from Bio.VCF import PhasedReader,PhasedWriter
+phase_reader = PhasedReader('./Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+
+
+plikvcf = open('Tests/VCF/chr10.vcf')
+for rec in phase_reader.fetch(plikvcf):
+    print(rec)
+
+
+
 # read = VCF.Reader(plikvcf,prepend_chr=True)
 # read = read.fetch(chrom='1',verbose=False, vcf='temp')
 #
@@ -92,9 +103,6 @@ writer = VCF.PhasedWriter(plik, reader)'''
 # sys.exit()
 
 
-'''newr = reader.fetch(fsock=plikvcf, verbose=False)
-for record in newr:
-    writer.write_record(record)'''
 
 #newr = reader.fetch(region='191761-112976029')
 #print(newr.filedata)
