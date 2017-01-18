@@ -951,6 +951,12 @@ rs11812734	31713857	A G A A G G G G A G G G
 
 \noindent As the output user receives a _PhasedRecord object, which represents found SNP, or information that no SNP with given rsID was found.
 
+\subsubsection{VCF.PhasedReader.get_snp_with_specific_id(rsID) - Getting SNP with user-given rsID}
+
+\noindent rsID argument provides information on rsID of searched SNP.
+
+\noindent As the output user receives a _PhasedRecord object, which represents found SNP, or information that no SNP with given rsID was found.
+
 \begin{verbatim}
 >>> from Bio.VCF import PhasedReader
 >>> reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
@@ -998,6 +1004,10 @@ SNPs found: 7
 \end{verbatim}
 
 \subsection{VCF.PhasedReader.get_samples_from_specific_hap(haplotype) - Getting samples within user-given haplotype}
+
+\noindent haplotype argument provides information on the name of the haplotype, within which user is searching for samples.
+
+\subsection{VCF.PhasedReader.get_snp_with_specific_sample(haplotype) - Getting SNPs with user-given details of the searched sample}
 
 \noindent haplotype argument provides information on the name of the haplotype, within which user is searching for samples.
 

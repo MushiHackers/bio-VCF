@@ -424,9 +424,10 @@ class PhasedReader(object):
                 for v in snplist:
                     added = False
                     if isinstance(vfile, pybedtools.bedtool.BedTool):
-                        start = int(v[1]) - 1
+                        start = int(v[1])
                     else:
-                        start = v.start
+                        start = v.start + 1
+                        print(start)
                     if rec.pos < start or rec.pos > start+1:
                         continue
                     if rec.pos == start:
