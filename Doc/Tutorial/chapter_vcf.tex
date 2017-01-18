@@ -525,20 +525,20 @@ VCF.Reader() anytime needed.
 
 Existing Filter's Classes:
 
-\verb|vcf.filters.SiteQuality|
-\verb|vcf.filters.VariantGenotypeQuality|
-\verb|vcf.filters.ErrorBiasFilter|
-\verb|vcf.filters.DepthPerSample|
-\verb|vcf.filters.AvgDepthPerSample|
-\verb|vcf.filters.SnpOnly|
+\verb|Bio.VCF.filters.SiteQuality|
+\verb|Bio.VCF.filters.VariantGenotypeQuality|
+\verb|Bio.VCF.filters.ErrorBiasFilter|
+\verb|Bio.VCF.filters.DepthPerSample|
+\verb|Bio.VCF.filters.AvgDepthPerSample|
+\verb|Bio.VCF.filters.SnpOnly|
 
 
 
 \subsection{Adding a filter}
 \noindent You can reuse this work by providing a filter class, rather than writing your own filter. For example, lets say I want to filter each site based on the quality of the site. I can create a class like this::
 \begin{verbatim}   
-import vcf.filters
-class SiteQuality(vcf.filters.Base):
+import Bio.VCF.filters
+class SiteQuality(filters.Base):
     'Filter sites by quality'
     name = 'sq'
     @classmethod
@@ -552,23 +552,23 @@ class SiteQuality(vcf.filters.Base):
             return record.QUAL
 \end{verbatim}
 
-\noindent This class subclasses \verb|vcf.filters.Base| which provides the interface for VCF filters. The docstring  and \verb|name| are metadata about the parser.  The docstring provides the help for the script, and the first line is included in the FILTER metadata when applied to a file.
+\noindent This class subclasses \verb|Bio.VCF.filters.Base| which provides the interface for VCF filters. The docstring  and \verb|name| are metadata about the parser.  The docstring provides the help for the script, and the first line is included in the FILTER metadata when applied to a file.
 
 \noindent The \verb|customize_parser| method allows you to add arguments to the script. We use the \verb|__init__| method to grab the argument of interest from the parser. Finally, the \verb|__call__| method processes each record and returns a value if the filter failed.  The base class uses the \verb|name| and \verb|threshold| to create the filter ID in the VCF file.
 
-\noindent Unfortunately \verb|vcf_filters.py| don't work as creator of pyVCF wanted. On official VCF-github site you can finde more information about that. We're hoping that that bugs will be soon fixed. But before it happens we recomand to use filters carefully and avoid filtering from bash console. We recomand to do it as we show below.
+\noindent Unfortunately \verb|Bio.VCF.filters.scripts.vcf_filters.py| don't work as creator of pyVCF wanted. On official VCF-github site you can finde more information about that. We're hoping that that bugs will be soon fixed. But before it happens we recomand to use filters carefully and avoid filtering from bash console. We recomand to do it as we show below.
 
 \noindent Example of using filters form filters.py file:
 \begin{verbatim}
-import vcf
+import Bio.VCF
 >>>#creating Reader object on our vcf file
->>>reader_object=vcf.Reader(open('chr13.vcf','rt'))
+>>>reader_object=vcf.Reader(open('Bio/Tests/VCF/example-4.1.vcf/chr13.vcf','rt'))
 >>>
 >>>#creating object Base (form filters.py file) with Reder object
->>>base_object=vcf.filters.Base(reader_object)
+>>>base_object=VCF.filters.Base(reader_object)
 >>>#choose filter for example vcf.filters.SiteQuality
 >>>
->>>sq= vcf.filters.SiteQuality(base_object)
+>>>sq= VCF.filters.SiteQuality(base_object)
 >>>sqobject=sq(4)
 >>>
 >>>#than we call function on reader_bejct lines to find this which agree which choosen value of site quality
