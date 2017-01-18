@@ -208,7 +208,7 @@ class PhasedReader(object):
 
     __next__ = next  # Python 3.X compatibility
 
-    def get_snp_with_specific_id(self, rsID):
+    def get_specific_snp(self, rsID):
         """Returns a _PhasedRecord object (SNP) with user-given rsID."""
         record = self.next()
         found = False
@@ -284,7 +284,7 @@ class PhasedReader(object):
             print('Searched haplotype is not included in the given file.')
         return results
             
-    def get_samples_in_specific_hap(self, haplotype):
+    def get_samples_from_specific_hap(self, haplotype):
         """Returns _Sample objects within user-given haplotype."""
         record = self.next()
         searched_haplotype = _Haplotype(haplotype)
@@ -315,18 +315,18 @@ class PhasedReader(object):
                     record = self.next()
             except StopIteration:
                 if not found:
-                    print('No SNPs were found for searched haplotype.')
-                    print('SNPs found unresolved: ' + str(unresolved))
-                    print('SNPs found not existing: ' + str(not_existing))                       
+                    print('No sample was found for searched haplotype.')
+                    print('Samples found unresolved: ' + str(unresolved))
+                    print('Samples found not existing: ' + str(not_existing))                       
                 else:
-                    print('SNPs found: ' + str(total))
-                    print('Found unresolved: ' + str(unresolved))
-                    print('Found not existing: ' + str(not_existing) + '\n')
+                    print('Samples found: ' + str(total))
+                    print('Samples found unresolved: ' + str(unresolved))
+                    print('Samples found not existing: ' + str(not_existing) + '\n')
         else:
             print('Searched haplotype is not included in the given file.')
         return results
             
-    def get_sample_from_specific_snp(self, rsID, haplotype):
+    def get_specific_sample(self, rsID, haplotype):
         """Returns _Sample object containing user-given haplotype and rsID of the SNP."""
         record = self.next()
         searched_haplotype = _Haplotype(haplotype)
