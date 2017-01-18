@@ -556,24 +556,23 @@ class SiteQuality(filters.Base):
 
 \noindent The \verb|customize_parser| method allows you to add arguments to the script. We use the \verb|__init__| method to grab the argument of interest from the parser. Finally, the \verb|__call__| method processes each record and returns a value if the filter failed.  The base class uses the \verb|name| and \verb|threshold| to create the filter ID in the VCF file.
 
-\noindent Unfortunately \verb|Bio.VCF.filters.scripts.vcf_filters.py| don't work as creator of pyVCF wanted. On official VCF-github site you can finde more information about that. We're hoping that that bugs will be soon fixed. But before it happens we recomand to use filters carefully and avoid filtering from bash console. We recomand to do it as we show below.
+\noindent Unfortunately \verb|Bio.VCF.filters.scripts.vcf_filters.py| don't work as creator of pyVCF wanted. On official VCF-github site you can finde more information about that. We're hoping that that bugs will be soon fixed. But before it happens we recomand to use filters carefully some of them doestn't work.
 
 \noindent Example of using filters form filters.py file:
 \begin{verbatim}
 import Bio.VCF
 >>>#creating Reader object on our vcf file
->>>reader_object=vcf.Reader(open('Bio/Tests/VCF/example-4.1.vcf','rt'))
+>>>reader_object=Bio.VCF.Reader(open('Tests/VCF/example-4.1.vcf','rt'))
 >>>
 >>>#creating object Base (form filters.py file) with Reder object
->>>base_object=VCF.filters.Base(reader_object)
->>>#choose filter for example VCF.filters.SiteQuality
+>>>base_object=Bio.VCF.filters.Base(reader_object)
+>>>#choose filter for example VCF.filters.SnpOnly
 >>>
->>>sq= VCF.filters.SiteQuality(base_object)
->>>sqobject=sq(4)
+>>>so= Bio.VCF.filters.SnpOnly(base_object)
 >>>
 >>>#than we call function on reader_bejct lines to find this which agree which choosen value of site quality
 >>>for i in readerobject:
-...		print sqobject(i)
+...		print so(i)
 ...
 \end{verbatim}
 
