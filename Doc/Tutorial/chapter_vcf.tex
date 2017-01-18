@@ -562,11 +562,11 @@ class SiteQuality(filters.Base):
 \begin{verbatim}
 import Bio.VCF
 >>>#creating Reader object on our vcf file
->>>reader_object=vcf.Reader(open('Bio/Tests/VCF/example-4.1.vcf/chr13.vcf','rt'))
+>>>reader_object=vcf.Reader(open('Bio/Tests/VCF/example-4.1.vcf','rt'))
 >>>
 >>>#creating object Base (form filters.py file) with Reder object
 >>>base_object=VCF.filters.Base(reader_object)
->>>#choose filter for example vcf.filters.SiteQuality
+>>>#choose filter for example VCF.filters.SiteQuality
 >>>
 >>>sq= VCF.filters.SiteQuality(base_object)
 >>>sqobject=sq(4)
