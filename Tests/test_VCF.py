@@ -246,7 +246,7 @@ class TestdbSNP(unittest.TestCase):
         t = databases.dbSNP_download(organism_taxon = 'grape_29760', chromosome = 1)
         assert next(t).POS == 12469 
         t = databases.dbSNP_download(organism_taxon = 'chicken_9031', chromosome = 10)
-        assert next(t).rsID == 'rs735347598'
+        assert next(t).ID == 'rs735347598'
         
 
 
