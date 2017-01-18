@@ -945,30 +945,30 @@ rs11812734	31713857	A G A A G G G G A G G G
 <Bio.VCF.phase.PhasedReader object at 0x7f38a3d3d518>
 \end{verbatim}
 
-<<<<<<< HEAD
-\subsubsection{VCF.PhasedReader.get_snp_with_specific_id(rsID) - Getting SNP with user-given rsID}
-=======
-\subsubsection{VCF.PhasedReader.get\_snp\_with\_specific\_id() - Getting SNP with user-given rsID}
->>>>>>> bdbb6e1a64db09e7b3f3d01c6f904ade69ebcce6
+\subsubsection{VCF.PhasedReader.get_specific_snp(rsID) - Getting SNP with user-given rsID}
+
+\noindent rsID argument provides information on rsID of searched SNP.
+
+\noindent As the output user receives a _PhasedRecord object, which represents found SNP, or information that no SNP with given rsID was found.
 
 \begin{verbatim}
 >>> from Bio.VCF import PhasedReader
->>> reader = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
 >>> reader.get_snp_with_specific_id('rs2066314')
 <Bio.VCF.phase._PhasedRecord object at 0x7fe67d7a7e50>
->>> reader = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
->>> print reader.get_snp_with_specific_id('rs2066314')
-Record(rs2066314 at 504032: C, C, C, G, C, G, C, C, C, C, C, C)
 
 \end{verbatim}
 
-\subsubsection{VCF.PhasedReader.get\_snp\_within\_range() - Getting SNPs within user-given range of positions}
+\subsubsection{VCF.PhasedReader.get_snp_within_range(pos1, pos2) - Getting SNPs within user-given range of positions}
 
 \noindent pos1 and pos2 arguments stand for a beginning and an ending position of the range (respectively) within which we are looking for SNPs.
 
+\noindent As the output user receives information on how many SNPs within given range were found and a list of _PhasedRecord objects, where each of them represents
+one found SNP, or information that no SNP within given range was found.
+
 \begin{verbatim}
 >>> from Bio.VCF import PhasedReader
->>> reader = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
 >>> reader.get_snp_within_range(418076, 504032)
 SNPs found: 3
 
@@ -978,17 +978,60 @@ SNPs found: 3
 
 \end{verbatim}
 
-<<<<<<< HEAD
-\subsection{VCF.PhasedReader.get_snp_with_specific_sample(haplotype, nucleotide) - Getting SNPs with user-given details of the searched sample}
+\subsection{VCF.PhasedReader.get_snp_with_specific_sample(haplotype, nucleotide) - Getting SNPs which contain user-given sample}
 
+\noindent haplotype argument provides information on the sample's haplotype name.
+nucleotide argument provides the information on the sample's nucleotide ('A', 'T', 'G', 'C'). 
 
-\noindent haplotype argument gives the information of the name of the haplotype which is of user's interest.
-nucleotide argument gives the information on the specific nucleotide ('A', 'T', 'G', 'C') ......
-=======
-\subsection{VCF.PhasedReader.get\_snp\_with\_specific\_sample() - Getting SNPs with user-given details of the searched sample}
->>>>>>> bdbb6e1a64db09e7b3f3d01c6f904ade69ebcce6
+\noindent As the output user receives information whether the haplotype provided in the arguments is included in the given file (if not, corresponding information 
+is being printed), how many SNPs containing searched sample were found and a list of _PhasedRecord objects, where each of them represents one found SNP. If no SNP 
+meeting the requirements provided in the arguments was found, corresponding information is being printed. 
 
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> reader.get_snp_with_specific_sample('NA18855_B', 'T')
+Searched haplotype is included in the given file...
+SNPs found: 7
 
+[<Bio.VCF.phase._PhasedRecord object at 0x7fe75042c7d0>, <Bio.VCF.phase._PhasedRecord object at 0x7fe75042c110>, <Bio.VCF.phase._PhasedRecord object at 0x7fe75042cb50>, <Bio.VCF.phase._PhasedRecord object at 0x7fe75042ce90>, <Bio.VCF.phase._PhasedRecord object at 0x7fe75042f550>, <Bio.VCF.phase._PhasedRecord object at 0x7fe75042f890>, <Bio.VCF.phase._PhasedRecord object at 0x7fe75042f210>]
+\end{verbatim}
 
-\noindent haplotype argument gives the information of the name of the haplotype which is of user's interest.
-nucleotide argument gives the information on the specific nucleotide ('A', 'T', 'G', 'C') ......
+\subsection{VCF.PhasedReader.get_samples_from_specific_hap(haplotype) - Getting samples within user-given haplotype}
+
+\noindent haplotype argument provides information on the name of the haplotype, within which user is searching for samples.
+
+\noindent As the output user receives information whether the haplotype provided in the arguments is included in the given file (if not, corresponding information 
+is being printed), how many samples within searched haplotype were found and a list of _Sample objects, where each of them represents one found sample. Moreover, 
+information on the number of unresolved and not existing samples (within given haplotype), which are found during parsing a file, is being printed. If no sample 
+meeting the requirements provided in the arguments was found, corresponding information is also being printed.
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> reader.get_samples_in_specific_hap('NA18855_NA18856_A')
+Searched haplotype is included in the given file...
+Samples found: 32
+SNPs found unresolved: 0
+SNPs found not existing: 0
+
+[<Bio.VCF.phase._Sample object at 0x7fe75042fbd0>, <Bio.VCF.phase._Sample object at 0x7fe750435490>, <Bio.VCF.phase._Sample object at 0x7fe75042fc50>, <Bio.VCF.phase._Sample object at 0x7fe7504354d0>, <Bio.VCF.phase._Sample object at 0x7fe75042fc90>, <Bio.VCF.phase._Sample object at 0x7fe750435510>, <Bio.VCF.phase._Sample object at 0x7fe75042fcd0>, <Bio.VCF.phase._Sample object at 0x7fe750435550>, <Bio.VCF.phase._Sample object at 0x7fe75042fd10>, <Bio.VCF.phase._Sample object at 0x7fe750435050>, <Bio.VCF.phase._Sample object at 0x7fe75042fd50>, <Bio.VCF.phase._Sample object at 0x7fe750435090>, <Bio.VCF.phase._Sample object at 0x7fe75042fd90>, <Bio.VCF.phase._Sample object at 0x7fe7504350d0>, <Bio.VCF.phase._Sample object at 0x7fe75042fdd0>, <Bio.VCF.phase._Sample object at 0x7fe750435110>, <Bio.VCF.phase._Sample object at 0x7fe75042fe10>, <Bio.VCF.phase._Sample object at 0x7fe750435150>, <Bio.VCF.phase._Sample object at 0x7fe75042fe50>, <Bio.VCF.phase._Sample object at 0x7fe750435190>, <Bio.VCF.phase._Sample object at 0x7fe750435590>, <Bio.VCF.phase._Sample object at 0x7fe7504351d0>, <Bio.VCF.phase._Sample object at 0x7fe7504355d0>, <Bio.VCF.phase._Sample object at 0x7fe750435610>, <Bio.VCF.phase._Sample object at 0x7fe750435650>, <Bio.VCF.phase._Sample object at 0x7fe750435690>, <Bio.VCF.phase._Sample object at 0x7fe7504356d0>, <Bio.VCF.phase._Sample object at 0x7fe750435710>, <Bio.VCF.phase._Sample object at 0x7fe750435750>, <Bio.VCF.phase._Sample object at 0x7fe750435790>, <Bio.VCF.phase._Sample object at 0x7fe7504357d0>, <Bio.VCF.phase._Sample object at 0x7fe750435810>]
+\end{verbatim}
+
+\subsection{VCF.PhasedReader.get_specific_sample(rsID, haplotype) - Getting a sample with user-given details}
+
+\noindent rsID argument provides information on the rsID of SNP, within which user is searching for a specific sample.
+haplotype argument provides information on the name of the haplotype, within which user is searching for a specific sample.
+
+\noindent As the output user receives information whether the haplotype provided in the arguments is included in the given file (if not, corresponding information 
+is being printed) and a _Sample object, which represents found sample. Moreover, if searched sample turns out to be unresolved or not existing, corresponding 
+information is being printed. If no sample meeting the requirements provided in the arguments was found, corresponding information is also being printed.
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> reader.get_specific_sample('rs11252546', 'NA18855_NA18856_A')
+Searched haplotype is included in the given file...
+<Bio.VCF.phase._Sample object at 0x7f8bb5d4c7d0>
+
+/end{verbatim}
