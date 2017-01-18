@@ -188,6 +188,19 @@ class TestPhasedReader(unittest.TestCase):
         assert rec.rsID == 'rs1904671'
         assert rec.samples[1].is_not_matching_snp == True
 
+    def test_fetch_file2(self):
+        t = phase.PhasedReader(filename='VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        t2 = t.fetch(fsock=fh('VCF/chr10.vcf'),vcf='testowy')
+        assert t
+        assert t2
+        rec = t.next()
+        assert rec.rsID == 'rs12255619'
+        rec = t2.next()
+        assert rec.rsID == 'rs12255619'
+        rec = t2.next()
+        assert rec.rsID == 'rs1904671'
+        assert rec.samples[1].is_not_matching_snp == True
+
     def test_get_snp_with_specific_id(self):
         # TODO Dejw
         pass
@@ -233,7 +246,7 @@ class TestdbSNP(unittest.TestCase):
         t = databases.dbSNP_download(organism_taxon = 'grape_29760', chromosome = 1)
         assert next(t).POS == 12469 
         t = databases.dbSNP_download(organism_taxon = 'chicken_9031', chromosome = 10)
-        assert next(t).resID == 'rs735347598'
+        assert next(t).rsID == 'rs735347598'
         
 
 
@@ -256,14 +269,13 @@ class Test1001Genomes(unittest.TestCase):
         assert len(t) == 6
 
 
-    # commented out because takes to much time (download of big files)
-    '''def testDownload(self):
+def testDownload(self):
         t = databases.thousandgenomes(latitude=(40.9063, 40.9064), longitude=(-73.1494, -73.1492))
         databases.download(t[0],'../database_download.gz')
         assert os.path.isfile('../database_download.gz')
-        os.system("rm -r ../database_download.gz")'''
+        os.system("rm -r ../database_download.gz")
 
-'''
+
 @unittest.skipUnless(pybedtools, "test requires installation of PyBedTools.")
 class TestFetch(unittest.TestCase):
     def testFetchBed(self):
@@ -357,7 +369,7 @@ class TestFetch(unittest.TestCase):
         t = reader.fetch('13')
         reader.create_vcf(t,'test')
         assert os.path.isfile('test.vcf')
-        os.system("rm -r test.vcf") '''
+        os.system("rm -r test.vcf")
 
 class TestGatkOutput(unittest.TestCase):
     filename = 'gatk.vcf'
@@ -1771,10 +1783,10 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMetadataWhitespac
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMixedFiltering))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRecord))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCall))
-#suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
-#suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Test1001Genomes))
-#suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedReader))
-#suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedWriter))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Test1001Genomes))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedReader))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedWriter))
 ##suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue201))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue234))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIssue246))
