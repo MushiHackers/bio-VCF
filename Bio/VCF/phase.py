@@ -208,45 +208,51 @@ class PhasedReader(object):
 
     __next__ = next  # Python 3.X compatibility
 
-    def get_snp_with_specific_id(self, rsID):
-        """Returns SNP with user-given rsID."""
+    def get_specific_snp(self, rsID):
+        """Returns a _PhasedRecord object (SNP) with user-given rsID."""
         record = self.next()
         found = False
+        result = None
         try:
             while not found:
                 if str(record.rsID) == str(rsID):
-                    found = True
-                    print(record)
+                    if not found: 
+                        found = True
+                    result = record
                 else:
                     record = self.next()
         except StopIteration:
             print('SNP with searched rsID was not found.')
+        return result
             
     def get_snp_within_range(self, pos1, pos2):
-        """Returns SNPs within user-given range. Condition: pos1 must be smaller than pos2."""
+        """Returns _PhasedRecord objects (SNPs) within user-given range. Condition: pos1 must be smaller than pos2."""
         record = self.next()
         found = False
         total = int()
+        results = list()
         try:
             while record is not None:
                 if int(record.pos) >= int(pos1) and int(record.pos) < int(pos2):
-                    if found is False:
+                    if not found:
                         found = True
-                        print('SNPs within given range:')
                     total += 1
-                    print(record)
+                    results.append(record)
                 record = self.next()
         except StopIteration:
             if not found:
                 print('No SNP within given range was found.')
             else:
-                print('\n' + 'In total found: ' + str(total))
+                print('SNPs found: ' + str(total) + '\n')
+        return results
                 
     def get_snp_with_specific_sample(self, haplotype, nucleotide):
-        """Returns SNPs containing user-given sample."""
+        """Returns _PhasedRecord objects (SNPs) containing user-given sample."""
+        #TODO Dejw, cos jest nie tak
         record = self.next()
         searched_haplotype = _Haplotype(haplotype)
         hap_found = False
+        results = list()
         for hap in record.samples:
             if hap.haplotype.is_transmitted == searched_haplotype.is_transmitted and hap.haplotype.name == searched_haplotype.name:
                 found = False
@@ -262,27 +268,28 @@ class PhasedReader(object):
                         if ((record.samples)[hap_index]).nucleotide == str(nucleotide):
                             if found is False:
                                 found = True
-                                print('SNPs with searched sample:')
                             total += 1
-                            print(str(record.rsID) + '\t' + str(record.pos))
-                    elif ((record.samples)[hap_index]).exists is False:
+                            results.append(record)
+                    '''elif ((record.samples)[hap_index]).exists is False:
                         not_existing += 1
                     elif ((record.samples)[hap_index]).is_unresolved:
-                        unresolved += 1
+                        unresolved += 1'''
                     record = self.next()
             except StopIteration:
                 if not found:
                     print('No SNP with searched sample was found.')
                 else:
-                    print('\n' + 'In total found: ' + str(total))
+                    print('SNPs found: ' + str(total) + '\n')
         else:
             print('Searched haplotype is not included in the given file.')
+        return results
             
-    def get_nucleotides_from_snps_in_specific_hap(self, haplotype):
-        """Returns SNPs within user-given haplotype."""
+    def get_samples_from_specific_hap(self, haplotype):
+        """Returns _Sample objects within user-given haplotype."""
         record = self.next()
         searched_haplotype = _Haplotype(haplotype)
         hap_found = False
+        results = list()
         for hap in record.samples:
             if hap.haplotype.is_transmitted == searched_haplotype.is_transmitted and hap.haplotype.name == searched_haplotype.name:
                 found = False
@@ -303,27 +310,29 @@ class PhasedReader(object):
                     else:
                         if found is False:
                             found = True
-                            print('SNPs within given haplotype:')
                         total += 1
-                        print(str(record.rsID) + '\t' + str(((record.samples)[hap_index]).nucleotide))
+                        results.append((record.samples)[hap_index])
                     record = self.next()
             except StopIteration:
                 if not found:
-                    print('No SNPs were found for searched haplotype.')
-                    print('SNPs found unresolved: ' + str(unresolved))
-                    print('SNPs found not existing: ' + str(not_existing))                       
+                    print('No sample was found for searched haplotype.')
+                    print('Samples found unresolved: ' + str(unresolved))
+                    print('Samples found not existing: ' + str(not_existing))                       
                 else:
-                    print('\n' + 'In total found: ' + str(total))
-                    print('\n' + 'Found unresolved: ' + str(unresolved))
-                    print('Found not existing: ' + str(not_existing))
+                    print('Samples found: ' + str(total))
+                    print('Samples found unresolved: ' + str(unresolved))
+                    print('Samples found not existing: ' + str(not_existing) + '\n')
         else:
             print('Searched haplotype is not included in the given file.')
+        return results
             
-    def get_sample_from_specific_snp(self, rsID, haplotype):
+    def get_specific_sample(self, rsID, haplotype):
+        """Returns _Sample object containing user-given haplotype and rsID of the SNP."""
         record = self.next()
         searched_haplotype = _Haplotype(haplotype)
         found = False
         hap_found = False
+        result = None
         for hap in record.samples:
             if hap.haplotype.is_transmitted == searched_haplotype.is_transmitted and hap.haplotype.name == searched_haplotype.name:
                 hap_found = True
@@ -340,16 +349,17 @@ class PhasedReader(object):
                         elif record.samples[hap_index].exists is False:
                             print('The sample for searched SNP does not exist.')
                         else:
-                            print(str(((record.samples)[hap_index]).nucleotide))
+                            result = record.samples[hap_index]
                     else:
                         record = self.next()
             except StopIteration:
                 print('SNP with searched rsID is not included in the given file.')
         else:
             print('Searched haplotype is not included in the given file.')
+        return result
 
-    def fetch(self, chrom=None, region=None, fsock=None, filename=None, compressed=None, prepend_chr=False,
-              strict_whitespace=False, encoding='ascii', verbose = True, vcf= None, not_matching_snp = "."):
+    def fetch(self, fsock=None, filename=None, compressed=None, prepend_chr=False,
+              strict_whitespace=False, encoding='ascii', verbose = True, vcf = None, not_matching_snp = "."):
         """
         Fetches snps from VCF
         - filename is a filename of the VCF
@@ -406,21 +416,24 @@ class PhasedReader(object):
             else:
                 if v.is_snp:
                     snplist.append(v)
+
         rec = self.next()
         while not eof:
-             try:
+            try:
                 added = False
                 for v in snplist:
                     added = False
                     if isinstance(vfile, pybedtools.bedtool.BedTool):
-                        start = int(v[1]) - 1
+                        start = int(v[1])
                     else:
-                        start = v.start
-
+                        start = v.start + 1
                     if rec.pos < start or rec.pos > start+1:
                         continue
                     if rec.pos == start:
-                        alleles = [v[3]] + v[4].split(',')
+                        if isinstance(vfile, pybedtools.bedtool.BedTool):
+                            alleles = [v[3]] + v[4].split(',')
+                        else:
+                            alleles = v.alleles
                         rec_string = rec.rsID + '\t' + str(rec.pos) + '\t'
                         for sample in rec.samples:
                             if not sample.exists:
@@ -438,18 +451,18 @@ class PhasedReader(object):
             except StopIteration:
                 eof = True
         
-    if verbose:
-        for r in result:
-            print(r)
-    origin = self._reader
-    self.reader, self._reader = None,None
-    resultreader = deepcopy(self)
-    origin.seek(0)
-    self._reader = origin
-    self.reader = (line.strip() for line in self._reader if line.strip())
-    next(self.reader)
-    resultreader.reader = (line for line in result)
-    return resultreader
+        if verbose:
+            for r in result:
+                print(r)
+        origin = self._reader
+        self.reader, self._reader = None,None
+        resultreader = deepcopy(self)
+        origin.seek(0)
+        self._reader = origin
+        self.reader = (line.strip() for line in self._reader if line.strip())
+        next(self.reader)
+        resultreader.reader = (line for line in result)
+        return resultreader
 
 
 class PhasedWriter(object):
@@ -483,6 +496,8 @@ class PhasedWriter(object):
                 else:
                     rec += sample.nucleotide + ' '
         self.stream.write(rec + '\n')
+
+    write = write_record
 
     def close(self):
         """Try closing the writer"""

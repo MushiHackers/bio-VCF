@@ -640,7 +640,20 @@ class Reader(object):
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
 
+        arg = False
+        if self._bedtool[0].chrom[:3] != "chr":
+            arg = True
+        if arg:
+            self._bedtool = self._bedtool.each(truncate_feature)
+
         bed = pybedtools.BedTool(bed_file).merge()
+
+        arg = False
+        if bed[0].chrom[:3] != "chr":
+            arg = True
+        if arg:
+            bed = bed.each(truncate_feature)
+
         features = self._bedtool.intersect(bed)
         if verbose:
             for d in features:
@@ -666,6 +679,13 @@ class Reader(object):
             raise Exception('Please provide a filename (or a "normal" fsock)')
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
+
+        arg = False
+        if self._bedtool[0].chrom[:3] != "chr":
+            arg = True
+        if arg:
+            self._bedtool = self._bedtool.each(truncate_feature)
+
         thetarfile = stream
         page = urlopen(thetarfile)
         if sys.version > '3':
@@ -673,6 +693,13 @@ class Reader(object):
             reader = codecs.getreader("utf-8")
             contents = reader(gzip_f)
             bed = pybedtools.BedTool(contents)
+
+            arg = False
+            if bed[0].chrom[:3] != "chr":
+                arg = True
+            if arg:
+                bed = bed.each(truncate_feature)
+
             features = self._bedtool.intersect(bed)
             if features:
                 if verbose:
@@ -686,9 +713,16 @@ class Reader(object):
                 return features
             else:
                 raise Exception("Did not find any SV in provided intervals")
-        elif sys.version < '3':
+        else: # sys.version < '3':
             gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
             bed = pybedtools.BedTool(gzip_f)
+
+            arg = False
+            if bed[0].chrom[:3] != "chr":
+                arg = True
+            if arg:
+                bed = bed.each(truncate_feature)
+
             features = self._bedtool.intersect(bed)
             if features:
                 if verbose:
@@ -719,7 +753,8 @@ class Reader(object):
 
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
-        if not self._prepend_chr and chrom[:3] != 'chr':
+
+        if chrom[:3] != 'chr':
             chrom = 'chr' + chrom
 
         local_file = 'feature_local.bed'
@@ -758,15 +793,33 @@ class Reader(object):
 
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
-        if not self._prepend_chr and chrom[:3] != 'chr':
+
+        arg = False
+        if self._bedtool[0].chrom[:3] != "chr":
+            arg = True
+        if arg:
+            self._bedtool = self._bedtool.each(truncate_feature)
+
+        if chrom[:3] != 'chr':
             chrom = 'chr' + chrom
+
         if not interval:
             end_position = 0
+
             for v in self._bedtool:
                 if (v.chrom == chrom and int(v.end) > end_position):
                     end_position = v.end
             description = chrom + " " + str(0) + " " + str(end_position)
             feature = pybedtools.BedTool(description, from_string=True)
+
+            self._bedtool = pybedtools.BedTool(self.filename)
+
+            arg = False
+            if self._bedtool[0].chrom[:3] != "chr":
+                arg = True
+            if arg:
+                self._bedtool = self._bedtool.each(truncate_feature)
+
             result = self._bedtool.intersect(feature)
             if verbose:
                 for r in result:
@@ -811,8 +864,10 @@ class Reader(object):
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
 
-        if not self._prepend_chr and chrom[:3] != 'chr':
+
+        if chrom[:3] != 'chr':
             chrom = 'chr' + chrom
+
         is_feature = False
         if location:
             print ("Finding SV corresponding to %s and chosen position" % (feature_type))

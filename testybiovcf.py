@@ -72,7 +72,5 @@ print(11)
 print(VCF.trim_common_suffix('TATATATA', 'TATATA'))
 print(VCF.trim_common_suffix('ACCCCC', 'ACCCCCCCC', 'ACCCCCCC', 'ACCCCCCCCC'))
 
-
-print('MELT')
-"""do przemyslenia"""
-print('todo')
+t = VCF.PhasedReader(filename='./Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+t2 = t.fetch(fsock=open('./Tests/VCF/chr10.vcf','r'),vcf='testowy')

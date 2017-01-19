@@ -1,33 +1,18 @@
 \chapter{Bio.VCF: handling VCF and phased files}
 
-Since new functionality added to \verb|Biopython| version ILEŚTAM NAPISAĆ ILE BO NIE WIEM is based on \verb|pyVCF|
+Since this functionality is based on \verb|pyVCF|
 package, this chapter is partly based on the original \verb|pyVCF| documentation. Not all of the original functionality
-is described below, therefore for further details of \verb|Bio.VCF| module, pleas see
+is described below, therefore for further details of \verb|Bio.VCF| module, please see
 \href{http://pyvcf.readthedocs.io/en/latest/INTRO.html}{pyVCF}.
 
 \section{VCF.Reader class}
 
-\verb|Bio.VCF.Reader| class takes a file-like object and acts as reader. It is intended to parse the content of each record
-based on the data types specified in the meta-information lines – specifically the \verb|##INFO| and \verb|##FORMAT| lines.
+\verb|VCF.Reader| class takes a file-like object and acts as reader. It is intended to parse the content of each record
+based on the data types specified in the meta-information lines, specifically the \verb|##INFO| and \verb|##FORMAT| lines.
 If these lines are missing or incomplete it will check against the reserved types mentioned in the spec.
 Failing that, it will just return strings.
-
-\noindent The attributes of a \verb|Record| object are the 8 fixed fields from the VCF spec: \
-
-\
-
-\verb|Record.CHROM|, \verb|Record.POS|, \verb|Record.ID|, \verb|Record.REF|, \verb|Record.ALT|, \verb|Record.QUAL| \
-  \verb|Record.FILTER|, \verb|Record.INFO|
-
-\
-
-\noindent plus attributes to handle genotype information:
-
-\
-
-\verb|Record.FORMAT|, \verb|Record.samples|, \verb|Record.genotype|.
-
-\
+\\
+\\
 
 \noindent Regarding the coordinates associated with each instance:
 
@@ -35,16 +20,17 @@ Failing that, it will just return strings.
   \item[\texttt{POS}] \
 
     per VCF specification, is the one-based index (the first base of the contig has an index of 1)
-    of the first base of the \verb|REF| sequence
+    of the first base of the \verb|REF| sequence. Positions are sorted numerically,
+    in increasing order.
 
-  \item[\texttt{start}{ end}] \
+  \item[\texttt{start, end}] \
 
     denote the coordinates of the entire \verb|REF| sequence in the zero-based, half-open coordinate
     system (see \href{http://genomewiki.ucsc.edu/index.php/Coordinate_Transforms}{Coordinate\_Transforms}), where
     the first base of the contig has an index of 0, and the interval runs up to, but does not include, the base
     at the end index. This indexing scheme is analagous to Python slice notation.
 
-  \item[\texttt{affected\_start}{ affected\_end}] \
+  \item[\texttt{affected\_start, affected\_end}] \
 
     are also in the zero-based, half-open coordinate system. These coordinates indicate the precise region
     of the reference genome actually affected by the events denoted in \verb|ALT| (i.e., the minimum
@@ -60,30 +46,48 @@ Failing that, it will just return strings.
 
 \end{description}
 
-\noindent \verb|samples| and \verb|genotype|, not being the title of any column, are left lowercase. The format of the fixed
+\noindent \verb|samples| and \verb|genotype|\\
+
+not being the title of any column, are left lowercase. The format of the fixed
 fields is from the spec. Comma-separated lists in the \verb|VCF| are converted to lists. In particular,
 one-entry \verb|VCF| lists are converted to one-entry Python lists (see, e.g., \verb|Record.ALT|).
 Semicolon-delimited lists of key=value pairs are converted to Python dictionaries, with flags being given a True value.
 
+\
+\
 
-\noindent This module supports
 
 
 \noindent Metadata regarding the VCF file itself can be investigated through the following attributes:
 
 \
 
-\verb|Record.metadata|, \verb|Record.infos|, \verb|Record.filters|, \verb|Record.formats|, \verb|Record.samples|.
+\verb|Reader.metadata|, \verb|Reader.infos|, \verb|Reader.filters|, \verb|Reader.formats|, \verb|Reader.samples|.
 
 \
 
+\noindent The attributes of a \verb|Record| object are the 8 fixed fields from the VCF spec: \
 
+\
 
-\noindent Suppose we have a VCF file and want to see all the records in it. We might simply create a Bio.VCF.Reader object:
+\verb|Record.CHROM|, \verb|Record.POS|, \verb|Record.ID|, \verb|Record.REF|, \verb|Record.ALT|, \verb|Record.QUAL| \
+  \verb|Record.FILTER|, \verb|Record.INFO|
+
+\
+
+\noindent Plus attributes to handle genotype information:
+
+\
+
+\verb|Record.FORMAT|, \verb|Record.samples|, \verb|Record.genotype|.
+
+\
+
+\noindent Suppose we have a VCF file and want to see all the records in it. We might simply create a VCF.Reader object:
 
 \begin{verbatim}
 >>> from Bio.VCF import parser
->>> vcf_reader = parser.Reader(open('VCF/example-4.0.vcf', 'r'))
+>>> vcf_reader = parser.Reader(open('example-4.0.vcf', 'r'))
 >>> for record in vcf_reader:
 ...     print record
 Record(CHROM=20, POS=14370, REF=G, ALT=[A])
@@ -94,8 +98,7 @@ Record(CHROM=20, POS=1234567, REF=GTCT, ALT=[G, GTACT])
 \end{verbatim}
 
 
-\noindent Now, we are interested in position and alteration type of the first record from the VCF file. We can
-obtain the information by typing:
+\noindent Now, we are interested in position and alteration type of the first record from the VCF file. We can obtain the information by typing:
 
 \begin{verbatim}
 >>> record = next(vcf_reader)
@@ -107,8 +110,7 @@ obtain the information by typing:
 [0.5]
 \end{verbatim}
 
-\noindent Moreover there are a number of convenience methods and properties for each \verb|Bio.VCF.Record| object
-allowing you to examine properties of interest:
+\noindent Moreover there are a number of convenience methods and properties for each \verb|VCF.Record| object allowing you to analyse VCF object:
 
 \begin{verbatim}
 >>> print record.num_called, record.call_rate, record.num_unknown
@@ -180,12 +182,13 @@ OrderedDict([('q10', Filter(id='q10', desc='Quality below 10')), \
 \noindent When you are interested in \verb|ALT| records, you can interrogate them to achieve information:
 
 \begin{verbatim}
->>> reader = parser.Reader(open('VCF/example-4.1-bnd.vcf'))
+>>> reader = parser.Reader(open('example-4.1-bnd.vcf'))
 >>> _ = next(reader); row = next(reader)
 >>> print row
 Record(CHROM=1, POS=2, REF=T, ALT=[T[2:3[])
 >>> bnd = row.ALT[0]
->>> print bnd.withinMainAssembly, bnd.orientation, bnd.remoteOrientation, bnd.connectingSequence
+>>> print bnd.withinMainAssembly, bnd.orientation, bnd.remoteOrientation,
+bnd.connectingSequence
 True False True T
 \end{verbatim}
 
@@ -247,11 +250,11 @@ True False True T
     return a list of size equal to the number of VCF readers. This list contains the \verb|VCF| record from
     readers that have this variant, and None for readers that don’t have it. The caller must make sure
     that inputs are sorted in the same way and use the same reference otherwise behaviour is undefined.
-
+    \
     \verb|Args|:
             \verb|vcf_record_sort_key|: \
 
-    function that takes a VCF record and returns a
+    Function that takes a VCF record and returns a
     tuple that can be used as a key for comparing and sorting \verb|VCF| records across all readers.
     This tuple defines what it means for two variants to be equal (eg. whether it’s only their
     position or also their allele values), and implicitly determines the chromosome ordering since
@@ -270,43 +273,25 @@ True False True T
     ['TAT', 'T']
     \end{verbatim}
 
-
     \begin{verbatim}
     >>> trim_common_suffix('ACCCCC', 'ACCCCCCCC', 'ACCCCCCC', 'ACCCCCCCCC')
     ['A', 'ACCC', 'ACC', 'ACCCC']
     \end{verbatim}
 
-    \
-
-    \item[\texttt{vcf\_melt}] \
-
-    This script converts a \verb|VCF| file from wide format (many calls per row) to a long format
-    (one call per row). This is useful if you want to grep per sample or for really quick
-    import into, say, a spreadsheet:
-
-    \begin{verbatim}
-    $ vcf_melt < vcf/test/gatk.vcf
-    SAMPLE      AD      DP      GQ      GT      PL      FILTER  CHROM   POS     REF     ...
-    BLANK       6,0     6       18.04   0/0     0,18,211        .       chr22   42522392        ...
-    NA12878     138,107 250     99.0    0/1     1961,0,3049     .       chr22   42522392        ...
-    NA12891     169,77  250     99.0    0/1     1038,0,3533     .       chr22   42522392        ...
-    NA12892     249,0   250     99.0    0/0     0,600,5732      .       chr22   42522392        ...
-    ...
-    \end{verbatim}
-
+   
     \end{description}
 
 \section{VCF.Writer class}
 
-\noindent The \verb|Bio.VCF.Writer| class provides a way of writing a VCF file.
-\verb|Bio.VCF.parser| module supports \verb|close()|, \verb|flush()| and \verb|write_record()| methods.
-
-\noindent Currently, when writing new VCF file you must specify a template \verb|Bio.VCF.Reader| object
+\noindent The \verb|VCF.Writer| class provides a way of writing a VCF file.
+\verb|VCF.parser| module supports \verb|close()|, \verb|flush()| and \verb|write_record()| methods.
+\
+\noindent Currently, when writing new VCF file you must specify a template \verb|VCF.Reader| object
 which provides the metadata, like this:
 
 \begin{verbatim}
 >>> from Bio.VCF import parser
->>> vcf_reader = parser.Reader(filename='VCF/tb.vcf.gz')
+>>> vcf_reader = parser.Reader(filename='tb.vcf.gz')
 >>> vcf_writer = parser.Writer(open('/dev/null', 'w'), vcf_reader)
 >>> for record in vcf_reader:
 ...     vcf_writer.write_record(record)
@@ -317,26 +302,26 @@ which provides the metadata, like this:
 
 \section{Retrieving records from VCF file}
 
-\noindent This chapter gives an overview of the functionality of fetch methods included in \verb|Bio.VCF| \verb|parser| module.
+\noindent This chapter gives an overview of the functionality of fetch methods included in \verb|VCF| \verb|parser| module.
 Those functions enable users to retrieve particular records from VCF file describing structural variants,
 depending on provided argument - for example interval of positions within which we seek for structural variants, a list
 of such positions or feature type within which structural variants are present.
-
+\
 
 \noindent Functionality of those fetch methods includes retrieving structural variants corresponding to ranges
 provided in BED files as well as features from GFF files. If you are not familiar with BED file format
 you might be interested in \href{http://www.ensembl.org/info/website/upload/bed.html}{BED} and
 \href{http://gmod.org/wiki/GFF3}{GFF}.
 
-
+\
 \noindent Most of implementation is based on \verb|pybedtools| module - \href{https://daler.github.io/pybedtools/}{pybedtools},
 which support many file formats including VCF, BED and GFF, therefore \verb|pybedtools| package is required.
-
+\
 
 \noindent Due to enormous sizes of some BED and GFF files, some fetch methods are intended to enable user to provide
 stream of particular GFF/BED file from chosen database. It is a beneficial solution allowing users to avoid
 the necessity of saving very big files to local disc.
-
+\
 
 \noindent Below there is a brief description of each fetch method.
 All of them have arguments \verb|verbose| and \verb|vcf| specifying if result should be printed to stdout
@@ -373,7 +358,6 @@ and whether new VCF.Reader object should be created, respectively.
     Chromosome must be specified and interval is optional.
 
   \item[\texttt{fetch\_gff(gff\_file, chrom, feature\_type, location = None, verbose = False, vcf = None)}] \
-
     This method enables to select desired features from a GFF/GFF2/GFF3 file and fetch VCF records
     that correspond to position of those features. Fetch is based on pybedtools 'intersection' method and returns
     a BedTool object of chosen VCF records or new VCF.Reader object.
@@ -408,7 +392,7 @@ we need to import Bio.VCF library:
 
 \end{verbatim}
 
-and then create a VCF.Reader obcject. We can either create object from a local file or we can provide fsock
+\noindent and then create a VCF.Reader obcject. We can either create object from a local file or we can provide fsock
 of corresponding VCF file:
 
 
@@ -430,7 +414,7 @@ located within those sites. If we have this BED file locally on our computer, th
 \end{verbatim}
 
 
-or if we don't, we should provide a stream of chosen BED file and use:
+\noindent or if we don't, we should provide a stream of chosen BED file and use:
 
 
 \begin{verbatim}
@@ -445,7 +429,7 @@ if we want to see all information of every selected record:
 
 
 \begin{verbatim}
->>> bed = vcf.fetch_bed('VCF/chr13bed.bed')
+>>> bed = vcf.fetch_bed('chr13bed.bed')
 >>> for b in bed:
 >>>     print (b.fields)
 ['chr13', '10', '.', 'G', 'GGT', '.', 'PASS', 'DP=91;SS=1;SSC=2;GPV=3.0109E-23;SPV=5.8324E-1',
@@ -467,7 +451,7 @@ at 13th chromosome. \verb|fetch_gff()| method is what we need:
 
 
 \begin{verbatim}
->>> vcf.fetch_gff('VCF/HS_fetch_gff.gff3', '13', 'pseudogene')
+>>> vcf.fetch_gff('HS_fetch_gff.gff3', '13', 'pseudogene')
 \end{verbatim}
 
 
@@ -476,7 +460,7 @@ at 13th chromosome. \verb|fetch_gff()| method is what we need:
 
 
 \begin{verbatim}
->>> vcf.fetch_gff('VCF/HS_fetch_gff.gff3', '13', 'pseudogene', location=[1, 18270822])
+>>> vcf.fetch_gff('HS_fetch_gff.gff3', '13', 'pseudogene', location=[1, 18270822])
 Finding SV corresponding to pseudogene and chosen position
 chr13	20	.	GT	G	.	PASS	DP=77;SS=1;SSC=2;GPV=2.4504E-29;SPV=6.0772E-1	GT:GQ:DP:RD:AD:FREQ:DP4
 1/1:.:28:5:22:81.48%:0,5,1,21
@@ -532,6 +516,120 @@ chr13	85837130	.	T	TTAA	.	PASS	DP=27;SS=1;SSC=2;GPV=1.4382E-14;SPV=5.5556E-1	GT:
 \noindent VCF file created after \verb|vcf.fetch| is saved to local disc and can be easily achieved with
 VCF.Reader() anytime needed.
 
+
+
+\section{VCF Filters}
+
+\subsection{The filters.py script}
+\noindent Filtering a VCF file based on some properties of interest is a common enough operation that PyVCF offers an extensible script.
+
+Existing Filter's Classes:
+
+\verb|Bio.VCF.filters.SiteQuality|
+\verb|Bio.VCF.filters.VariantGenotypeQuality|
+\verb|Bio.VCF.filters.ErrorBiasFilter|
+\verb|Bio.VCF.filters.DepthPerSample|
+\verb|Bio.VCF.filters.AvgDepthPerSample|
+\verb|Bio.VCF.filters.SnpOnly|
+
+
+
+\subsection{Adding a filter}
+\noindent You can reuse this work by providing a filter class, rather than writing your own filter. For example, lets say I want to filter each site based on the quality of the site. I can create a class like this::
+\begin{verbatim}   
+import Bio.VCF.filters
+class SiteQuality(filters.Base):
+    'Filter sites by quality'
+    name = 'sq'
+    @classmethod
+    def customize_parser(self, parser):
+        parser.add_argument('--site-quality', type=int, default=30,
+            help='Filter sites below this quality')
+    def __init__(self, args):
+        self.threshold = args.site_quality
+    def __call__(self, record):
+        if record.QUAL < self.threshold:
+            return record.QUAL
+\end{verbatim}
+
+\noindent This class subclasses \verb|Bio.VCF.filters.Base| which provides the interface for VCF filters. The docstring  and \verb|name| are metadata about the parser.  The docstring provides the help for the script, and the first line is included in the FILTER metadata when applied to a file.
+
+\noindent The \verb|customize_parser| method allows you to add arguments to the script. We use the \verb|__init__| method to grab the argument of interest from the parser. Finally, the \verb|__call__| method processes each record and returns a value if the filter failed.  The base class uses the \verb|name| and \verb|threshold| to create the filter ID in the VCF file.
+
+\noindent Unfortunately \verb|Bio.VCF.filters.scripts.vcf_filters.py| don't work as creator of pyVCF wanted. On official VCF-github site you can finde more information about that. We're hoping that that bugs will be soon fixed. But before it happens we recomand to use filters carefully some of them doestn't work.
+
+\noindent Example of using filters form filters.py file:
+\begin{verbatim}
+import Bio.VCF
+>>>#creating Reader object on our vcf file
+>>>reader_object=Bio.VCF.Reader(open('Tests/VCF/example-4.1.vcf','rt'))
+>>>
+>>>#creating object Base (form filters.py file) with Reder object
+>>>base_object=Bio.VCF.filters.Base(reader_object)
+>>>#choose filter for example VCF.filters.SnpOnly
+>>>
+>>>so= Bio.VCF.filters.SnpOnly(base_object)
+>>>
+>>>#than we call function on reader_bejct lines to find this which agree which choosen value of site quality
+>>>for i in readerobject:
+...		print so(i)
+...
+\end{verbatim}
+
+
+\subsection{sample_filters.py script}
+\noindent \verb|Bio.VCF.sample_filters| are functions created to filter VCF files by haplotyp's sample. Usually we're interseted just in specified mutants, thats why it's very helpfull to get information to further analysis only about this variants.
+
+\noindent How to use it:
+
+\begin{verbatim}
+positional arguments:
+  file          VCF file to filter
+
+optional arguments:
+  -h, --help    show this help message and exit
+  -o outfile    File to write out filtered samples
+  -f filters    Comma-separated list of sample indices or names to filter
+  -i, --invert  Keep rather than discard the filtered samples
+  -q, --quiet   Less output
+\end{verbatim}
+
+\noindent Example of usage:
+\begin{verbatim}
+$ python ../Bio/VCF/scripts/vcf_sample_filter.py VCF/example-4.1.vcf
+Samples:
+0: NA00001
+1: NA00002
+2: NA00003
+
+$python ../Bio/VCF/scripts/vcf_sample_filter.py VCF/example-4.1.vcf -f 1,2 --quiet
+##fileformat=VCFv4.1
+##fileDate=20090805
+##source=myImputationProgramV3.1
+##reference=file:///seq/references/1000GenomesPilot-NCBI36.fasta
+##phasing=partial
+##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=AA,Number=1,Type=String,Description="Ancestral Allele">
+##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership, build 129">
+##INFO=<ID=H2,Number=0,Type=Flag,Description="HapMap2 membership">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##FORMAT=<ID=HQ,Number=2,Type=Integer,Description="Haplotype Quality">
+##FILTER=<ID=q10,Description="Quality below 10">
+##FILTER=<ID=s50,Description="Less than 50% of samples have data">
+##contig=<ID=20,length=62435964>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NA00001
+20	14370	rs6054257	G	A	29	PASS	NS=3;DP=14;AF=0.5;DB;H2	GT:GQ:DP:HQ	0|0:48:1:51,51
+20	17330	.	T	A	3	q10	NS=3;DP=11;AF=0.017	GT:GQ:DP:HQ	0|0:49:3:58,50
+20	1110696	rs6040355	A	G,T	67	PASS	NS=2;DP=10;AF=0.333,0.667;AA=T;DB	GT:GQ:DP:HQ	1|2:21:6:23,27
+20	1230237	.	T	.	47	PASS	NS=3;DP=13;AA=T	GT:GQ:DP:HQ	0|0:54:7:56,60
+20	1234567	microsat1	GTC	G,GTCT	50	PASS	NS=3;DP=9;AA=G	GT:GQ:DP	0/1:35:4
+\end{verbatim}   
+
+
 \section{Available VCF Databases}
 
 \noindent Bio.VCF.databases is a Biopython module that supports \verb|1001 Genomes| and \verb|dbSNP| databases.
@@ -556,7 +654,7 @@ Searching through the database can be based on strain's name, ec number, eco typ
 origin - such as country, longitude or latitude.
 
 
-\noindent Below there is a brief description of \verb|thousandgenome()| methods:
+\noindent Below there is a brief description of \verb|thousandgenomes()| methods:
 
 
 \begin{description}
@@ -623,4 +721,441 @@ method can manage this:
 \end{verbatim}
 
 \subsection{dbSNP database}
-todo Zojka
+
+\verb|dbSNP| Is the NCBI Short Genetic Variations database. It catalogs short variations in nucleotide sequences froma wide range of organisms. 
+\verb|Bio.VCf.databases| module can be used to obtain avaiable VCF files from dbSNP. List of organism for which VCF files exists can be found in supplementary file \verb|organisms.txt|. The database is regulary updated. User can update list od organisms using attached methods. Searching through the database can be based on organism and taxon ID proposed in file \verb|organisms.txt| and a chosen chromosome. Unfortunatelly dbSNP does not contain human SNPs divided into chromosomes. User can operate only on a very big file (350GB).
+
+\noindent Below there is a brief description of \verb|dbSNP| methods:
+
+\begin{description}
+  \item[\texttt{dbSNP\_download(organism\_taxon, chromosome = None)}] \
+
+    This method enables to search through \verb|dbSNP| database for VCF file corresponding to selected
+    organism, taxon and chromosome.
+    
+    Organism and corresponding taxon ID must be chosen from list of organisms in \verb|organisms.txt|. User can update this list by running
+    \verb|check_VCF()| method.
+    
+    Chromosome must be chosen from existing chromosomes in given organism. Leaving \verb|chromosome=None| will cause loading VCF file
+    containing all the chromosomes (but not every organism has this file).
+    
+    Method returns VCF.Reader object of selected VCF file stream from dbSNP.
+    
+    \item[\texttt{check\_VCF()}] \
+    
+    This method enables to update organisms list in \verb|organisms.txt|. dbSNP is regullary updated. If you can't find chosen organisms in 
+    the list we recommend running this method. 
+
+\end{description}
+
+\noindent Let's try some functionality of the module:
+
+\noindent Suppose we want to analyse SNPs found in chromosome 2R in fruitfly. We check \verb|organisms.txt| where we can find identifier 
+fruitfly\_7227.
+
+\begin{verbatim}
+>>> from Bio.VCF import databases
+>>> vcf = databases.dbSNP_download('fruitfly_7227',chromosome='2R')
+>>> vcf
+<Bio.VCF.parser.Reader object at 0x7f1d813f14d0>
+\end{verbatim}
+
+\noindent Now we can continue our analysis using methods proposed in VCF.Reader class.
+
+\noindent We can also want to analyse all SNPs found for flycatcher:
+
+\begin{verbatim}
+>>> vcf = databases.dbSNP_download('flycatcher_59894')
+>>> vcf
+<Bio.VCF.parser.Reader object at 0x7f1d82c83ad0>
+\end{verbatim}
+
+\noindent If you want to check if new VCF files are avaiable just run:
+
+\begin{verbatim}
+>>> from Bio.VCF import databases
+>>> databases.check_VCF()
+Connecting to database...
+Searching for VCF files...
+Searching for VCF files...
+Searching for VCF files...
+Searching for VCF files...
+Searching for VCF files...
+.
+.
+.
+List updated.
+\end{verbatim}
+    
+    
+\section {Retrieving records from phasing files}
+%todo Hans
+
+This chapter gives an overview of the usage of phasing files parser included in \verb|Bio.VCF| \verb|phase| module.
+This module makes handling haplotype data easier, allowing users to retrieve particular records from phasing files
+and even filtering SNPs by matching them to those included in VCF file.
+
+The whole module is specifficaly written for handling data from \href{ftp://ftp.hapmap.org/hapmap/phasing/2009-02\_phaseIII/HapMap3\_r2/}{HapMap 3} project.
+Format of the data handled by functions is as staded in \href{ftp://ftp.hapmap.org/hapmap/phasing/2009-02\_phaseIII/HapMap3\_r2/hapmap3\_r2\_phasing\_summary.doc}{hapmap3\_r2\_phasing\_summary.doc},
+but also assuming that SNPs in those files are sorted increasingly by position.
+
+
+\subsection{Parsing and reading phasing files}
+
+Phasing data can be read as \verb|VCF.PhasedReader| object. It is similiar to \verb|VCF.Reader| class - works with both compressed (.gz) and
+uncompressed files, can take fsocks (streams) and filenames as input, with specified encoding (default is ascii).
+\verb|VCF.PhasedReader| holds information extracted from the name of the file (if available), haplotypes, and SNP's in form of \verb|VCF._PhasedRecord| objects.
+It also contains several useful functions explained further in the coresponding subsections in \verb|VCF.PhasedReader functions| section below.
+Important thing is, if you are downloading the .phased file to your computer, rather not change the file name as it gives important
+information not stated anywhere in the file. Files without original name will be parsed normally but will lack in information like:
+\begin{enumerate}
+  \item chromosome
+  \item region
+  \item if the file is for unrelated haplotypes, duos or trios.
+\end{enumerate}
+
+\subsubsection{Creating VCF.PhasedReader objects}
+
+\noindent Suppose we have a phasing file downloaded from the \href{ftp://ftp.hapmap.org/hapmap/phasing/2009-02\_phaseIII/HapMap3\_r2/}{HapMap 3} site.
+We can read it in several ways, in example supporting only the filename:
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> phase_reader = PhasedReader('hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> phase_reader
+<Bio.VCF.phase.PhasedReader object at 0x7fee0c0445c0>
+
+\end{verbatim}
+
+\noindent or with opening the file first:
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> phase_file = open('hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> phase_reader = PhasedReader(fsock = phase_file)
+>>> phase_reader
+<Bio.VCF.phase.PhasedReader object at 0x7fee0c04bd30>
+
+\end{verbatim}
+
+\noindent If the file is compressed (.gz), the parser will try to guess it and uncompress it without stating anything, but it is advised that the uncompressed argument is set
+to true:
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> phase_reader = PhasedReader('hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz',
+compressed=True)
+>>> phase_reader
+<Bio.VCF.phase.PhasedReader object at 0x7fedf6df1278>
+
+\end{verbatim}
+
+\subsubsection{Exploring data held by VCF.PhasedReader}
+
+\noindent Data extracted from the filename is stored in the VCF.PhasedReader.filedata dict.
+
+\begin{verbatim}
+>>> phase_reader.filedata
+{'region': 'yri', 'chrom': '10', 'data_type': 'duos'}
+
+\end{verbatim}
+
+\noindent It is possible to get to the particular information by calling its key from dict:
+
+\begin{verbatim}
+>>> phase_reader.filedata['region']
+'yri'
+>>> phase_reader.filedata['chrom']
+'10'
+>>> phase_reader.filedata['data_type']
+'duos'
+
+\end{verbatim}
+
+\noindent Haplotypes included in the file are stored in the haplotypes list, as \_Haplotype objects:
+
+\begin{verbatim}
+>>> phase_reader.haplotypes
+[<Bio.VCF.phase._Haplotype object at 0x7fb16ed6e828>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6e898>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6e908>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6e940>,
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6e9b0>,
+.
+.
+.
+
+\end{verbatim}
+
+\noindent Let's see the first haplotype in the file:
+
+\begin{verbatim}
+>>> phase_reader.haplotypes[0]
+<Bio.VCF.phase._Haplotype object at 0x7fb16ed6e828>
+>>> print(phase_reader.haplotypes[0])
+NA18855, transmitted: True
+
+\end{verbatim}
+
+\noindent The \_Haplotype object holds information about the name of haplotype and if it is transmitted:
+
+\begin{verbatim}
+>>> phase_reader.haplotypes[0].name
+'NA18855'
+>>> phase_reader.haplotypes[0].is_transmitted
+True
+
+\end{verbatim}
+
+\subsubsection{Parsing phasing files with VCF.PhasedReader}
+
+\noindent To get the first (and then next, and then next...) line of the file, you just call next() on the PhasedReader:
+
+\begin{verbatim}
+>>> rec = next(phase_reader)
+>>> rec
+<Bio.VCF.phase._PhasedRecord object at 0x7fb16ed7f6d8>
+>>> print(rec)
+Record(rs12255619 at 88481: C, A, A, A, A, A, A, A, A, A, A, A)
+
+\end{verbatim}
+
+\noindent Parsing the phasing file by iterating over it is also possible:
+
+\begin{verbatim}
+>>> for rec in phase_reader:
+...     print(rec)
+...
+Record(rs12255619 at 88481: C, A, A, A, A, A, A, A, A, A, A, A)
+Record(rs11252546 at 94427: T, T, T, T, T, T, T, T, C, T, T, T)
+Record(rs17156316 at 191762: T, T, T, T, T, T, T, C, C, T, T, T)
+Record(rs10903451 at 193471: A, A, A, A, G, G, A, A, A, A, A, G)
+Record(rs11250575 at 199448: T, C, C, C, C, C, C, C, C, C, C, C)
+.
+.
+.
+
+\end{verbatim}
+
+\noindent Let's explore what is stored in the \_PhasedRecord:
+\begin{enumerate}
+\item rsID of the SNP
+\begin{verbatim}
+>>> rec.rsID
+'rs12255619'
+\end{verbatim}
+
+\item record position on the chromosome:
+\begin{verbatim}
+>>> rec.pos
+88481
+\end{verbatim}
+
+\item samples included in the record (as list of \_Sample objects):
+\begin{verbatim}
+>>> rec.samples
+[<Bio.VCF.phase._Sample object at 0x7f38a3d20a90>,
+<Bio.VCF.phase._Sample object at 0x7f38a3d3d048>,
+<Bio.VCF.phase._Sample object at 0x7f38a3d3d080>,
+<Bio.VCF.phase._Sample object at 0x7f38a3d3d0b8>,
+<Bio.VCF.phase._Sample object at 0x7f38a3d3d160>,
+.
+.
+.
+\end{verbatim}
+\end{enumerate}
+
+\noindent The \_Sample object corresponds to the nucleotide in the particular haplotype for the particular SNP:
+
+\begin{verbatim}
+>>> rec.samples[0]
+<Bio.VCF.phase._Sample object at 0x7f38a3d20a90>
+>>> rec.samples[0].rsID, rec.samples[0].haplotype.name, rec.samples[0].nucleotide
+('rs12255619', 'NA18855', 'C')
+\end{verbatim}
+
+\noindent \_Sample also holds information if the particular SNP for the haplotype exists and if it's unresolved:
+
+\begin{verbatim}
+>>> rec.samples[0].exists, rec.samples[0].is_unresolved
+(True, False)
+\end{verbatim}
+
+\noindent There is also the is\_not\_matching\_snp argument, but it is further discussed in the \verb|VCF.PhasedReader.fetch()|
+section.
+
+\subsection{Writing phasing files with VCF.PhasedWriter}
+
+\noindent The VCF.PhasedWriter works similarily to the VCF.Writer. You need to supply the stream to save the contents and
+the template (PhasedReader object):
+
+\begin{verbatim}
+>>> phase_reader = PhasedReader('hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> out = open('somenewname.phased','w')
+>>> phase_writer = PhasedWriter(stream = out, template = phase_reader)
+>>> phase_writer
+<Bio.VCF.phase.PhasedWriter object at 0x7f991e9ba4e0>
+\end{verbatim}
+
+\noindent and then, you write in the records you want, i.e fetched from the VCF file:
+
+\begin{verbatim}
+>>> for rec in phase_reader.fetch(filename = './Tests/VCF/chr10.vcf'):
+...     phase_writer.write(rec)
+...
+rs12255619	88481	C A A A A A A A A A A A
+rs1904671	1004603	A G. A A A A G. G. A A A A
+rs11812734	31713857	A G A A G G G G A G G G
+
+\end{verbatim}
+
+\noindent The output in this case should be stored in the somenewname.phased file.
+
+\subsection{VCF.PhasedReader functions}
+
+\subsubsection{VCF.PhasedReader.fetch() - Fetching SNP's from VCF file}
+
+\noindent The fetch metod retrieves SNPs corresponding to those in provided VCF file. It creates \verb|VCF.Reader|
+and filters it to have only the SNP's, then finds the matching ones in the phasing file. It returns the next PhasedReader object, but only with matching records.
+It takes the same arguments as VCF.Reader when it is created (see in the section about \verb|VCF.Reader| above) and a few more:
+
+\begin{enumerate}
+  \item verbose (default True) - if the found records should be printed out
+  \item vcf (default None) - the argument for VCF.Reader.fetch, see above
+  \item not\_matching\_snp (default ".") - what should be put after the nucleotide not matching any of the alleles in the VCF.
+  If None, nucleotide is outputted normally.
+\end{enumerate}
+
+\noindent Remember that all the functions in the PhasedReader objects, especially fetch, treats the phasing file as sorted by position.
+\\
+
+\noindent Suppose you wanted to filter the SNPs in the phasing files with the VCF file with some records for the same chromosome.
+First you need to create the PhasedReader object, and then fetch it by supplying the same arguments as you would when creating the VCF.Reader object.
+
+\begin{verbatim}
+>>> phase_reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz',
+compressed = True)
+>>> phase_reader.fetch(filename = 'Tests/VCF/chr10.vcf',compressed = True)
+rs12255619	88481	C A A A A A A A A A A A
+rs1904671	1004603	A G. A A A A G. G. A A A A
+rs11812734	31713857	A G A A G G G G A G G G
+<Bio.VCF.phase.PhasedReader object at 0x7f38a3d3d128>
+\end{verbatim}
+
+\noindent If you don't want dots, or any sign after the not-matching SNPs, set not\_matching\_snp to None:
+
+\begin{verbatim}
+>>> phase_reader.fetch(filename = 'Tests/VCF/chr10.vcf',not_matching_snp = None)
+rs12255619	88481	C A A A A A A A A A A A
+rs1904671	1004603	A G A A A A G G A A A A
+rs11812734	31713857	A G A A G G G G A G G G
+<Bio.VCF.phase.PhasedReader object at 0x7f38a3d20b70>
+\end{verbatim}
+
+\noindent Or if you don't want the lines to be printed and just have the new reader, simply change the verbose to False:
+
+\begin{verbatim}
+>>> phase_reader.fetch(filename = 'Tests/VCF/chr10.vcf',verbose=False)
+<Bio.VCF.phase.PhasedReader object at 0x7f38a3d3d518>
+\end{verbatim}
+
+\subsubsection{VCF.PhasedReader.get_specific_snp(rsID) - Getting SNP with user-given rsID}
+
+\noindent rsID argument provides information on rsID of searched SNP.
+
+\noindent As the output user receives a _PhasedRecord object, which represents found SNP, or information that no SNP with given rsID was found.
+
+\subsubsection{VCF.PhasedReader.get_snp_with_specific_id(rsID) - Getting SNP with user-given rsID}
+
+\noindent rsID argument provides information on rsID of searched SNP.
+
+\noindent As the output user receives a _PhasedRecord object, which represents found SNP, or information that no SNP with given rsID was found.
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> reader.get_snp_with_specific_id('rs2066314')
+<Bio.VCF.phase._PhasedRecord object at 0x7fe67d7a7e50>
+
+\end{verbatim}
+
+\subsubsection{VCF.PhasedReader.get_snp_within_range(pos1, pos2) - Getting SNPs within user-given range of positions}
+
+\noindent pos1 and pos2 arguments stand for a beginning and an ending position of the range (respectively) within which we are looking for SNPs.
+
+\noindent As the output user receives information on how many SNPs within given range were found and a list of _PhasedRecord objects, where each of them represents
+one found SNP, or information that no SNP within given range was found.
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> reader.get_snp_within_range(418076, 504032)
+SNPs found: 3
+
+[<Bio.VCF.phase._PhasedRecord object at 0x7f3e13b30dd0>,
+<Bio.VCF.phase._PhasedRecord object at 0x7f3e13b30750>,
+<Bio.VCF.phase._PhasedRecord object at 0x7f3e13b33150>]
+
+\end{verbatim}
+
+\subsection{VCF.PhasedReader.get_snp_with_specific_sample(haplotype, nucleotide) - Getting SNPs which contain user-given sample}
+
+\noindent haplotype argument provides information on the sample's haplotype name.
+nucleotide argument provides the information on the sample's nucleotide ('A', 'T', 'G', 'C'). 
+
+\noindent As the output user receives information whether the haplotype provided in the arguments is included in the given file (if not, corresponding information 
+is being printed), how many SNPs containing searched sample were found and a list of _PhasedRecord objects, where each of them represents one found SNP. If no SNP 
+meeting the requirements provided in the arguments was found, corresponding information is being printed. 
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> reader.get_snp_with_specific_sample('NA18855_B', 'T')
+Searched haplotype is included in the given file...
+SNPs found: 7
+
+[<Bio.VCF.phase._PhasedRecord object at 0x7fe75042c7d0>, <Bio.VCF.phase._PhasedRecord object at 0x7fe75042c110>, <Bio.VCF.phase._PhasedRecord object at 0x7fe75042cb50>, <Bio.VCF.phase._PhasedRecord object at 0x7fe75042ce90>, <Bio.VCF.phase._PhasedRecord object at 0x7fe75042f550>, <Bio.VCF.phase._PhasedRecord object at 0x7fe75042f890>, <Bio.VCF.phase._PhasedRecord object at 0x7fe75042f210>]
+\end{verbatim}
+
+\subsection{VCF.PhasedReader.get_samples_from_specific_hap(haplotype) - Getting samples within user-given haplotype}
+
+\noindent haplotype argument provides information on the name of the haplotype, within which user is searching for samples.
+
+\subsection{VCF.PhasedReader.get_snp_with_specific_sample(haplotype) - Getting SNPs with user-given details of the searched sample}
+
+\noindent haplotype argument provides information on the name of the haplotype, within which user is searching for samples.
+
+\noindent As the output user receives information whether the haplotype provided in the arguments is included in the given file (if not, corresponding information 
+is being printed), how many samples within searched haplotype were found and a list of _Sample objects, where each of them represents one found sample. Moreover, 
+information on the number of unresolved and not existing samples (within given haplotype), which are found during parsing a file, is being printed. If no sample 
+meeting the requirements provided in the arguments was found, corresponding information is also being printed.
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> reader.get_samples_in_specific_hap('NA18855_NA18856_A')
+Searched haplotype is included in the given file...
+Samples found: 32
+SNPs found unresolved: 0
+SNPs found not existing: 0
+
+[<Bio.VCF.phase._Sample object at 0x7fe75042fbd0>, <Bio.VCF.phase._Sample object at 0x7fe750435490>, <Bio.VCF.phase._Sample object at 0x7fe75042fc50>, <Bio.VCF.phase._Sample object at 0x7fe7504354d0>, <Bio.VCF.phase._Sample object at 0x7fe75042fc90>, <Bio.VCF.phase._Sample object at 0x7fe750435510>, <Bio.VCF.phase._Sample object at 0x7fe75042fcd0>, <Bio.VCF.phase._Sample object at 0x7fe750435550>, <Bio.VCF.phase._Sample object at 0x7fe75042fd10>, <Bio.VCF.phase._Sample object at 0x7fe750435050>, <Bio.VCF.phase._Sample object at 0x7fe75042fd50>, <Bio.VCF.phase._Sample object at 0x7fe750435090>, <Bio.VCF.phase._Sample object at 0x7fe75042fd90>, <Bio.VCF.phase._Sample object at 0x7fe7504350d0>, <Bio.VCF.phase._Sample object at 0x7fe75042fdd0>, <Bio.VCF.phase._Sample object at 0x7fe750435110>, <Bio.VCF.phase._Sample object at 0x7fe75042fe10>, <Bio.VCF.phase._Sample object at 0x7fe750435150>, <Bio.VCF.phase._Sample object at 0x7fe75042fe50>, <Bio.VCF.phase._Sample object at 0x7fe750435190>, <Bio.VCF.phase._Sample object at 0x7fe750435590>, <Bio.VCF.phase._Sample object at 0x7fe7504351d0>, <Bio.VCF.phase._Sample object at 0x7fe7504355d0>, <Bio.VCF.phase._Sample object at 0x7fe750435610>, <Bio.VCF.phase._Sample object at 0x7fe750435650>, <Bio.VCF.phase._Sample object at 0x7fe750435690>, <Bio.VCF.phase._Sample object at 0x7fe7504356d0>, <Bio.VCF.phase._Sample object at 0x7fe750435710>, <Bio.VCF.phase._Sample object at 0x7fe750435750>, <Bio.VCF.phase._Sample object at 0x7fe750435790>, <Bio.VCF.phase._Sample object at 0x7fe7504357d0>, <Bio.VCF.phase._Sample object at 0x7fe750435810>]
+\end{verbatim}
+
+\subsection{VCF.PhasedReader.get_specific_sample(rsID, haplotype) - Getting a sample with user-given details}
+
+\noindent rsID argument provides information on the rsID of SNP, within which user is searching for a specific sample.
+haplotype argument provides information on the name of the haplotype, within which user is searching for a specific sample.
+
+\noindent As the output user receives information whether the haplotype provided in the arguments is included in the given file (if not, corresponding information 
+is being printed) and a _Sample object, which represents found sample. Moreover, if searched sample turns out to be unresolved or not existing, corresponding 
+information is being printed. If no sample meeting the requirements provided in the arguments was found, corresponding information is also being printed.
+
+\begin{verbatim}
+>>> from Bio.VCF import PhasedReader
+>>> reader = PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+>>> reader.get_specific_sample('rs11252546', 'NA18855_NA18856_A')
+Searched haplotype is included in the given file...
+<Bio.VCF.phase._Sample object at 0x7f8bb5d4c7d0>
+
+/end{verbatim}
