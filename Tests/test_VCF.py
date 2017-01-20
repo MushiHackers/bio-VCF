@@ -201,14 +201,38 @@ class TestPhasedReader(unittest.TestCase):
         assert rec.rsID == 'rs1904671'
         assert rec.samples[1].is_not_matching_snp == True
 
-    def test_get_snp_with_specific_id(self):
-        # TODO Dejw
-        pass
+    def test_get_specific_snp(self):
+        t = phase.PhasedReader(filename = 'VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        assert t
+        result = t.get_specific_snp('rs2066314')
+        assert result.rsID == 'rs2066314'
 
     def test_get_snp_within_range(self):
-        # TODO Dejw
-        pass
-
+        t = phase.PhasedReader(filename = 'VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        assert t
+        result = t.get_snp_within_range(418076, 504032)
+        assert result[1].rsID == 'rs7090704'
+        assert result[2].rsID == 'rs10795167'
+        
+    def test_get_snp_with_specific_sample(self):
+        t = phase.PhasedReader(filename = 'VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        assert t
+        result = t.get_snp_with_specific_sample('NA18855_B', 'T')
+        assert result[2].rsID = 'rs4880624'
+        assert result[5].rsID == 'rs1360864'
+        
+    def test_get_samples_from_specific_hap(self):
+        t = phase.PhasedReader(filename = 'VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        assert t
+        result = t.get_samples_from_specific_hap('NA18855_NA18856_A')
+        assert result[7].nucleotide == 'A'
+        assert result[24].nucleotide == 'G'
+        
+    def test_get_specific_sample(self):
+        t = phase.PhasedReader(filename = 'VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
+        assert t
+        result = t.get_specific_sample('rs11252546', 'NA18855_NA18856_A')
+        assert result.nucleotide == 'T'
 
 class TestPhasedWriter(unittest.TestCase):
     def testWriter(self):
