@@ -218,7 +218,7 @@ class TestPhasedReader(unittest.TestCase):
         t = phase.PhasedReader(filename = 'VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased.gz')
         assert t
         result = t.get_snp_with_specific_sample('NA18855_B', 'T')
-        assert result[2].rsID = 'rs4880624'
+        assert result[2].rsID == 'rs4880624'
         assert result[5].rsID == 'rs1360864'
         
     def test_get_samples_from_specific_hap(self):
