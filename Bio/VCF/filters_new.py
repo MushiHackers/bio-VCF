@@ -1,7 +1,6 @@
 from Bio import VCF
 from Bio.VCF.parser import _Filter, Reader
 import sys
-import re
 
 
 class Filters:

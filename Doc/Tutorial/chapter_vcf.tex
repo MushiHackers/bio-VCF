@@ -519,63 +519,62 @@ VCF.Reader() anytime needed.
 
 
 \section{VCF Filters}
+\noindent Not all of oryginall filters (from https://github.com/jamescasbon/PyVCF) work. Untill the error will be fixed we recomand to use our version. 
 
-\subsection{The filters.py script}
+\subsection{The filters_new.py script}
 \noindent Filtering a VCF file based on some properties of interest is a common enough operation that PyVCF offers an extensible script.
 
 Existing Filter's Classes:
 
-\verb|Bio.VCF.filters.SiteQuality|
-\verb|Bio.VCF.filters.VariantGenotypeQuality|
-\verb|Bio.VCF.filters.ErrorBiasFilter|
-\verb|Bio.VCF.filters.DepthPerSample|
-\verb|Bio.VCF.filters.AvgDepthPerSample|
-\verb|Bio.VCF.filters.SnpOnly|
+\verb|Bio.VCF.filters_new.Filter.SQ|
+\verb|Bio.VCF.filters_new.Filter.VGQ|
+\verb|Bio.VCF.filters_new.Filter.DPS|
+\verb|Bio.VCF.filters_new.Filter.APS|
+\verb|Bio.VCF.filters_new.Filter.SNP|
+\verb|Bio.VCF.filters_new.Filter.CHR|
+\verb|Bio.VCF.filters_new.Filter.POS|
 
 
 
 \subsection{Adding a filter}
-\noindent You can reuse this work by providing a filter class, rather than writing your own filter. For example, lets say I want to filter each site based on the quality of the site. I can create a class like this::
+\noindent To add your own filter you should write it by example shown below. First you should create function of ypur filter in \verb|Bio.VCF.filter_new.Filter| class and than recognition condirion in recognition function.
+
 \begin{verbatim}   
-import Bio.VCF.filters
-class SiteQuality(filters.Base):
-    'Filter sites by quality'
-    name = 'sq'
-    @classmethod
-    def customize_parser(self, parser):
-        parser.add_argument('--site-quality', type=int, default=30,
-            help='Filter sites below this quality')
-    def __init__(self, args):
-        self.threshold = args.site_quality
-    def __call__(self, record):
-        if record.QUAL < self.threshold:
-            return record.QUAL
+(...)
+
+class Filter:
+
+	def your_filter(self, record,val=None): 
+		try:
+			if record.your_argument in val:
+				return True
+			else:
+				return False 
+		except:
+			sys.exit("your note for exception")
+
+	(....)
+
+	def recognition(self, name, record,argument):
+		if name=="your_filter"':
+			return self.your_filter(record,argument)
+
 \end{verbatim}
 
-\noindent This class subclasses \verb|Bio.VCF.filters.Base| which provides the interface for VCF filters. The docstring  and \verb|name| are metadata about the parser.  The docstring provides the help for the script, and the first line is included in the FILTER metadata when applied to a file.
+\noindent To use this filter firstly you have to import \verb|filters_new.py| from its directory. 
+\noindent Than you have to create Base object with VCF file which you want to filter and optionaly name of output file. After that you must use \verb|filtering| funcion on base object with dict of filter and list of their parameters.
 
-\noindent The \verb|customize_parser| method allows you to add arguments to the script. We use the \verb|__init__| method to grab the argument of interest from the parser. Finally, the \verb|__call__| method processes each record and returns a value if the filter failed.  The base class uses the \verb|name| and \verb|threshold| to create the filter ID in the VCF file.
+\noindent You have several options of filtering: by  Site Quality \verb|Bio.VCF.filters_new.Filter.SQ|, Variant Genotype Quality \verb|Bio.VCF.filters_new.Filter.VGQ|, Depth per sample \verb|Bio.VCF.filters_new.Filter.DPS|, Avg Depth Per Sample \verb|Bio.VCF.filters_new.Filter.APS|, Snp Only \verb|Bio.VCF.filters_new.Filter.SNP|, chromosomes \verb|Bio.VCF.filters_new.Filter.CHR|, position \verb|Bio.VCF.filters_new.Filter.POS|.
 
-\noindent Unfortunately \verb|Bio.VCF.filters.scripts.vcf_filters.py| don't work as creator of pyVCF wanted. On official VCF-github site you can finde more information about that. We're hoping that that bugs will be soon fixed. But before it happens we recomand to use filters carefully some of them doestn't work.
 
-\noindent Example of using filters form filters.py file:
+\noindent Example of using filters form filters_new.py file:
 \begin{verbatim}
-import Bio.VCF
->>>#creating Reader object on our vcf file
->>>reader_object=Bio.VCF.Reader(open('Tests/VCF/example-4.1.vcf','rt'))
->>>
->>>#creating object Base (form filters.py file) with Reder object
->>>base_object=Bio.VCF.filters.Base(reader_object)
->>>#choose filter for example VCF.filters.SnpOnly
->>>
->>>so= Bio.VCF.filters.SnpOnly(base_object)
->>>
->>>#than we call function on reader_bejct lines to find this which agree which choosen value of site quality
->>>for i in readerobject:
-...		print so(i)
-...
+>>>from Bio.VCF import filters_new
+>>>base=filters_new.Base('./Tests/VCF/1kg.sites.vcf')
+>>>base.filtering({'POS':[106544, 99080]}, SNP:[]})
 \end{verbatim}
 
+\noindent If you have any problem with filters_new.py, please contast us. 
 
 \subsection{sample_filters.py script}
 \noindent \verb|Bio.VCF.sample_filters| are functions created to filter VCF files by haplotyp's sample. Usually we're interseted just in specified mutants, thats why it's very helpfull to get information to further analysis only about this variants.
