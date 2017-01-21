@@ -358,6 +358,7 @@ and whether new VCF.Reader object should be created, respectively.
     Chromosome must be specified and interval is optional.
 
   \item[\texttt{fetch\_gff(gff\_file, chrom, feature\_type, location = None, verbose = False, vcf = None)}] \
+  
     This method enables to select desired features from a GFF/GFF2/GFF3 file and fetch VCF records
     that correspond to position of those features. Fetch is based on pybedtools 'intersection' method and returns
     a BedTool object of chosen VCF records or new VCF.Reader object.
@@ -366,7 +367,7 @@ and whether new VCF.Reader object should be created, respectively.
     provided optional parameter 'location=[start,end]'.
 
   \item[\texttt{fetch\_gff\_fsock(self, stream, chrom, feature\_type, location = None, verbose = False, vcf = None)}] \
-
+  
     This method works exactly the same as fetch\_gff(), except the GFF file is not required.
     The GFF file is replaced with a stream object from chosen database.
     Method returns a BedTool object of selected VCF records or new VCF.Reader object.
@@ -522,15 +523,15 @@ VCF.Reader() anytime needed.
 
 \subsection{The filters.py script}
 \noindent Filtering a VCF file based on some properties of interest is a common enough operation that PyVCF offers an extensible script.
+\\
+\noindent Existing Filter's Classes:
 
-Existing Filter's Classes:
-
-\verb|Bio.VCF.filters.SiteQuality|
-\verb|Bio.VCF.filters.VariantGenotypeQuality|
-\verb|Bio.VCF.filters.ErrorBiasFilter|
-\verb|Bio.VCF.filters.DepthPerSample|
-\verb|Bio.VCF.filters.AvgDepthPerSample|
-\verb|Bio.VCF.filters.SnpOnly|
+\verb|Bio.VCF.filters.SiteQuality|\
+\verb|Bio.VCF.filters.VariantGenotypeQuality|\
+\verb|Bio.VCF.filters.ErrorBiasFilter|\
+\verb|Bio.VCF.filters.DepthPerSample|\
+\verb|Bio.VCF.filters.AvgDepthPerSample|\
+\verb|Bio.VCF.filters.SnpOnly|\
 
 
 
@@ -552,7 +553,7 @@ class SiteQuality(filters.Base):
             return record.QUAL
 \end{verbatim}
 
-\noindent This class subclasses \verb|Bio.VCF.filters.Base| which provides the interface for VCF filters. The docstring  and \verb|name| are metadata about the parser.  The docstring provides the help for the script, and the first line is included in the FILTER metadata when applied to a file.
+\noindent This class subclasses \verb|Bio.VCF.filters.Base| which provides the interface for VCF filters. The \verb|docstring|  and \verb|name| are metadata about the parser. The docstring provides the help for the script, and the first line is included in the FILTER metadata when applied to a file.
 
 \noindent The \verb|customize_parser| method allows you to add arguments to the script. We use the \verb|__init__| method to grab the argument of interest from the parser. Finally, the \verb|__call__| method processes each record and returns a value if the filter failed.  The base class uses the \verb|name| and \verb|threshold| to create the filter ID in the VCF file.
 
