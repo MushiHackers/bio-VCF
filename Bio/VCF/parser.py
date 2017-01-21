@@ -794,8 +794,16 @@ class Reader(object):
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
 
-        if not self._prepend_chr and chrom[:3] != 'chr':
+        '''if not self._prepend_chr and chrom[:3] != 'chr':
+            chrom = 'chr' + chrom'''
+        test = self._bedtool[0]
+        if test.chrom[:3] == "chr" and chrom[:3] != 'chr':
             chrom = 'chr' + chrom
+
+        if test.chrom[:3] != 'chr' and chrom[:3] == 'chr':
+            chrom = chrom[3:]
+
+
 
         if not interval:
             end_position = 0

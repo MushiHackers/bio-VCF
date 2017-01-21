@@ -301,6 +301,17 @@ def testDownload(self):
 
 
 @unittest.skipUnless(pybedtools, "test requires installation of PyBedTools.")
+class TestMerge(unittest.TestCase):
+    def testMerge(self):
+        vcf1 = parser.Reader(fh("VCF/chr13.vcf"))
+        vcf2 = parser.Reader(fh("VCF/chr10.vcf"))
+        databases.merge([vcf1,vcf2],vcf1,"test_merge")
+        num_lines = sum(1 for line in open('test_merge.vcf'))
+        assert num_lines == 56
+        os.system("rm -r test.vcf")
+
+
+@unittest.skipUnless(pybedtools, "test requires installation of PyBedTools.")
 class TestFetch(unittest.TestCase):
     def testFetchBed(self):
         reader = VCF.Reader(fh("VCF/chr13.vcf"))
@@ -1808,6 +1819,7 @@ suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMixedFiltering))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRecord))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestCall))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestFetch))
+suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestMerge))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Test1001Genomes))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedReader))
 suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestPhasedWriter))
