@@ -325,7 +325,8 @@ the necessity of saving very big files to local disc.
 
 \noindent Below there is a brief description of each fetch method.
 All of them have arguments \verb|verbose| and \verb|vcf| specifying if result should be printed to stdout
-and whether new VCF.Reader object should be created, respectively.
+and whether new VCF.Reader object should be created, respectively. When running fetch on two files, one of them must be
+saved to local disc.
 
 \begin{description}
   \item[\texttt{fetch\_bed(bed\_file, verbose = True, vcf = None)}] \
@@ -680,6 +681,12 @@ origin - such as country, longitude or latitude.
     Downloads VCF file corresponding to stream on which provided VCF.Reader object is initialized.
     VCF.Reader object as well as download directory and filename are required.
 
+\item[\texttt{merge(vcf\_list,vcf\_template,vcf\_name)}] \
+
+    Method creates VCF.Reader object from provided list of VCF.Reader objects.
+    It is based on VCF.Writer class and uses Writer.write\_record() method - new sorted VCF file is saved to
+    bio-VCF/Bio/VCF directory.
+    Template VCF.Reader object and name for new VCF file are required.
 
 \end{description}
 
