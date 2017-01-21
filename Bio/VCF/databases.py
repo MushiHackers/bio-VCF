@@ -245,16 +245,20 @@ def merge(vcf_list,vcf_template,vcf_name):
     line_info = []
     for l in lines:
         if l[0][0] != '#':
+            l[1] = int(l[1])
             line_sv.append(l)
         else:
+
             line_info.append(l)
+
     line_sv.sort(key=itemgetter(1))
     f.close()
-    with open (name,'a') as w:
+    with open (name,'w') as w:
         for el in line_info:
             w.write('{0}\n'.format(' '.join(el)))
-        for el in line_sv:
-            w.write('{0}\n'.format(' '.join(el)))
+        for e in line_sv:
+            e[1] = str(e[1])
+            w.write('{0}\n'.format(' '.join(e)))
     w.close()
     vcf = parser.Reader(open(name))
     return vcf
