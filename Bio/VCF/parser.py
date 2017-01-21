@@ -794,14 +794,16 @@ class Reader(object):
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
 
-        arg = False
-        if self._bedtool[0].chrom[:3] != "chr":
-            arg = True
-        if arg:
-            self._bedtool = self._bedtool.each(truncate_feature)
-
-        if chrom[:3] != 'chr':
+        '''if not self._prepend_chr and chrom[:3] != 'chr':
+            chrom = 'chr' + chrom'''
+        test = self._bedtool[0]
+        if test.chrom[:3] == "chr" and chrom[:3] != 'chr':
             chrom = 'chr' + chrom
+
+        if test.chrom[:3] != 'chr' and chrom[:3] == 'chr':
+            chrom = chrom[3:]
+
+
 
         if not interval:
             end_position = 0
@@ -812,13 +814,6 @@ class Reader(object):
             description = chrom + " " + str(0) + " " + str(end_position)
             feature = pybedtools.BedTool(description, from_string=True)
 
-            self._bedtool = pybedtools.BedTool(self.filename)
-
-            arg = False
-            if self._bedtool[0].chrom[:3] != "chr":
-                arg = True
-            if arg:
-                self._bedtool = self._bedtool.each(truncate_feature)
 
             result = self._bedtool.intersect(feature)
             if verbose:
