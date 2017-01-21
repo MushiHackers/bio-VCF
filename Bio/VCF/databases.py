@@ -255,12 +255,13 @@ def merge(vcf_list,vcf_template,vcf_name):
     f.close()
     with open (name,'w') as w:
         for el in line_info:
-            w.write('{0}\n'.format(' '.join(el)))
+            w.write('{0}\n'.format('\t'.join(el)))
         for e in line_sv:
             e[1] = str(e[1])
-            w.write('{0}\n'.format(' '.join(e)))
+            w.write('{0}\n'.format('\t'.join(e)))
     w.close()
     vcf = parser.Reader(open(name))
+    vcf._bedtool = pybedtools.BedTool(vcf.filename)
     return vcf
 
 
