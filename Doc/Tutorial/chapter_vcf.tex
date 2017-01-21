@@ -359,6 +359,7 @@ saved to local disc.
     Chromosome must be specified and interval is optional.
 
   \item[\texttt{fetch\_gff(gff\_file, chrom, feature\_type, location = None, verbose = False, vcf = None)}] \
+  
     This method enables to select desired features from a GFF/GFF2/GFF3 file and fetch VCF records
     that correspond to position of those features. Fetch is based on pybedtools 'intersection' method and returns
     a BedTool object of chosen VCF records or new VCF.Reader object.
@@ -367,7 +368,7 @@ saved to local disc.
     provided optional parameter 'location=[start,end]'.
 
   \item[\texttt{fetch\_gff\_fsock(self, stream, chrom, feature\_type, location = None, verbose = False, vcf = None)}] \
-
+  
     This method works exactly the same as fetch\_gff(), except the GFF file is not required.
     The GFF file is replaced with a stream object from chosen database.
     Method returns a BedTool object of selected VCF records or new VCF.Reader object.
@@ -524,16 +525,16 @@ VCF.Reader() anytime needed.
 
 \subsection{The filters\_new.py script}
 \noindent Filtering a VCF file based on some properties of interest is a common enough operation that PyVCF offers an extensible script.
+\\
+\noindent Existing Filter's Classes:
 
-Existing Filter's Classes:
-
-\verb|Bio.VCF.filters_new.Filter.SQ|
-\verb|Bio.VCF.filters_new.Filter.VGQ|
-\verb|Bio.VCF.filters_new.Filter.DPS|
-\verb|Bio.VCF.filters_new.Filter.APS|
-\verb|Bio.VCF.filters_new.Filter.SNP|
-\verb|Bio.VCF.filters_new.Filter.CHR|
-\verb|Bio.VCF.filters_new.Filter.POS|
+\verb|Bio.VCF.filters_new.Filter.SQ|\
+\verb|Bio.VCF.filters_new.Filter.VGQ|\
+\verb|Bio.VCF.filters_new.Filter.DPS|\
+\verb|Bio.VCF.filters_new.Filter.APS|\
+\verb|Bio.VCF.filters_new.Filter.SNP|\
+\verb|Bio.VCF.filters_new.Filter.CHR|\
+\verb|Bio.VCF.filters_new.Filter.POS|\
 
 
 
