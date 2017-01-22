@@ -41,7 +41,7 @@ sys.exit()'''
 ##sprawdza, czy SNP o danym rsID jest w pliku - jezeli jest, to zwraca caly record z nim, jezeli nie - informacje, ze nie ma takiego w pliku
 #print reader3.get_snp_within_range(84819444444, 8512304444)
 ##wypisuje wszystkie snpy w danym zakresie (zakres: >= i <)
-#reader.get_snp_with_specific_sample('NA18855_B', 'T')
+reader3.get_snp_with_specific_sample('NA18855_', 'T')
 ##wypisuje wszystkie snpy z dana probka
 #reader.get_samples_from_specific_hap('NA18855_NA18856_A')
 ##wypisuje wszystkie snpy w danym haplotypie
