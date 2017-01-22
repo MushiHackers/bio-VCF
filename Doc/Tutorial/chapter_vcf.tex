@@ -233,7 +233,7 @@ True False True T
 
 \end{description}
 
-\noindent There are also a number of boolean methods, such as:
+\noindent There are also a number of boolean methods, such as: \\
 
 \verb|is_deletion|, \verb|is_filtered|, \verb|is_indel|, \verb|is_monomorphic|, \verb|is_snp|, \verb|is_svp|, \verb|is_transition|.
 
@@ -249,10 +249,10 @@ True False True T
     Simultaneously iteratate over two or more \verb|VCF| readers. For each genomic position with a variant,
     return a list of size equal to the number of VCF readers. This list contains the \verb|VCF| record from
     readers that have this variant, and None for readers that don’t have it. The caller must make sure
-    that inputs are sorted in the same way and use the same reference otherwise behaviour is undefined.
+    that inputs are sorted in the same way and use the same reference otherwise behaviour is undefined.\\
     \
-    \verb|Args|:
-            \verb|vcf_record_sort_key|: \
+   \noindent\verb|Args|:\\
+            \verb|vcf_record_sort_key|: \\
 
     Function that takes a VCF record and returns a
     tuple that can be used as a key for comparing and sorting \verb|VCF| records across all readers.
@@ -415,9 +415,7 @@ located within those sites. If we have this BED file locally on our computer, th
 
 \end{verbatim}
 
-
 \noindent or if we don't, we should provide a stream of chosen BED file and use:
-
 
 \begin{verbatim}
 >>> stream="ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/BED/bed_chr_13.bed.gz"
@@ -498,7 +496,6 @@ new vcf.Reader object:
 
 \end{verbatim}
 
-
 \noindent Now, when we have all variants located on chromosome 13, we can choose only those within specified intervals:
 
 
@@ -514,9 +511,7 @@ chr13	85837130	.	T	TTAA	.	PASS	DP=27;SS=1;SSC=2;GPV=1.4382E-14;SPV=5.5556E-1	GT:
 
 \end{verbatim}
 
-
-\noindent VCF file created after \verb|vcf.fetch| is saved to local disc and can be easily achieved with
-VCF.Reader() anytime needed.
+\noindent VCF file created after \verb|vcf.fetch| is saved to local disc and can be easily achieved with \verb|VCF.Reader()| anytime needed.
 
 
 
@@ -526,7 +521,7 @@ VCF.Reader() anytime needed.
 \subsection{The filters\_new.py script}
 \noindent Filtering a VCF file based on some properties of interest is a common enough operation that PyVCF offers an extensible script.\\
 \\
-\noindent Existing Filter's Classes:
+\noindent Existing Filter's Classes:\\
 
 \verb|Bio.VCF.filters_new.Filter.SQ| \\
 
@@ -547,7 +542,7 @@ VCF.Reader() anytime needed.
 \subsection{Adding a filter}
 \noindent To add your own filter you should write it by example shown below. First you should create function of your filter in \verb|Bio.VCF.filter_new.Filter| class and than recognition condition in recognition function.
 
-\begin{verbatim}   
+\begin{verbatimtab}[4]   
 (...)
 
 class Filter:
@@ -567,7 +562,7 @@ class Filter:
 		if name=="your_filter"':
 			return self.your_filter(record,argument)
 
-\end{verbatim}
+\end{verbatimtab}
 
 \noindent To use this filter firstly you have to import \verb|filters_new.py| from its directory. 
 \noindent Than you have to create Base object with VCF file which you want to filter and optionaly name of output file. After that you must use \verb|filtering| funcion on base object with dict of filter and list of their parameters.
