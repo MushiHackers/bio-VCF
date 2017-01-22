@@ -275,9 +275,9 @@ class PhasedReader(object):
                     print('No SNP with searched sample was found.')
                 else:
                     print('SNPs found: ' + str(total) + '\n')
+                return results
         else:
             print('Searched haplotype is not included in the given file.')
-        return results
             
     def get_samples_from_specific_hap(self, haplotype):
         """Returns _Sample objects within user-given haplotype."""
