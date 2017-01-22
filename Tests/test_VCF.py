@@ -308,7 +308,7 @@ class TestMerge(unittest.TestCase):
         databases.merge([vcf1,vcf2],vcf1,"test_merge")
         num_lines = sum(1 for line in open('test_merge.vcf'))
         assert num_lines == 56
-        os.system("rm -r test.vcf")
+        os.system("rm -r test_merge.vcf")
 
 
 @unittest.skipUnless(pybedtools, "test requires installation of PyBedTools.")
