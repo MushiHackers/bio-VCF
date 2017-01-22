@@ -107,6 +107,10 @@ def truncate_feature(feature):
     feature.chrom = "chr" + feature.chrom
     return feature
 
+def truncate_feature2(feature):
+    feature.chrom = feature.chrom[3:]
+    return feature
+
 
 class _vcf_metadata_parser(object):
     """Parse the metadata in the header of a VCF file."""
@@ -626,6 +630,38 @@ class Reader(object):
 
     __next__ = next  # Python 3.X compatibility
 
+
+    def _vcfstream_bed(self, bed_file, verbose = True, vcf = None):
+        '''Function used in fetch_bed() method in case of VCF stream.'''
+        page = urlopen(self._stream)
+        if sys.version > '3':
+            gzip_f = gzip.GzipFile(mode='rb', fileobj=page)
+            reader = codecs.getreader('utf-8')
+            contents = reader(gzip_f)
+            self._bedtool = pybedtools.BedTool(contents)
+        else:
+            gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
+            self._bedtool = pybedtools.BedTool(gzip_f)
+
+        bed = pybedtools.BedTool(bed_file).merge()
+
+        if bed[0].chrom[:3] != "chr" and self._bedtool[0].chrom[:3] == 'chr':
+            bed = bed.each(truncate_feature)
+        if bed[0].chrom[:3] == "chr" and self._bedtool[0].chrom[:3] != 'chr':
+            bed = bed.each(truncate_feature2)
+
+        features = self._bedtool.intersect(bed)
+        if verbose:
+            for d in features:
+                print(d)
+
+        if vcf:
+            new_vcf = self.create_vcf(features, vcf)
+            return new_vcf
+
+        return features
+
+
     def fetch_bed(self, bed_file, verbose = True, vcf = None):
         """Fetches VCF file records that correspond to regions contained in a BED file.
         Fetch is based on pybedtools 'intersect' method and returns a BedTool object of selected features.
@@ -635,8 +671,12 @@ class Reader(object):
         if not pybedtools:
             raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
-        if not self.filename:
-            raise Exception('Please provide a filename (or a "normal" fsock)')
+        if (self.filename == 'r' and self._stream):
+            return self._vcfstream_bed(bed_file, verbose, vcf)
+
+        if (not self.filename or (self.filename == 'r' and not self._stream)):
+            raise Exception('Please provide a filename (or add stream attribute)')
+
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
 
@@ -676,7 +716,7 @@ class Reader(object):
             raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
         if not self.filename:
-            raise Exception('Please provide a filename (or a "normal" fsock)')
+            raise Exception('Please provide a filename')
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
 
@@ -737,6 +777,44 @@ class Reader(object):
             else:
                 raise Exception("Did not find any SV in provided intervals")
 
+    def _vcfstream_multilocal(self, chrom, local_list, verbose = True, vcf = None):
+        '''Function used in fetch_multilocal() method in case of VCF stream.'''
+        page = urlopen(self._stream)
+        if sys.version > '3':
+            gzip_f = gzip.GzipFile(mode='rb', fileobj=page)
+            reader = codecs.getreader('utf-8')
+            contents = reader(gzip_f)
+            self._bedtool = pybedtools.BedTool(contents)
+        else:
+            gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
+            self._bedtool = pybedtools.BedTool(gzip_f)
+
+        if (self._bedtool[0].chrom[:3] != 'chr' and chrom[:3] == 'chr'):
+            chrom = chrom[3:]
+
+        if (self._bedtool[0].chrom[:3] == 'chr' and chrom[:3] != 'chr'):
+            chrom = 'chr' + chrom
+        local_file = 'feature_local.bed'
+        g = open(local_file, "w+")
+        for l in local_list:
+            description = chrom + " " + str(l[0]) + " " + str(l[1])
+            feature = pybedtools.BedTool(description,
+                                         from_string=True)
+            g.write(str(feature))
+        g.seek(0)
+        result = self._bedtool.intersect(local_file)
+        if verbose:
+            for r in result:
+                print(r)
+
+        if vcf:
+            new_vcf = self.create_vcf(result, vcf)
+            return new_vcf
+
+        return result
+
+
+
     def fetch_multilocal(self, chrom, local_list, verbose = False, vcf = None):
         """Fetches VCF records that correspond to intervals provided in 'local_list'.
         Local_list must be a list of tuples (start, end), where start and end coordinates are in in the
@@ -748,8 +826,11 @@ class Reader(object):
         if not pybedtools:
             raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
-        if not self.filename:
-            raise Exception('Please provide a filename (or a "normal" fsock)')
+        if (self.filename == 'r' and self._stream):
+            return self._vcfstream_multilocal(chrom, local_list, verbose, vcf)
+
+        if (not self.filename or (self.filename == 'r' and not self._stream)):
+            raise Exception('Please provide a filename (or add stream attribute)')
 
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
@@ -776,6 +857,72 @@ class Reader(object):
 
         return result
 
+    def _vcfstream_fetch(self, chrom, interval = None, verbose = True, vcf = None):
+        '''Function used in fetch() method in case of VCF stream.'''
+
+        page = urlopen(self._stream)
+        if sys.version > '3':
+            gzip_f = gzip.GzipFile(mode='rb', fileobj=page)
+            reader = codecs.getreader('utf-8')
+            contents = reader(gzip_f)
+            self._bedtool = pybedtools.BedTool(contents)
+        else:
+            gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
+            self._bedtool = pybedtools.BedTool(gzip_f)
+
+        if (self._bedtool[0].chrom[:3] != 'chr' and chrom[:3] == 'chr'):
+            chrom = chrom[3:]
+
+        if (self._bedtool[0].chrom[:3] == 'chr' and chrom[:3] != 'chr'):
+            chrom = 'chr' + chrom
+
+        if not interval:
+            end_position = 0
+
+            for v in self._bedtool:
+                if (v.chrom == chrom and int(v.end) > end_position):
+                    end_position = v.end
+            description = chrom + " " + str(0) + " " + str(end_position)
+
+            feature = pybedtools.BedTool(description, from_string=True)
+            page = urlopen(self._stream)
+            if sys.version > '3':
+                gzip_f = gzip.GzipFile(mode='rb', fileobj=page)
+                reader = codecs.getreader('utf-8')
+                contents = reader(gzip_f)
+                self._bedtool = pybedtools.BedTool(contents)
+            else:
+                gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
+                self._bedtool = pybedtools.BedTool(gzip_f)
+
+            result = self._bedtool.intersect(feature)
+
+            if verbose:
+                for r in result:
+                    print(r)
+
+            if vcf:
+                new_vcf = self.create_vcf(result, vcf)
+                return new_vcf
+
+            return result
+
+        else:
+            description = chrom + " " + str(interval[0]) + " " + str(interval[1])
+            feature = pybedtools.BedTool(description, from_string=True)
+            result = self._bedtool.intersect(feature)
+            if verbose:
+                for r in result:
+                    print(r)
+
+            if vcf:
+                new_vcf = self.create_vcf(result, vcf)
+                return new_vcf
+
+            return result
+
+
+
     def fetch(self, chrom, interval = None, verbose = True, vcf=None):
         """Fetches those records from VCF file that correspond to selected chromosome and
         fit in selected interval (if provided).
@@ -788,14 +935,15 @@ class Reader(object):
         if not pybedtools:
             raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
-        if not self.filename:
-            raise Exception('Please provide a filename (or a "normal" fsock)')
+        if (self.filename == 'r' and self._stream):
+            return self._vcfstream_fetch(chrom, interval, verbose, vcf)
+
+        if (not self.filename or (self.filename == 'r' and not self._stream)):
+            raise Exception('Please provide a filename (or add stream attribute)')
 
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
 
-        '''if not self._prepend_chr and chrom[:3] != 'chr':
-            chrom = 'chr' + chrom'''
         test = self._bedtool[0]
         if test.chrom[:3] == "chr" and chrom[:3] != 'chr':
             chrom = 'chr' + chrom
@@ -840,6 +988,101 @@ class Reader(object):
 
             return result
 
+    def _vcfstream_gff(self, gff_file, chrom, feature_type, location = None, verbose = True, vcf = None):
+        '''Function used in fetch_gff() method in case of VCF stream.'''
+
+        gff2bedfile = 'gffbed.bed'
+        page = urlopen(self._stream)
+        if sys.version > '3':
+            gzip_f = gzip.GzipFile(mode='rb',fileobj = page)
+            reader = codecs.getreader('utf-8')
+            contents = reader(gzip_f)
+            self._bedtool = pybedtools.BedTool(contents)
+        else:
+            gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
+            self._bedtool = pybedtools.BedTool(gzip_f)
+
+        if (self._bedtool[0].chrom[:3] != 'chr' and chrom[:3] == 'chr'):
+            chrom = chrom[3:]
+
+        if (self._bedtool[0].chrom[:3] == 'chr' and chrom[:3] != 'chr'):
+            chrom = 'chr' + chrom
+
+        is_feature = False
+        if location:
+            print ("Finding SV corresponding to %s and chosen position" % (feature_type))
+            genes = pybedtools.BedTool(gff_file).remove_invalid().saveas()
+
+            arg = False
+            if genes[0].chrom[:3] != "chr":
+                arg = True
+            if arg:
+                genes = genes.each(truncate_feature)
+
+            filter_feature = genes.filter(lf_filter, location, feature_type)
+            g = open(gff2bedfile, 'w+')
+            for feature in filter_feature:
+                feature_bed = f.gff2bed(feature)
+                g.write(str(feature_bed))
+                is_feature = True
+            g.seek(0)
+            if is_feature:
+                bed = pybedtools.BedTool(gff2bedfile)
+                if bed[0].chrom[:3] != "chr" and self._bedtool[0].chrom[:3] == 'chr':
+                    bed = bed.each(truncate_feature)
+                    features = self._bedtool.intersect(bed)
+                if bed[0].chrom[:3] == 'chr' and self._bedtool[0].chrom[:3] != 'chr':
+                    bed = bed.each(truncate_feature2)
+                    features = self._bedtool.intersect(bed)
+                else:
+                    features = self._bedtool.intersect(bed)
+            else:
+                raise Exception('Did not find any GFF features corresponding to chosen type and/or location.')
+
+        else:
+            print ("Finding SV corresponding to %s" % (feature_type))
+            genes = pybedtools.BedTool(gff_file).remove_invalid().saveas()
+
+            arg = False
+            if genes[0].chrom[:3] != "chr":
+                arg = True
+            if arg:
+                genes = genes.each(truncate_feature)
+
+            filter_f = genes.filter(feature_filter, feature_type)
+            g = open(gff2bedfile, "w+")
+            for feature in filter_f:
+                feature_bed = f.gff2bed(feature)
+                g.write(str(feature_bed))
+                is_feature = True
+            g.seek(0)
+            if is_feature:
+                bed = pybedtools.BedTool(gff2bedfile)
+                if bed[0].chrom[:3] != "chr" and self._bedtool[0].chrom[:3] == 'chr':
+                    bed = bed.each(truncate_feature)
+                    features = self._bedtool.intersect(bed)
+                if bed[0].chrom[:3] == 'chr' and self._bedtool[0].chrom[:3] != 'chr':
+                    bed = bed.each(truncate_feature2)
+                    features = self._bedtool.intersect(bed)
+                else:
+                    features = self._bedtool.intersect(bed)
+
+            else:
+                raise Exception('Did not find any GFF features corresponding to chosen type.')
+        if verbose:
+            for d in features:
+                print(d)
+
+        if vcf:
+            new_vcf = self.create_vcf(features, vcf)
+            return new_vcf
+
+        return features
+
+
+
+
+
     def fetch_gff(self, gff_file, chrom, feature_type, location = None, verbose = False, vcf = None):
         """This method enables to select desired features from a GFF/GFF2/GFF3 file and fetch VCF records
         that correspond to position of those features. Fetch is based on pybedtools 'intersection' method and returns
@@ -853,8 +1096,11 @@ class Reader(object):
         if not pybedtools:
             raise Exception('pybedtools not available, try "pip install pybedtools"?')
 
-        if not self.filename:
-            raise Exception('Please provide a filename (or a "normal" fsock)')
+        if (self.filename == 'r' and self._stream):
+            return self._vcfstream_gff(gff_file, chrom, feature_type, location, verbose, vcf)
+
+        if (not self.filename or (self.filename == 'r' and not self._stream)):
+            raise Exception('Please provide a filename (or add stream attribute)')
 
         if not self._bedtool:
             self._bedtool = pybedtools.BedTool(self.filename)
