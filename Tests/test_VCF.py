@@ -17,6 +17,7 @@ from Bio._py3k import StringIO  ##
 from Bio._py3k import getstatusoutput  ##
 from subprocess import Popen, PIPE
 import sys
+from Bio.VCF import filters_new
 
 
 try:
@@ -1639,6 +1640,10 @@ class TestFilter(unittest.TestCase):
         assert 'mgq50' in reader.filters
         assert 'sq30' in reader.filters
 
+    def testFilters_new(self):
+        base = filters_new.Base('./VCF/1kg.sites.vcf')
+        res= base.filtering({'CHR': [1], 'SNP': []})
+        assert res==True
 
 class TestRegression(unittest.TestCase):
     def test_issue_16(self):
