@@ -542,27 +542,27 @@ chr13	85837130	.	T	TTAA	.	PASS	DP=27;SS=1;SSC=2;GPV=1.4382E-14;SPV=5.5556E-1	GT:
 \subsection{Adding a filter}
 \noindent To add your own filter you should write it by example shown below. First you should create function of your filter in \verb|Bio.VCF.filter_new.Filter| class and than recognition condition in recognition function.
 
-\begin{verbatimtab}[4]   
+\begin{verbatim}  
 (...)
 
 class Filter:
 
-	def your_filter(self, record,val=None): 
-		try:
-			if record.your_argument in val:
-				return True
-			else:
-				return False 
-		except:
-			sys.exit("your note for exception")
+    def your_filter(self, record,val=None): 
+        try:
+            if record.your_argument in val:
+                return True
+            else:
+                return False 
+        except:
+            sys.exit("your note for exception")
 
-	(....)
+    (....)
 
-	def recognition(self, name, record,argument):
-		if name=="your_filter"':
-			return self.your_filter(record,argument)
+    def recognition(self, name, record,argument):
+        if name=="your_filter"':
+            return self.your_filter(record,argument)
 
-\end{verbatimtab}
+\end{verbatim}
 
 \noindent To use this filter firstly you have to import \verb|filters_new.py| from its directory. 
 \noindent Than you have to create Base object with VCF file which you want to filter and optionaly name of output file. After that you must use \verb|filtering| funcion on base object with dict of filter and list of their parameters.
@@ -635,10 +635,10 @@ $python ../Bio/VCF/scripts/vcf_sample_filter.py VCF/example-4.1.vcf -f 1,2 --qui
 
 \section{Available VCF Databases}
 
-\noindent Bio.VCF.databases is a Biopython module that supports \verb|1001 Genomes| and \verb|dbSNP| databases.
+\noindent \verb|Bio.VCF.databases| is a Biopython module that supports \verb|1001 Genomes| and \verb|dbSNP| databases.
 Since most of VCF files are of enormous sizes, it is convenient to use streams instead of local files.
 Functionality of this package enables users to search through above-mentioned databases, and use selected streams
-of VCF files as VCF.Reader objects in further analysis.
+of VCF files as \verb|VCF.Reader| objects in further analysis.
 
 
 \noindent If you are not familiar with \verb|1001 Genomes| and \verb|dbSNP| databases you might be interested in
