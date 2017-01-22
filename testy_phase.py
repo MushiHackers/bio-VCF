@@ -4,6 +4,7 @@ import re
 from Bio import VCF
 reader = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
 reader2 = VCF.PhasedReader('Tests/VCF/hapmap3_r2_b36_fwd.consensus.qc.poly.chr10_yri.D.phased')
+reader3 = VCF.PhasedReader('/home/karolina/Pulpit/SUN1region2.phased')
 
 '''rec1 = reader.next()
 rec2 = reader2.next()'''
@@ -38,13 +39,13 @@ sys.exit()'''
 ##streamow jeszcze nie robilam i nie testowalam
 #print reader.get_specific_snp('rs2066314')
 ##sprawdza, czy SNP o danym rsID jest w pliku - jezeli jest, to zwraca caly record z nim, jezeli nie - informacje, ze nie ma takiego w pliku
-#print reader.get_snp_within_range(418076, 504032)
+#print reader3.get_snp_within_range(84819444444, 8512304444)
 ##wypisuje wszystkie snpy w danym zakresie (zakres: >= i <)
-#print reader.get_snp_with_specific_sample('NA18855_B', 'T')
+#reader.get_snp_with_specific_sample('NA18855_B', 'T')
 ##wypisuje wszystkie snpy z dana probka
-#print reader.get_samples_from_specific_hap('NA18855_NA18856_A')
+#reader.get_samples_from_specific_hap('NA18855_NA18856_A')
 ##wypisuje wszystkie snpy w danym haplotypie
-#reader.get_specific_sample('rs11252546', 'NA18855_NA18856_A')
+#print reader.get_specific_sample('rs11252546', 'NA18855_NA18856_A')
 ##wypisuje zasade w danym snpie w danym haplotypie
 #plik = open('plikphased.phased','w')
 #writer = VCF.PhasedWriter(plik, reader)

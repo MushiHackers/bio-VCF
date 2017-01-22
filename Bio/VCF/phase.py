@@ -248,7 +248,6 @@ class PhasedReader(object):
                 
     def get_snp_with_specific_sample(self, haplotype, nucleotide):
         """Returns _PhasedRecord objects (SNPs) containing user-given sample."""
-        #TODO Dejw, cos jest nie tak
         record = self.next()
         searched_haplotype = _Haplotype(haplotype)
         hap_found = False
@@ -270,19 +269,15 @@ class PhasedReader(object):
                                 found = True
                             total += 1
                             results.append(record)
-                    '''elif ((record.samples)[hap_index]).exists is False:
-                        not_existing += 1
-                    elif ((record.samples)[hap_index]).is_unresolved:
-                        unresolved += 1'''
                     record = self.next()
             except StopIteration:
                 if not found:
                     print('No SNP with searched sample was found.')
                 else:
                     print('SNPs found: ' + str(total) + '\n')
+                return results
         else:
             print('Searched haplotype is not included in the given file.')
-        return results
             
     def get_samples_from_specific_hap(self, haplotype):
         """Returns _Sample objects within user-given haplotype."""

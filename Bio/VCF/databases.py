@@ -1,5 +1,7 @@
 import gzip, io, codecs, sys
 from Bio.VCF import parser
+import pybedtools
+from operator import itemgetter
 
 try:
     # For Python 3.0 and later
@@ -78,9 +80,8 @@ def _thousandgenomes_more(file='thaliana_strains.csv', name = None, ecotype = No
                     e_list.append(l[0])
 
     if ecotype:
-        tfile = "http://1001genomes.org/data/GMI-MPI/releases/v3.1/intersection_snp_short_indel_vcf_with_quality_reference/"
-        filename = "_snp_short_indel_with_quality_reference.vcf.gz"
-        thetarfile = tfile + ecotype + filename
+        tfile = "http://1001genomes.org/data/GMI-MPI/releases/v3.1/intersection_snp_short_indel_vcf/intersection_"
+        thetarfile = tfile + ecotype + '.vcf.gz'
         page = urlopen(thetarfile)
         #print (thetarfile)
         if sys.version > '3':
@@ -96,12 +97,11 @@ def _thousandgenomes_more(file='thaliana_strains.csv', name = None, ecotype = No
             vcf._stream = thetarfile
             return vcf
     if e_list:
-        tfile = "http://1001genomes.org/data/GMI-MPI/releases/v3.1/intersection_snp_short_indel_vcf_with_quality_reference/"
-        filename = "_snp_short_indel_with_quality_reference.vcf.gz"
+        tfile = "http://1001genomes.org/data/GMI-MPI/releases/v3.1/intersection_snp_short_indel_vcf/intersection_"
         if sys.version > '3':
             resulting_vcf = []
             for e in e_list:
-                thetarfile = tfile + e + filename
+                thetarfile = tfile + e + '.vcf.gz'
                 page = urlopen(thetarfile)
                 gzip_f = gzip.GzipFile(mode='rb', fileobj=page)
                 reader = codecs.getreader("utf-8")
@@ -115,7 +115,7 @@ def _thousandgenomes_more(file='thaliana_strains.csv', name = None, ecotype = No
             resulting_vcf = []
             for e in e_list:
                 # print e
-                thetarfile = tfile + e + filename
+                thetarfile = tfile + e + '.vcf.gz'
                 page = urlopen(thetarfile)
                 gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
                 vcf = parser.Reader(gzip_f, "r")
@@ -151,12 +151,11 @@ def _thousandgenomes_geo(file='thaliana_strains.csv', longitude = None, latitude
             if l[4]!= "" and l[5] != "":
                 if (latitude[0] <= float(l[4]) <= latitude[1] and longitude[0] <= float(l[5]) <= longitude[1]):
                     e_list.append(l[0])
-    tfile = "http://1001genomes.org/data/GMI-MPI/releases/v3.1/intersection_snp_short_indel_vcf_with_quality_reference/"
-    filename = "_snp_short_indel_with_quality_reference.vcf.gz"
+    tfile = "http://1001genomes.org/data/GMI-MPI/releases/v3.1/intersection_snp_short_indel_vcf/intersection_"
     if sys.version > '3':
         resulting_vcf = []
         for e in e_list:
-            thetarfile = tfile + e + filename
+            thetarfile = tfile + e + '.vcf.gz'
             page = urlopen(thetarfile)
             gzip_f = gzip.GzipFile(mode='rb', fileobj=page)
             reader = codecs.getreader("utf-8")
@@ -171,7 +170,7 @@ def _thousandgenomes_geo(file='thaliana_strains.csv', longitude = None, latitude
         print (resulting_vcf)
         for e in e_list:
             # print e
-            thetarfile = tfile + e + filename
+            thetarfile = tfile + e + '.vcf.gz'
             page = urlopen(thetarfile)
             gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
             # print gzip_f
@@ -188,6 +187,83 @@ def download(vcf_reader, path_filename):
 
     urlretrieve(vcf_reader._stream, path_filename)
     return
+
+
+def merge(vcf_list,vcf_template,vcf_name):
+    '''Method creates VCF.Reader object from provided list of VCF.Reader objects.
+    It is based on VCF.Writer class and uses Writer.write_record() method - new VCF file is saved to
+    bio-VCF/Bio/VCF directory.
+    Template VCF.Reader object and name for new VCF file are required.
+    Method returns VCF.Reader object.'''
+    name = vcf_name + '.vcf'
+    vcf_writer = parser.Writer(open(name,'w'), vcf_template)
+    vcf_writer.close()
+    f = open(name,'a')
+    for vcf in vcf_list:
+        if vcf._stream:
+            if sys.version > '3':
+                thetarfile = vcf._stream
+                page = urlopen(thetarfile)
+                gzip_f = gzip.GzipFile(mode='rb', fileobj=page)
+                reader = codecs.getreader("utf-8")
+                contents = reader(gzip_f)
+                bed = pybedtools.BedTool(contents)
+                for record in bed:
+                    line = ""
+                    for r in record.fields:
+                        line += str(r) + "\t"
+                    line = line[:-1]
+                    line += "\n"
+                    f.write(line)
+
+            else:
+                thetarfile = vcf._stream
+                page = urlopen(thetarfile)
+                gzip_f = gzip.GzipFile(fileobj=io.BytesIO(page.read()))
+                bed = pybedtools.BedTool(gzip_f)
+                for record in bed:
+                    line = ""
+                    for r in record.fields:
+                        line += str(r) + "\t"
+                    line = line[:-1]
+                    line += "\n"
+                    f.write(line)
+
+        else:
+            bed = pybedtools.BedTool(vcf.filename)
+            for record in bed:
+                line = ""
+                for r in record.fields:
+                    line += str(r) + "\t"
+                line = line[:-1]
+                line += "\n"
+                f.write(line)
+    f.close()
+    f = open(name,'r')
+    lines = [line.split() for line in f]
+    line_sv = []
+    line_info = []
+    for l in lines:
+        if l[0][0] != '#':
+            l[1] = int(l[1])
+            line_sv.append(l)
+        else:
+
+            line_info.append(l)
+
+    line_sv.sort(key=itemgetter(1))
+    f.close()
+    with open (name,'w') as w:
+        for el in line_info:
+            w.write('{0}\n'.format('\t'.join(el)))
+        for e in line_sv:
+            e[1] = str(e[1])
+            w.write('{0}\n'.format('\t'.join(e)))
+    w.close()
+    vcf = parser.Reader(open(name))
+    vcf._bedtool = pybedtools.BedTool(vcf.filename)
+    return vcf
+
 
 # dbSNP
 
