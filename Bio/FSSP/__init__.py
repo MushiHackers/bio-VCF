@@ -11,15 +11,16 @@ summary and alignment sections.
 See: Holm and Sander (1996) The FSSP database: fold classification based on
 structure-structure alignment of proteins.
 
-functions: read_fssp(file_handle): reads an fssp file into the records. Returns a
-tuple of two instances.
+functions: read_fssp(file_handle): reads an fssp file into the records. Returns
+a tuple of two instances.
+
 mult_align: returns a Biopython alignment object
 """
 from __future__ import print_function
 
 import re
+
 from . import fssp_rec
-from Bio import Alphabet
 
 
 fff_rec = fssp_rec.fff_rec
@@ -95,7 +96,8 @@ class PosAlign(object):
 
 
 class FSSPSumRec(object):
-    """ Contains info from an FSSP summary record"""
+    """Contains info from an FSSP summary record"""
+
     def __init__(self, in_str):
         self.raw = in_str
         in_rec = in_str.strip().split()
@@ -198,9 +200,9 @@ class FSSPAlignDict(dict):
         mult_align_dict = {}
         for j in self.abs(1).pos_align_dict:
             mult_align_dict[j] = ''
-        for fssp_rec in self.values():
+        for fssp_record in self.values():
             for j in fssp_rec.pos_align_dict:
-                mult_align_dict[j] += fssp_rec.pos_align_dict[j].aa
+                mult_align_dict[j] += fssp_record.pos_align_dict[j].aa
         out_str = ''
         for i in sorted(mult_align_dict):
             out_str += '> %d\n' % i

@@ -37,6 +37,11 @@ Instead, we can do this under either Python 2 or 3:
 Once we drop support for Python 2, the whole of Bio._py3k will
 go away.
 """
+
+# From the point of view of pep8 and flake8, there are lots of issues with
+# this file. This line tells flake8 to ignore it for quality assurance:
+# flake8: noqa
+
 import sys
 
 
@@ -90,70 +95,16 @@ if sys.version_info[0] >= 3:
 
     import io
 
-    if sys.version_info[:2] <= (3, 3):
-        def _binary_to_string_handle(handle):
-            """Treat a binary (bytes) handle like a text (unicode) handle."""
-            # TODO, once drop all of Python 3.0 - 3.3, remove this!
-            #
-            # See also http://bugs.python.org/issue5628
-            # and http://bugs.python.org/issue13541
-            # and http://bugs.python.org/issue13464 which should be fixed in Python 3.3
-            #
-            # However, still have problems under Python 3.3.0, e.g.
-            #
-            # $ python3.3 test_SeqIO_online.py
-            # test_nuccore_X52960 (__main__.EntrezTests)
-            # Bio.Entrez.efetch('nuccore', id='X52960', ...) ... ERROR
-            # test_nucleotide_6273291 (__main__.EntrezTests)
-            # Bio.Entrez.efetch('nucleotide', id='6273291', ...) ... ERROR
-            # test_protein_16130152 (__main__.EntrezTests)
-            # Bio.Entrez.efetch('protein', id='16130152', ...) ... ERROR
-            # test_get_sprot_raw (__main__.ExPASyTests)
-            # Bio.ExPASy.get_sprot_raw("O23729") ... ok
-            # ..
-            # ValueError: I/O operation on closed file.
-            #
-            class EvilHandleHack(object):
-                """Biopython internal class to work around bugs in early versions of Python 3."""
-                def __init__(self, handle):
-                    self._handle = handle
-                    try:
-                        # If wrapping an online handle, this this is nice to have:
-                        self.url = handle.url
-                    except AttributeError:
-                        pass
-
-                def read(self, length=None):
-                    return _as_string(self._handle.read(length))
-
-                def readline(self):
-                    return _as_string(self._handle.readline())
-
-                def __iter__(self):
-                    for line in self._handle:
-                        yield _as_string(line)
-
-                def close(self):
-                    return self._handle.close()
-
-                def seek(self, pos):
-                    return self._handle.seek(pos)
-
-                def tell(self):
-                    return self._handle.tell()
-
-            return EvilHandleHack(handle)
-    else:
-        # Python 3.4 onwards, the standard library wrappers should work:
-        def _binary_to_string_handle(handle):
-            """Treat a binary (bytes) handle like a text (unicode) handle."""
-            wrapped = io.TextIOWrapper(io.BufferedReader(handle))
-            try:
-                # If wrapping an online handle, this this is nice to have:
-                wrapped.url = handle.url
-            except AttributeError:
-                pass
-            return wrapped
+    # Python 3.4 onwards, the standard library wrappers should work:
+    def _binary_to_string_handle(handle):
+        """Treat a binary (bytes) handle like a text (unicode) handle."""
+        wrapped = io.TextIOWrapper(io.BufferedReader(handle))
+        try:
+            # If wrapping an online handle, this is nice to have:
+            wrapped.url = handle.url
+        except AttributeError:
+            pass
+        return wrapped
 
     # This is to avoid the deprecation warning from open(filename, "rU")
     _universal_read_mode = "r"  # text mode does universal new lines
@@ -162,7 +113,7 @@ if sys.version_info[0] >= 3:
     from io import StringIO
 
     # On Python 3 urllib, urllib2, and urlparse were merged:
-    from urllib.request import urlopen, Request, urlretrieve, urlparse
+    from urllib.request import urlopen, Request, urlretrieve, urlparse, urlcleanup
     from urllib.parse import urlencode, quote
     from urllib.error import HTTPError
 
@@ -219,7 +170,7 @@ else:
 
     # Under urllib.request on Python 3:
     from urllib2 import urlopen, Request
-    from urllib import urlretrieve
+    from urllib import urlretrieve, urlcleanup
     from urlparse import urlparse
 
     # Under urllib.parse on Python 3:

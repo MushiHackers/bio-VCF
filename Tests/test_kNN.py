@@ -10,6 +10,7 @@ import unittest
 
 try:
     import numpy
+    del numpy
     from numpy import asarray
     del asarray
 except ImportError:
@@ -114,6 +115,7 @@ class TestKNN(unittest.TestCase):
             if prediction == ys[i]:
                 correct += 1
         self.assertEqual(correct, 13)
+
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner(verbosity=2)

@@ -11,7 +11,7 @@ from Bio._py3k import StringIO
 
 from Bio import SeqIO
 from Bio.SeqIO.FastaIO import FastaIterator
-from Bio.Alphabet import generic_protein, generic_nucleotide, generic_dna
+from Bio.Alphabet import generic_nucleotide, generic_dna
 
 
 def title_to_ids(title):
@@ -70,6 +70,7 @@ def read_title_and_seq(filename):
 
 class TitleFunctions(unittest.TestCase):
     """Cunning unit test where methods are added at run time."""
+
     def simple_check(self, filename, alphabet):
         """Basic test for parsing single record FASTA files."""
         title, seq = read_title_and_seq(filename)  # crude parser

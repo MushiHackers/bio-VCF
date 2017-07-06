@@ -28,7 +28,6 @@ class Motif(motifs.Motif):
                  species=None, tax_group=None, acc=None, data_type=None,
                  medline=None, pazar_id=None, comment=None):
         """Construct a JASPAR Motif instance."""
-
         motifs.Motif.__init__(self, alphabet, instances, counts)
         self.name = name
         self.matrix_id = matrix_id
@@ -104,6 +103,7 @@ class Motif(motifs.Motif):
         """Return the hash key corresponding to the JASPAR profile.
 
         :note: We assume the unicity of matrix IDs
+
         """
         return self.matrix_id.__hash__()
 
@@ -115,7 +115,6 @@ class Record(list):
     """Represent a list of jaspar motifs.
 
     Attributes:
-
      - version: The JASPAR version used
 
     """
@@ -259,7 +258,6 @@ def _read_jaspar(handle):
                 2	19	11	50	29	47	22	81	1	6
 
     """
-
     alphabet = dna
     counts = {}
 
@@ -348,7 +346,6 @@ def split_jaspar_id(id):
     Components are base ID and version number, e.g. 'MA0047.2' is returned as
     ('MA0047', 2).
     """
-
     id_split = id.split('.')
 
     base_id = None

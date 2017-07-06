@@ -29,7 +29,9 @@ from Bio.Alphabet import Gapped
 
 
 def _extract_alignment_region(alignment_seq_with_flanking, annotation):
-    """Helper function for the main parsing code (PRIVATE).
+    """Extract alignment region (PRIVATE).
+
+    Helper function for the main parsing code.
 
     To get the actual pairwise alignment sequences, we must first
     translate the un-gapped sequence based coordinates into positions
@@ -138,6 +140,7 @@ def FastaM10Iterator(handle, alphabet=single_letter_alphabet):
         alignment = MultipleSeqAlignment([], alphabet)
 
         # TODO - Introduce an annotated alignment class?
+        # See also Bio/AlignIO/MafIO.py for same requirement.
         # For now, store the annotation a new private property:
         alignment._annotations = {}
 
@@ -605,19 +608,3 @@ Function used was FASTA [version 34.26 January 12, 2007]
             print("%s %s %i" % (r.seq, r.id, r.annotations["original_length"]))
         # print(a.annotations)
     print("Done")
-
-    import os
-    path = "../../Tests/Fasta/"
-    files = sorted(f for f in os.listdir(path) if os.path.splitext(f)[-1] == ".m10")
-    for filename in files:
-        if os.path.splitext(filename)[-1] == ".m10":
-            print("")
-            print(filename)
-            print("=" * len(filename))
-            for i, a in enumerate(FastaM10Iterator(open(os.path.join(path, filename)))):
-                print("#%i, %s" % (i + 1, a))
-                for r in a:
-                    if "-" in r.seq:
-                        assert r.seq.alphabet.gap_char == "-"
-                    else:
-                        assert not hasattr(r.seq.alphabet, "gap_char")

@@ -109,13 +109,13 @@ class TestCluster(unittest.TestCase):
         except Exception:  # TODO - Which exceptions?
             self.fail("treecluster failed to accept matrix data2")
 
-        self.assertRaises(TypeError, lambda: treecluster(data3))
-        self.assertRaises(TypeError, lambda: treecluster(data4))
-        self.assertRaises(TypeError, lambda: treecluster(data5))
-        self.assertRaises(TypeError, lambda: treecluster(data6))
-        self.assertRaises(TypeError, lambda: treecluster(data7))
-        self.assertRaises(TypeError, lambda: treecluster(data8))
-        self.assertRaises(TypeError, lambda: treecluster(data9))
+        self.assertRaises(TypeError, treecluster, data3)
+        self.assertRaises(TypeError, treecluster, data4)
+        self.assertRaises(TypeError, treecluster, data5)
+        self.assertRaises(TypeError, treecluster, data6)
+        self.assertRaises(TypeError, treecluster, data7)
+        self.assertRaises(TypeError, treecluster, data8)
+        self.assertRaises(TypeError, treecluster, data9)
 
     def test_kcluster(self):
         if TestCluster.module == 'Bio.Cluster':
@@ -851,6 +851,7 @@ class TestCluster(unittest.TestCase):
         self.assertAlmostEqual(eigenvalues[1], 3.0108911400291856)
         self.assertAlmostEqual(eigenvalues[2], 1.8775592718563467)
         self.assertAlmostEqual(eigenvalues[3], 0.0)
+
 
 if __name__ == "__main__":
     TestCluster.module = 'Bio.Cluster'

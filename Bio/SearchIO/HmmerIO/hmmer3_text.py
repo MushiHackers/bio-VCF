@@ -14,7 +14,7 @@ from Bio.SearchIO._model import QueryResult, Hit, HSP, HSPFragment
 
 from ._base import _BaseHmmerTextIndexer
 
-__all__ = ['Hmmer3TextParser', 'Hmmer3TextIndexer']
+__all__ = ('Hmmer3TextParser', 'Hmmer3TextIndexer')
 
 
 # precompile regex patterns for faster processing
@@ -35,7 +35,6 @@ _HRE_ID_LINE = re.compile(r'^(\s+\S+\s+[0-9-]+ )(.+?)(\s+[0-9-]+)')
 
 
 class Hmmer3TextParser(object):
-
     """Parser for the HMMER 3.0 text output."""
 
     def __init__(self, handle):
@@ -99,13 +98,17 @@ class Hmmer3TextParser(object):
 
     def _parse_qresult(self):
         """Parses a HMMER3 query block."""
-
         self._read_until(lambda line: line.startswith('Query:'))
 
         while self.line:
 
-            # get query id and length
             regx = re.search(_QRE_ID_LEN, self.line)
+
+            while not regx:
+                self.line = read_forward(self.handle)
+                regx = re.search(_QRE_ID_LEN, self.line)
+
+            # get query id and length
             qid = regx.group(1).strip()
             # store qresult attributes
             qresult_attrs = {
@@ -147,7 +150,7 @@ class Hmmer3TextParser(object):
 
             # Skip line beginning with '# Alignment of', which are output
             # when running phmmer with the '-A' flag.
-            if self.line.startswith('# Alignment of'):
+            if self.line.startswith('#'):
                 self.line = self.handle.readline()
 
             # HMMER >= 3.1 outputs '[ok]' at the end of all results file,
@@ -394,7 +397,6 @@ class Hmmer3TextParser(object):
 
 
 class Hmmer3TextIndexer(_BaseHmmerTextIndexer):
-
     """Indexer class for HMMER plain text output."""
 
     _parser = Hmmer3TextParser
@@ -422,6 +424,7 @@ class Hmmer3TextIndexer(_BaseHmmerTextIndexer):
                 start_offset = end_offset
             elif not line:
                 break
+
 
 # if not used as a module, run the doctest
 if __name__ == "__main__":

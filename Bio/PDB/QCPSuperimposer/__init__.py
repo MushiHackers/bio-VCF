@@ -2,7 +2,8 @@
 # This code is part of the Biopython distribution and governed by its
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
-"""
+"""Structural alignment using Quaternion Characteristic Polynomial (QCP).
+
 QCPSuperimposer finds the best rotation and translation to put
 two point sets on top of each other (minimizing the RMSD). This is
 eg. useful to superimpose crystal structures. QCP stands for
@@ -16,8 +17,8 @@ from .qcprotmodule import FastCalcRMSDAndRotation
 
 
 class QCPSuperimposer(object):
+    """Quaternion Characteristic Polynomial (QCP) Superimposer.
 
-    """
     QCPSuperimposer finds the best rotation and translation to put
     two point sets on top of each other (minimizing the RMSD). This is
     eg. useful to superimposing 3D structures of proteins.
@@ -47,7 +48,7 @@ class QCPSuperimposer(object):
         self.init_rms = None
 
     def _rms(self, coords1, coords2):
-        "Return rms deviations between coords1 and coords2."
+        """Return rms deviations between coords1 and coords2."""
         diff = coords1 - coords2
         l = coords1.shape[0]
         return sqrt(sum(dot(diff, diff)) / l)
@@ -69,12 +70,12 @@ class QCPSuperimposer(object):
     # Public methods
 
     def set(self, reference_coords, coords):
-        """
-        Set the coordinates to be superimposed.
+        """Set the coordinates to be superimposed.
+
         coords will be put on top of reference_coords.
 
-        o reference_coords: an NxDIM array
-        o coords: an NxDIM array
+        - reference_coords: an NxDIM array
+        - coords: an NxDIM array
 
         DIM is the dimension of the points, N is the number
         of points to be superimposed.
@@ -91,7 +92,7 @@ class QCPSuperimposer(object):
         self.n = n[0]
 
     def run(self):
-        "Superimpose the coordinate sets."
+        """Superimpose the coordinate sets."""
         if self.coords is None or self.reference_coords is None:
             raise Exception("No coordinates set.")
         coords = self.coords
@@ -107,7 +108,7 @@ class QCPSuperimposer(object):
         self.tran = av2 - dot(av1, self.rot)
 
     def get_transformed(self):
-        "Get the transformed coordinate set."
+        """Get the transformed coordinate set."""
         if self.coords is None or self.reference_coords is None:
             raise Exception("No coordinates set.")
         if self.rot is None:
@@ -117,13 +118,13 @@ class QCPSuperimposer(object):
         return self.transformed_coords
 
     def get_rotran(self):
-        "Right multiplying rotation matrix and translation."
+        """Right multiplying rotation matrix and translation."""
         if self.rot is None:
             raise Exception("Nothing superimposed yet.")
         return self.rot, self.tran
 
     def get_init_rms(self):
-        "Root mean square deviation of untransformed coordinates."
+        """Root mean square deviation of untransformed coordinates."""
         if self.coords is None:
             raise Exception("No coordinates set yet.")
         if self.init_rms is None:
@@ -131,62 +132,7 @@ class QCPSuperimposer(object):
         return self.init_rms
 
     def get_rms(self):
-        "Root mean square deviation of superimposed coordinates."
+        """Root mean square deviation of superimposed coordinates."""
         if self.rms is None:
             raise Exception("Nothing superimposed yet.")
         return self.rms
-
-
-if __name__ == "__main__":
-    from datetime import datetime
-
-    # start with two coordinate sets (Nx3 arrays - float)
-
-    x = array([[-2.803, -15.373, 24.556],
-               [0.893, -16.062, 25.147],
-               [1.368, -12.371, 25.885],
-               [-1.651, -12.153, 28.177],
-               [-0.440, -15.218, 30.068],
-               [2.551, -13.273, 31.372],
-               [0.105, -11.330, 33.567]], 'f')
-
-    y = array([[-14.739, -18.673, 15.040],
-               [-12.473, -15.810, 16.074],
-               [-14.802, -13.307, 14.408],
-               [-17.782, -14.852, 16.171],
-               [-16.124, -14.617, 19.584],
-               [-15.029, -11.037, 18.902],
-               [-18.577, -10.001, 17.996]], 'f')
-
-    t0 = datetime.now()
-    for loop in range(0, 10000):
-        # start!
-        sup = QCPSuperimposer()
-
-        # set the coords
-        # y will be rotated and translated on x
-        sup.set(x, y)
-
-        # do the lsq fit
-        sup.run()
-
-        # get the rmsd
-        rms = sup.get_rms()
-
-        # get rotation (right multiplying!) and the translation
-        rot, tran = sup.get_rotran()
-
-        # rotate y on x
-        y_on_x1 = dot(y, rot) + tran
-
-        # same thing
-        y_on_x2 = sup.get_transformed()
-    t1 = datetime.now()
-    dif = t1 - t0
-    print("process wall time (msec): %d" % (dif.total_seconds() * 1000))
-
-    print(y_on_x1)
-    print("")
-    print(y_on_x2)
-    print("")
-    print("%.2f" % rms)

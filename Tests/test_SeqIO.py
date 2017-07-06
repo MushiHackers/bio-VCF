@@ -264,7 +264,7 @@ class ForwardOnlyHandle(object):
 
 
 def compare_record(record_one, record_two):
-    """This is meant to be a strict comparison for exact agreement..."""
+    """Attempt strict SeqRecord comparison."""
     assert isinstance(record_one, SeqRecord)
     assert isinstance(record_two, SeqRecord)
     assert record_one.seq is not None
@@ -427,7 +427,7 @@ def check_simple_write_read(records, indent=" "):
             elif format == "clustal":
                 assert r1.id.replace(" ", "_")[:30] == r2.id, \
                     "'%s' vs '%s'" % (r1.id, r2.id)
-            elif format == "stockholm":
+            elif format in ["stockholm", "maf"]:
                 assert r1.id.replace(" ", "_") == r2.id, \
                     "'%s' vs '%s'" % (r1.id, r2.id)
             elif format == "fasta":

@@ -1,8 +1,10 @@
 # Copyright 2006-2016 by Peter Cock.  All rights reserved.
 # Revisions copyright 2011 Brandon Invergo. All rights reserved.
-# This code is part of the Biopython distribution and governed by its
-# license.  Please see the LICENSE file that should have been included
-# as part of this package.
+#
+# This file is part of the Biopython distribution and governed by your
+# choice of the "Biopython License Agreement" or the "BSD 3-Clause License".
+# Please see the LICENSE file that should have been included as part of this
+# package.
 """AlignIO support for "phylip" format from Joe Felsenstein's PHYLIP tools.
 
 You are expected to use this module via the Bio.AlignIO functions (or the
@@ -179,7 +181,7 @@ class PhylipIterator(AlignmentIterator):
             return False  # First line should have two integers
 
     def _split_id(self, line):
-        """Extracts the sequence ID from a Phylip line (PRIVATE).
+        """Extract the sequence ID from a Phylip line (PRIVATE).
 
         Returning a tuple containing: (sequence_id, sequence_residues)
 
@@ -191,6 +193,7 @@ class PhylipIterator(AlignmentIterator):
         return seq_id, seq
 
     def __next__(self):
+        """Parse the next alignment from the handle."""
         handle = self.handle
 
         if self._header is None:
@@ -270,14 +273,10 @@ class PhylipIterator(AlignmentIterator):
 
 # Relaxed Phylip
 class RelaxedPhylipWriter(PhylipWriter):
-    """
-    Relaxed Phylip format writer
-    """
+    """Relaxed Phylip format writer."""
 
     def write_alignment(self, alignment):
-        """
-        Write a relaxed phylip alignment
-        """
+        """Write a relaxed phylip alignment."""
         # Check inputs
         for name in (s.id.strip() for s in alignment):
             if any(c in name for c in string.whitespace):
@@ -299,7 +298,7 @@ class RelaxedPhylipIterator(PhylipIterator):
     """Relaxed Phylip format Iterator."""
 
     def _split_id(self, line):
-        """Extracts the sequence ID from a Phylip line (PRIVATE).
+        """Extract the sequence ID from a Phylip line (PRIVATE).
 
         Returns a tuple containing: (sequence_id, sequence_residues)
 
@@ -314,6 +313,7 @@ class SequentialPhylipWriter(SequentialAlignmentWriter):
     """Sequential Phylip format Writer."""
 
     def write_alignment(self, alignment, id_width=_PHYLIP_ID_WIDTH):
+        """Write a Phylip alignment to the handle."""
         handle = self.handle
 
         if len(alignment) == 0:

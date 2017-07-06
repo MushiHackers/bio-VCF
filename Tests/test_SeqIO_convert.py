@@ -14,7 +14,7 @@ from Bio import SeqIO
 from Bio.SeqIO import QualityIO
 from Bio.SeqIO._convert import _converter as converter_dict
 from Bio._py3k import StringIO
-from Bio.Alphabet import generic_protein, generic_nucleotide, generic_dna
+from Bio.Alphabet import generic_nucleotide, generic_dna
 
 
 # TODO - share this with the QualityIO tests...
@@ -110,7 +110,7 @@ def compare_record(old, new, truncate=None):
                         [min(q, truncate) for q in new.letter_annotations["phred_quality"]]:
             pass
         else:
-            raise ValuerError("Mismatch in phred_quality")
+            raise ValueError("Mismatch in phred_quality")
     if "solexa_quality" in old.letter_annotations \
     and "solexa_quality" in new.letter_annotations \
     and old.letter_annotations["solexa_quality"] != new.letter_annotations["solexa_quality"]:
@@ -161,11 +161,13 @@ def compare_records(old_list, new_list, truncate_qual=None):
 
 class ConvertTests(unittest.TestCase):
     """Cunning unit test where methods are added at run time."""
+
     def simple_check(self, filename, in_format, out_format, alphabet):
         check_convert(filename, in_format, out_format, alphabet)
 
     def failure_check(self, filename, in_format, out_format, alphabet):
         check_convert_fails(filename, in_format, out_format, alphabet)
+
 
 tests = [
     ("Quality/example.fastq", "fastq", None),

@@ -331,8 +331,7 @@ for tag in _INSTRUMENT_SPECIFIC_TAGS.values():
 
 
 def AbiIterator(handle, alphabet=None, trim=False):
-    """Iterator for the Abi file format.
-    """
+    """Iterator for the Abi file format."""
     # raise exception is alphabet is not dna
     if alphabet is not None:
         if isinstance(Alphabet._get_base_alphabet(alphabet),
@@ -401,32 +400,47 @@ def AbiIterator(handle, alphabet=None, trim=False):
     # raw data (for advanced end users benefit)
     annot['abif_raw'] = raw
 
-    # use the file name as SeqRecord.name if available
-    try:
-        file_name = basename(handle.name).replace('.ab1', '')
-    except AttributeError:
-        file_name = ""
-    record = SeqRecord(Seq(seq, alphabet),
-                       id=sample_id, name=file_name,
-                       description='',
-                       annotations=annot,
-                       letter_annotations={'phred_quality': qual})
+    # fsa check
+    is_fsa_file = set(['SpNm1', 'LIMS1', 'CTID1']).issubset(raw)
 
-    if not trim:
+    if is_fsa_file:
+        try:
+            file_name = basename(handle.name).replace('.fsa', '')
+        except AttributeError:
+            file_name = ""
+        sample_id = raw['LIMS1']
+        description = raw['CTID1']
+        record = SeqRecord(Seq(''),
+                           id=sample_id,
+                           name=file_name,
+                           description=description,
+                           annotations=annot)
+
+    else:
+        # use the file name as SeqRecord.name if available
+        try:
+            file_name = basename(handle.name).replace('.ab1', '')
+        except AttributeError:
+            file_name = ""
+        record = SeqRecord(Seq(seq, alphabet),
+                           id=sample_id, name=file_name,
+                           description='',
+                           annotations=annot,
+                           letter_annotations={'phred_quality': qual})
+
+    if not trim or is_fsa_file:
         yield record
     else:
         yield _abi_trim(record)
 
 
 def _AbiTrimIterator(handle):
-    """Iterator for the Abi file format that yields trimmed SeqRecord objects.
-    """
+    """Iterator for the Abi file format that yields trimmed SeqRecord objects."""
     return AbiIterator(handle, trim=True)
 
 
 def _abi_parse_header(header, handle):
-    """Generator that returns directory contents.
-    """
+    """Generator that returns directory contents."""
     # header structure (after ABIF marker):
     # file version, tag name, tag number,
     # element type code, element size, number of elements
@@ -479,7 +493,6 @@ def _abi_trim(seq_record):
     http://www.phrap.org/phredphrap/phred.html
     http://www.clcbio.com/manual/genomics/Quality_abif_trimming.html
     """
-
     start = False   # flag for starting position of trimmed sequence
     segment = 20    # minimum sequence length
     trim_start = 0  # init start index
@@ -519,9 +532,10 @@ def _parse_tag_data(elem_code, elem_num, raw_data):
     """Returns single data value.
 
     Arguments:
-        - elem_code - What kind of data
-        - elem_num - How many data points
-        - raw_data - abi file object from which the tags would be unpacked
+     - elem_code - What kind of data
+     - elem_num - How many data points
+     - raw_data - abi file object from which the tags would be unpacked
+
     """
     if elem_code in _BYTEFMT:
         # because '>1s' unpack differently from '>s'
@@ -556,6 +570,7 @@ def _parse_tag_data(elem_code, elem_num, raw_data):
             return data
     else:
         return None
+
 
 if __name__ == '__main__':
     pass

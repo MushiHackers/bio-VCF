@@ -145,6 +145,7 @@ def _make_ranges(mydict):
 
 # Mass data taken from PubChem
 
+
 # Average masses of monophosphate deoxy nucleotides
 unambiguous_dna_weights = {
     "A": 331.2218,
@@ -195,6 +196,7 @@ def _make_ambiguous_ranges(mydict, weight_table):
             total_w = total_w + w
         avg_d[letter] = total_w / len(weights)
     return range_d, avg_d
+
 
 ambiguous_dna_weight_ranges, avg_ambiguous_dna_weights = \
                _make_ambiguous_ranges(ambiguous_dna_values,
@@ -297,6 +299,7 @@ extended_protein_weight_ranges, avg_extended_protein_weights = \
 # Taken from http://www.chem.qmul.ac.uk/iupac/AtWt/ & PyMol
 atom_weights = {
     'H': 1.00794,
+    'D': 2.01410,
     'He': 4.002602,
     'Li': 6.941,
     'Be': 9.012182,

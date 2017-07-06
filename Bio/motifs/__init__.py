@@ -17,8 +17,6 @@ from __future__ import print_function
 
 from Bio._py3k import range
 
-import math
-
 
 def create(instances, alphabet=None):
     instances = Instances(instances, alphabet)
@@ -29,14 +27,13 @@ def parse(handle, format):
     """Parses an output file of motif finding programs.
 
     Currently supported formats (case is ignored):
-
-        - AlignAce:      AlignAce output file format
-        - MEME:          MEME output file motif
-        - MAST:          MAST output file motif
-        - TRANSFAC:      TRANSFAC database file format
-        - pfm:           JASPAR-style position-frequency matrix
-        - jaspar:        JASPAR-style multiple PFM format
-        - sites:         JASPAR-style sites file
+     - AlignAce:      AlignAce output file format
+     - MEME:          MEME output file motif
+     - MAST:          MAST output file motif
+     - TRANSFAC:      TRANSFAC database file format
+     - pfm:           JASPAR-style position-frequency matrix
+     - jaspar:        JASPAR-style multiple PFM format
+     - sites:         JASPAR-style sites file
 
     As files in the pfm and sites formats contain only a single motif,
     it is easier to use Bio.motifs.read() instead of Bio.motifs.parse()
@@ -147,9 +144,8 @@ def read(handle, format):
 
 
 class Instances(list):
-    """
-    A class representing instances of sequence motifs.
-    """
+    """A class representing instances of sequence motifs."""
+
     def __init__(self, instances=None, alphabet=None):
         from Bio.Alphabet import IUPAC
         from Bio.Seq import Seq
@@ -198,8 +194,10 @@ class Instances(list):
         return counts
 
     def search(self, sequence):
-        """
-        a generator function, returning found positions of motif instances in a given sequence
+        """Find positions of motifs in a given sequence.
+
+        This is a generator function, returning found positions of motif
+        instances in a given sequence.
         """
         for pos in range(0, len(sequence) - self.length + 1):
             for instance in self:
@@ -217,9 +215,8 @@ class Instances(list):
 
 
 class Motif(object):
-    """
-    A class representing sequence motifs.
-    """
+    """A class representing sequence motifs."""
+
     def __init__(self, alphabet=None, instances=None, counts=None):
         from . import matrix
         from Bio.Alphabet import IUPAC
@@ -328,8 +325,7 @@ class Motif(object):
         return self.pwm.log_odds(self._background)
 
     def __str__(self, masked=False):
-        """ string representation of a motif.
-        """
+        """String representation of a motif."""
         text = ""
         if self.instances is not None:
             text += str(self.instances)
@@ -507,8 +503,8 @@ class Motif(object):
          - pfm : JASPAR single Position Frequency Matrix
          - jaspar : JASPAR multiple Position Frequency Matrix
          - transfac : TRANSFAC like files
-        """
 
+        """
         if format in ('pfm', 'jaspar'):
             from Bio.motifs import jaspar
             motifs = [self]
@@ -528,8 +524,8 @@ def write(motifs, format):
      - pfm : JASPAR simple single Position Frequency Matrix
      - jaspar : JASPAR multiple PFM format
      - transfac : TRANSFAC like files
-    """
 
+    """
     format = format.lower()
     if format in ("pfm", "jaspar"):
         from Bio.motifs import jaspar

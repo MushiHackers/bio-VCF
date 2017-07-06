@@ -1,10 +1,11 @@
-# Copyright 2000-2002 Andrew Dalke.
-# Copyright 2002-2004 Brad Chapman.
-# Copyright 2006-2010 by Peter Cock.
-# All rights reserved.
-# This code is part of the Biopython distribution and governed by its
-# license.  Please see the LICENSE file that should have been included
-# as part of this package.
+# Copyright 2000-2002 Andrew Dalke.  All rights reserved.
+# Copyright 2002-2004 Brad Chapman.  All rights reserved.
+# Copyright 2006-2017 by Peter Cock.  All rights reserved.
+#
+# This file is part of the Biopython distribution and governed by your
+# choice of the "Biopython License Agreement" or the "BSD 3-Clause License".
+# Please see the LICENSE file that should have been included as part of this
+# package.
 """Represent a Sequence Record, a sequence with annotation."""
 
 
@@ -93,22 +94,22 @@ class SeqRecord(object):
     """A SeqRecord object holds a sequence and information about it.
 
     Main attributes:
-        - id          - Identifier such as a locus tag (string)
-        - seq         - The sequence itself (Seq object or similar)
+     - id          - Identifier such as a locus tag (string)
+     - seq         - The sequence itself (Seq object or similar)
 
     Additional attributes:
-        - name        - Sequence name, e.g. gene name (string)
-        - description - Additional text (string)
-        - dbxrefs     - List of database cross references (list of strings)
-        - features    - Any (sub)features defined (list of SeqFeature objects)
-        - annotations - Further information about the whole sequence (dictionary).
-          Most entries are strings, or lists of strings.
-        - letter_annotations - Per letter/symbol annotation (restricted
-          dictionary). This holds Python sequences (lists, strings
-          or tuples) whose length matches that of the sequence.
-          A typical use would be to hold a list of integers
-          representing sequencing quality scores, or a string
-          representing the secondary structure.
+     - name        - Sequence name, e.g. gene name (string)
+     - description - Additional text (string)
+     - dbxrefs     - List of database cross references (list of strings)
+     - features    - Any (sub)features defined (list of SeqFeature objects)
+     - annotations - Further information about the whole sequence (dictionary).
+       Most entries are strings, or lists of strings.
+     - letter_annotations - Per letter/symbol annotation (restricted
+       dictionary). This holds Python sequences (lists, strings
+       or tuples) whose length matches that of the sequence.
+       A typical use would be to hold a list of integers
+       representing sequencing quality scores, or a string
+       representing the secondary structure.
 
     You will typically use Bio.SeqIO to read in sequences from files as
     SeqRecord objects.  However, you may want to create your own SeqRecord
@@ -157,16 +158,16 @@ class SeqRecord(object):
         """Create a SeqRecord.
 
         Arguments:
-            - seq         - Sequence, required (Seq, MutableSeq or UnknownSeq)
-            - id          - Sequence identifier, recommended (string)
-            - name        - Sequence name, optional (string)
-            - description - Sequence description, optional (string)
-            - dbxrefs     - Database cross references, optional (list of strings)
-            - features    - Any (sub)features, optional (list of SeqFeature objects)
-            - annotations - Dictionary of annotations for the whole sequence
-            - letter_annotations - Dictionary of per-letter-annotations, values
-              should be strings, list or tuples of the same
-              length as the full sequence.
+         - seq         - Sequence, required (Seq, MutableSeq or UnknownSeq)
+         - id          - Sequence identifier, recommended (string)
+         - name        - Sequence name, optional (string)
+         - description - Sequence description, optional (string)
+         - dbxrefs     - Database cross references, optional (list of strings)
+         - features    - Any (sub)features, optional (list of SeqFeature objects)
+         - annotations - Dictionary of annotations for the whole sequence
+         - letter_annotations - Dictionary of per-letter-annotations, values
+           should be strings, list or tuples of the same length as the full
+           sequence.
 
         You will typically use Bio.SeqIO to read in sequences from files as
         SeqRecord objects.  However, you may want to create your own SeqRecord
@@ -217,7 +218,7 @@ class SeqRecord(object):
                 try:
                     self._per_letter_annotations = \
                         _RestrictedDict(length=len(seq))
-                except:
+                except TypeError:
                     raise TypeError("seq argument should be a Seq object or similar")
         else:
             # This will be handled via the property set function, which will
@@ -986,6 +987,10 @@ class SeqRecord(object):
                            letter_annotations=True, dbxrefs=False):
         """Returns new SeqRecord with reverse complement sequence.
 
+        By default the new record does NOT preserve the sequence identifier,
+        name, description, general annotation or database cross-references -
+        these are unlikely to apply to the reversed sequence.
+
         You can specify the returned record's id, name and description as
         strings, or True to keep that of the parent, or False for a default.
 
@@ -1012,9 +1017,10 @@ class SeqRecord(object):
         >>> print(record.letter_annotations["solexa_quality"])
         [40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5]
 
-        Now take the reverse complement,
+        Now take the reverse complement, here we explicitly give a new
+        identifier (the old identifier with a suffix):
 
-        >>> rc_record = record.reverse_complement(id=record.id+"_rc")
+        >>> rc_record = record.reverse_complement(id=record.id + "_rc")
         >>> print("%s %s" % (rc_record.id, rc_record.seq))
         slxa_0001_1_0001_01_rc NNNNNNACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT
 

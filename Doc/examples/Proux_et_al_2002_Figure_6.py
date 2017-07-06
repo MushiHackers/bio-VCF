@@ -3,7 +3,7 @@
 # as part of this package.
 #
 
-"""GenomeDiagram script to mimic Proux et al 2002 Figure 6
+"""GenomeDiagram script to mimic Proux et al 2002 Figure 6.
 
 You can use the Entrez module to download the 3 required GenBank files
 
@@ -112,6 +112,7 @@ def get_feature(features, id, tags=("locus_tag", "gene", "old_locus_tag")):
                 if x == id:
                     return f
     raise KeyError(id)
+
 
 gd_diagram = GenomeDiagram.Diagram(name)
 feature_sets = {}

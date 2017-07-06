@@ -11,7 +11,9 @@ results are parseable. Detailed tests on each Entrez service are not within the
 scope of this file as they are already covered in test_Entrez.py.
 
 """
+import doctest
 import os
+import sys
 import unittest
 
 import requires_internet
@@ -200,16 +202,23 @@ class EntrezOnlineCase(unittest.TestCase):
         expected_result = "proc natl acad sci u s a|1991|88|3248|mann bj|citation_1|2014248\n"
         self.assertEquals(result, expected_result)
 
-    def test_fetch_xml_schemas(self):
-        handle = Entrez.efetch("protein", id="783730874", rettype="ipg", retmode="xml")
-        records = list(Entrez.parse(handle))
-        handle.close()
-        self.assertEqual(len(records), 1)
-        self.assertIn("Product", records[0])
-        self.assertIn("Statistics", records[0])
-        self.assertIn("RedundantGiList", records[0])
+# NCBI XML does not currently match the XSD file
+#    def test_fetch_xml_schemas(self):
+#        handle = Entrez.efetch("protein", id="783730874", rettype="ipg", retmode="xml")
+#        records = list(Entrez.parse(handle, validate=False))
+#        handle.close()
+#        self.assertEqual(len(records), 1)
+#        self.assertIn("Product", records[0])
+#        self.assertIn("Statistics", records[0])
+#        self.assertIn("RedundantGiList", records[0])
 
 
 if __name__ == "__main__":
-    runner = unittest.TextTestRunner(verbosity=2)
-    unittest.main(testRunner=runner)
+    # When running test_Entrez.py directly, will also include the
+    # Bio.Entrez doctests.
+    # TODO: Include the doctests via run_tests.py when online.
+    unittest_suite = unittest.TestLoader().loadTestsFromName("test_Entrez_online")
+    doctest_suite = doctest.DocTestSuite(Entrez)
+    suite = unittest.TestSuite((unittest_suite, doctest_suite))
+    runner = unittest.TextTestRunner(sys.stdout, verbosity=2)
+    runner.run(suite)

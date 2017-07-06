@@ -1,6 +1,5 @@
 import unittest
 
-from Bio.Affy import CelFile
 import struct
 import os
 import sys
@@ -12,6 +11,8 @@ except ImportError:
     from Bio import MissingPythonDependencyError
     raise MissingPythonDependencyError(
         "Install NumPy if you want to use Bio.Affy.CelFile")
+
+from Bio.Affy import CelFile
 
 
 def testRecordV4(record):
@@ -184,6 +185,7 @@ class AffyTest(unittest.TestCase):
         f.write(b"\x00" * 15)
         for i in range(25):
             f.write(packData(float(i), float(-i), 9))
+
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner(verbosity=0)

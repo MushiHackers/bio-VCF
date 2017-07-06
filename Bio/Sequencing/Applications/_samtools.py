@@ -11,7 +11,6 @@ from Bio.Application import _StaticArgument
 
 
 class SamtoolsViewCommandline(AbstractCommandline):
-
     """Command line wrapper for samtools view.
 
     Extract/print all or sub alignments in SAM or BAM format, equivalent to::
@@ -32,6 +31,7 @@ class SamtoolsViewCommandline(AbstractCommandline):
     samtools view /path/to/sam_or_bam_file
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [
@@ -125,6 +125,7 @@ class SamtoolsMpileupCommandline(AbstractCommandline):
     samtools mpileup /path/to/sam_or_bam_file
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [
@@ -264,6 +265,7 @@ class SamtoolsReheaderCommandline(AbstractCommandline):
     samtools reheader /path/to/header_sam_file /path/to/input_bam_file
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [
@@ -283,7 +285,7 @@ class SamtoolsCatCommandline(AbstractCommandline):
 
     Concatenate BAMs, equivalent to::
 
-    $ samtools cat [-h header.sam] [-o out.bam] <in1.bam> <in2.bam> [ ... ]
+        $ samtools cat [-h header.sam] [-o out.bam] <in1.bam> <in2.bam> [ ... ]
 
     See http://samtools.sourceforge.net/samtools.shtml for more details
 
@@ -297,7 +299,8 @@ class SamtoolsCatCommandline(AbstractCommandline):
     >>> print(samtools_cat_cmd)
     samtools cat /path/to/input_bam1 /path/to/input_bam2
 
-     """
+    """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [
@@ -315,8 +318,8 @@ class SamtoolsCatCommandline(AbstractCommandline):
         AbstractCommandline.__init__(self, cmd, **kwargs)
 
 
-class SamtoolsSortCommandline(AbstractCommandline):
-    """Command line wrapper for samtools sort.
+class SamtoolsVersion0xSortCommandline(AbstractCommandline):
+    """Command line wrapper for samtools version 0.1.x sort.
 
     Concatenate BAMs, equivalent to::
 
@@ -327,18 +330,19 @@ class SamtoolsSortCommandline(AbstractCommandline):
     Example
     -------
 
-    >>> from Bio.Sequencing.Applications import SamtoolsSortCommandline
+    >>> from Bio.Sequencing.Applications import SamtoolsVersion0xSortCommandline
     >>> input_bam = "/path/to/input_bam"
     >>> out_prefix = "/path/to/out_prefix"
-    >>> samtools_sort_cmd = SamtoolsSortCommandline(\
-                                                    input_bam=input_bam,\
-                                                    out_prefix=out_prefix)
+    >>> samtools_sort_cmd = SamtoolsVersion0xSortCommandline(input=input_bam, out_prefix=out_prefix)
     >>> print(samtools_sort_cmd)
     samtools sort /path/to/input_bam /path/to/out_prefix
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
+
+        # options for version samtools 0.0.19
         self.parameters = [
             _StaticArgument("sort"),
             _Switch(["-o", "o"], """Output the final alignment
@@ -348,10 +352,62 @@ class SamtoolsSortCommandline(AbstractCommandline):
             _Option(["-m", "m"], "Approximately the maximum required memory",
                     equate=False,
                     checker_function=lambda x: isinstance(x, int)),
-            _Argument(["input_bam"], "Input BAM file",
+            _Argument(["input"], "Input BAM file",
                       filename=True, is_required=True),
             _Argument(["out_prefix"], "Output prefix",
-                      filename=True, is_required=True)
+                      filename=True, is_required=True),
+        ]
+        AbstractCommandline.__init__(self, cmd, **kwargs)
+
+
+class SamtoolsVersion1xSortCommandline(AbstractCommandline):
+    """Command line wrapper for samtools version 1.3.x sort.
+
+    Concatenate BAMs, equivalent to::
+
+    $ samtools sort [-n] [-T FREFIX] [-o file] [-I INT] [-m maxMem] <in.bam>
+
+    See http://samtools.sourceforge.net/samtools.shtml for more details
+
+    Example
+    -------
+
+    >>> from Bio.Sequencing.Applications import SamtoolsVersion1xSortCommandline
+    >>> input_bam = "/path/to/input_bam"
+    >>> FREFIX = "/path/to/out_prefix"
+    >>> file_name = "/path/to/out_file"
+    >>> samtools_sort_cmd = SamtoolsVersion1xSortCommandline(input=input_bam, T=FREFIX, o=file_name)
+    >>> print(samtools_sort_cmd)
+    samtools sort -o /path/to/out_file -T /path/to/out_prefix /path/to/input_bam
+
+    """
+
+    def __init__(self, cmd="samtools", **kwargs):
+        self.program_name = cmd
+
+        # options for version samtools 1.3.1
+        self.parameters = [
+            _StaticArgument("sort"),
+            _Switch(["-n", "n"], """Sort by read names rather
+                                    than by chromosomal coordinates"""),
+            _Option(["-o", "o"], """(file) Write the final sorted output to FILE,
+                    rather than to standard output""",
+                    equate=False, checker_function=lambda x: isinstance(x, str)),
+            _Option(["-O", "O"], """(FORMAT) Write the final output as sam, bam, or cram""",
+                    equate=False, checker_function=lambda x: isinstance(x, str)),
+            _Option(["-T", "T"], """(PREFIX) Write temporary files to PREFIX.nnnn.bam, or if the specified PREFIX
+                    is an existing directory, to PREFIX/samtools.mmm.mmm.tmp.nnnn.bam,
+                    where mmm is unique to this invocation of the sort command""",
+                    equate=False, checker_function=lambda x: isinstance(x, str)),
+            _Option(["-I", "I"], """(INT) Set the desired compression level for the final output file,
+                    ranging from 0 (uncompressed) or 1 (fastest but minimal compression)
+                    to 9 (best compression but slowest to write), similarly to gzip(1)'s compression level setting.""",
+                    equate=False, checker_function=lambda x: isinstance(x, str)),
+            _Option(["-m", "m"], "Approximately the maximum required memory",
+                    equate=False,
+                    checker_function=lambda x: isinstance(x, int)),
+            _Argument(["input"], "Input SAM/BAM/CRAM file",
+                      filename=True, is_required=True),
         ]
         AbstractCommandline.__init__(self, cmd, **kwargs)
 
@@ -379,6 +435,7 @@ class SamtoolsMergeCommandline(AbstractCommandline):
     samtools merge /path/to/out_bam /path/to/input_bam1 /path/to/input_bam2
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [
@@ -429,6 +486,7 @@ class SamtoolsIndexCommandline(AbstractCommandline):
     samtools index /path/to/aln_bam
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [
@@ -457,6 +515,7 @@ class SamtoolsIdxstatsCommandline(AbstractCommandline):
     samtools idxstats /path/to/aln_bam
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [
@@ -486,6 +545,7 @@ class SamtoolsFaidxCommandline(AbstractCommandline):
     samtools faidx /path/to/reference.fasta
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [
@@ -520,6 +580,7 @@ class SamtoolsFixmateCommandline(AbstractCommandline):
     samtools fixmate /path/to/in.nameSrt.bam /path/to/out.bam
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [
@@ -556,6 +617,7 @@ class SamtoolsRmdupCommandline(AbstractCommandline):
     samtools rmdup /path/to/input.srt.bam /path/to/out.bam
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [
@@ -599,6 +661,7 @@ class SamtoolsCalmdCommandline(AbstractCommandline):
     samtools calmd /path/to/aln.bam /path/to/reference.fasta
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [
@@ -659,6 +722,7 @@ class SamtoolsTargetcutCommandline(AbstractCommandline):
     samtools targetcut /path/to/aln.bam
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [
@@ -705,6 +769,7 @@ class SamtoolsPhaseCommandline(AbstractCommandline):
     samtools phase /path/to/in.bam
 
     """
+
     def __init__(self, cmd="samtools", **kwargs):
         self.program_name = cmd
         self.parameters = [

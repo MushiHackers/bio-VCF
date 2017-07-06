@@ -97,7 +97,7 @@ class BlastDisplayer(object):
                 txt = fid.read()
                 self.tid.insert('end', txt)
                 self.tid.update()
-            except:
+            except Exception:
                 # text widget is detroyed, we assume the search
                 # has been cancelled
                 pass
@@ -128,6 +128,7 @@ class BlastWorker(threading.Thread):
             messagebox.showwarning('BLAST error',
                                    'BLAST error:\n\n' + str(e))
         self.finished = 1
+
 
 if __name__ == '__main__':
     os.system('python xbb_blast.py' +

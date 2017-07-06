@@ -8,8 +8,11 @@
 # as part of this package.
 #
 
-"""Update the Rebase emboss files used by Restriction to build the
-Restriction_Dictionary.py module."""
+"""Update the Rebase EMBOSS files.
+
+The Rebase EMBOSS files are used by `ranacompiler.py` to build the updated
+`Restriction_Dictionary.py` module for  `Bio.Restriction`.
+"""
 
 from __future__ import print_function
 
@@ -25,7 +28,8 @@ except ImportError:
     # Python 3
     from urllib.request import FancyURLopener
 
-from Bio.Restriction.RanaConfig import *
+from Bio.Restriction.RanaConfig import ftp_proxy, ftp_Rebase, Rebase_name
+from Bio.Restriction.RanaConfig import ftp_emb_e, ftp_emb_s, ftp_emb_r
 
 
 class RebaseUpdate(FancyURLopener):
@@ -49,7 +53,7 @@ class RebaseUpdate(FancyURLopener):
         print('\n Please wait, trying to connect to Rebase\n')
         try:
             self.open(name)
-        except:
+        except Exception:
             raise ConnectionError('Rebase')
         return
 

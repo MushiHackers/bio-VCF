@@ -69,7 +69,7 @@ from Bio import MissingPythonDependencyError
 
 try:
     import MySQLdb as mdb
-except:
+except ImportError:
     raise MissingPythonDependencyError("Install MySQLdb if you want to use "
                                        "Bio.motifs.jaspar.db")
 
@@ -81,28 +81,27 @@ JASPAR_DFLT_COLLECTION = 'CORE'
 
 
 class JASPAR5(object):
-    """
+    """Class representing a JASPAR5 database.
+
     Class representing a JASPAR5 DB. The methods within are loosely based
     on the perl TFBS::DB::JASPAR5 module.
 
     Note: We will only implement reading of JASPAR motifs from the DB.
     Unlike the perl module, we will not attempt to implement any methods to
     store JASPAR motifs or create a new DB at this time.
-
     """
 
     def __init__(self, host=None, name=None, user=None, password=None):
-        """
-        Construct a JASPAR5 instance and connect to specified DB
+        """Construct a JASPAR5 instance and connect to specified DB.
 
         Arguments:
-        host - host name of the the JASPAR DB server
-        name - name of the JASPAR database
-        user - user name to connect to the JASPAR DB
-        password - JASPAR DB password
+
+        - host - host name of the the JASPAR DB server
+        - name - name of the JASPAR database
+        - user - user name to connect to the JASPAR DB
+        - password - JASPAR DB password
 
         """
-
         self.name = name
         self.host = host
         self.user = user
@@ -111,19 +110,13 @@ class JASPAR5(object):
         self.dbh = mdb.connect(host, user, password, name)
 
     def __str__(self):
-        """
-        Return a string represention of the JASPAR5 DB connection.
-
-        """
-
-        text = "%s\@%s:%s" % (self.user, self.host, self.name)
-
-        return text
+        """Return a string represention of the JASPAR5 DB connection."""
+        return "%s\@%s:%s" % (self.user, self.host, self.name)
 
     def fetch_motif_by_id(self, id):
-        """
-        Fetch a single JASPAR motif from the DB by it's JASPAR matrix ID
-        (e.g. 'MA0001.1').
+        """Fetch a single JASPAR motif from the DB by it's JASPAR matrix ID
+
+        Example id 'MA0001.1'.
 
         Arguments:
 
@@ -133,7 +126,6 @@ class JASPAR5(object):
               returned.
 
         Returns:
-
             - A Bio.motifs.jaspar.Motif object
 
         **NOTE:** The perl TFBS module allows you to specify the type of matrix
@@ -143,7 +135,6 @@ class JASPAR5(object):
         log-odds matrices.
 
         """
-
         # separate stable ID and version number
         (base_id, version) = jaspar.split_jaspar_id(id)
         if not version:
@@ -163,8 +154,7 @@ class JASPAR5(object):
         return motif
 
     def fetch_motifs_by_name(self, name):
-        """
-        Fetch a list of JASPAR motifs from a JASPAR DB by the given TF name(s).
+        """Fetch a list of JASPAR motifs from a JASPAR DB by the given TF name(s).
 
         Arguments:
         name - a single name or list of names
@@ -183,7 +173,6 @@ class JASPAR5(object):
         in the case where multiple matrices have the same name.
 
         """
-
         return self.fetch_motifs(collection=None, tf_name=name)
 
     def fetch_motifs(
@@ -192,9 +181,7 @@ class JASPAR5(object):
         pazar_id=None, data_type=None, medline=None, min_ic=0, min_length=0,
         min_sites=0, all=False, all_versions=False
     ):
-        """
-        Fetch a jaspar.Record (list) of motifs based on the provided selection
-        criteria.
+        """Fetch jaspar.Record (list) of motifs using selection criteria.
 
         Arguments::
 
@@ -248,11 +235,9 @@ class JASPAR5(object):
                           motifs are returned.
 
         Returns:
-
             - A Bio.motifs.jaspar.Record (list) of motifs.
 
         """
-
         # Fetch the internal IDs of the motifs using the criteria provided
         int_ids = self._fetch_internal_id_list(
             collection=collection,
@@ -308,11 +293,7 @@ class JASPAR5(object):
         return record
 
     def _fetch_latest_version(self, base_id):
-        """
-        Get the latest version number for the given base_id,
-
-        """
-
+        """Get the latest version number for the given base_id."""
         cur = self.dbh.cursor()
         cur.execute("""select VERSION from MATRIX where BASE_id = %s
                        order by VERSION desc limit 1""", (base_id,))
@@ -331,12 +312,10 @@ class JASPAR5(object):
         return latest
 
     def _fetch_internal_id(self, base_id, version):
-        """
-        Fetch the internal id for a base id + version. Also checks if this
-        combo exists or not
+        """Fetch the internal id for a base id + version.
 
+        Also checks if this combo exists or not.
         """
-
         cur = self.dbh.cursor()
         cur.execute("""select id from MATRIX where BASE_id = %s
                        and VERSION = %s""", (base_id, version))
@@ -443,11 +422,9 @@ class JASPAR5(object):
         return motif
 
     def _fetch_counts_matrix(self, int_id):
-        """
-        Fetch the counts matrix from the JASPAR DB by the internal ID
+        """Fetch the counts matrix from the JASPAR DB by the internal ID
 
         Returns a Bio.motifs.matrix.GenericPositionMatrix
-
         """
         counts = {}
         cur = self.dbh.cursor()
@@ -472,7 +449,8 @@ class JASPAR5(object):
         pazar_id=None, data_type=None, medline=None, all=False,
         all_versions=False
     ):
-        """
+        """Fetch list of internal JASPAR motif IDs.
+
         Fetch a list of internal JASPAR motif IDs based on various passed
         parameters which may then be used to fetch the rest of the motif data.
 
@@ -501,7 +479,6 @@ class JASPAR5(object):
         calling fetch_motifs() method.
 
         """
-
         int_ids = []
 
         cur = self.dbh.cursor()
@@ -758,10 +735,10 @@ class JASPAR5(object):
         return int_ids
 
     def _is_latest_version(self, int_id):
-        """
+        """Check if the internal ID represents the latest JASPAR matrix.
+
         Does this internal ID represent the latest version of the JASPAR
         matrix (collapse on base ids)
-
         """
         cur = self.dbh.cursor()
 

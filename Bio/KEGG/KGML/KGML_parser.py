@@ -3,19 +3,17 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
-"""This module provides classes and functions to parse a KGML pathway map.
+"""Classes and functions to parse a KGML pathway map.
 
 The KGML pathway map is parsed into the object structure defined in
 KGML_Pathway.py in this module.
 
 Classes:
-
-    - KGMLParser             Parses KGML file
+ - KGMLParser - Parses KGML file
 
 Functions:
+ - read - Returns a single Pathway object, using KGMLParser internally
 
-    - read                   Returns a single Pathway object, using KGMLParser
-      internally
 """
 
 from __future__ import print_function
@@ -27,7 +25,8 @@ except ImportError:
 
 from Bio._py3k import StringIO
 
-from Bio.KEGG.KGML.KGML_pathway import *
+from Bio.KEGG.KGML.KGML_pathway import Component, Entry, Graphics
+from Bio.KEGG.KGML.KGML_pathway import Pathway, Reaction, Relation
 
 
 def read(handle, debug=0):
@@ -57,8 +56,8 @@ def parse(handle, debug=0):
     """Returns an iterator over Pathway elements.
 
     Arguments:
-    - handle - file handle to a KGML file for parsing
-    - debug - integer for amount of debug information to print
+     - handle - file handle to a KGML file for parsing
+     - debug - integer for amount of debug information to print
 
     This is a generator for the return of multiple Pathway objects.
     """
@@ -111,7 +110,6 @@ class KGMLParser(object):
 
     def parse(self):
         """Parse the input elements."""
-
         def _parse_pathway(attrib):
             for k, v in attrib.items():
                 self.pathway.__setattr__(k, v)
@@ -164,7 +162,7 @@ class KGMLParser(object):
             self.pathway.add_relation(new_relation)
 
         # ==========
-        # Initialise Pathway
+        # Initialize Pathway
         self.pathway = Pathway()
         # Get information about the pathway itself
         _parse_pathway(self.entry.attrib)

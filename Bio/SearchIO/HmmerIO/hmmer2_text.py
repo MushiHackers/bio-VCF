@@ -14,7 +14,7 @@ from Bio.SearchIO._model import QueryResult, Hit, HSP, HSPFragment
 
 from ._base import _BaseHmmerTextIndexer
 
-__all__ = ['Hmmer2TextParser', 'Hmmer2TextIndexer']
+__all__ = ('Hmmer2TextParser', 'Hmmer2TextIndexer')
 
 
 _HSP_ALIGN_LINE = re.compile(r'(\S+):\s+domain (\d+) of (\d+)')
@@ -136,7 +136,6 @@ class Hmmer2TextParser(object):
 
     def parse_hits(self):
         """Parse a HMMER2 hit block, beginning with the hit table."""
-
         hit_placeholders = []
         while self.read_next():
             if self.line.startswith('Parsed'):
@@ -302,7 +301,6 @@ class Hmmer2TextParser(object):
 
 
 class Hmmer2TextIndexer(_BaseHmmerTextIndexer):
-
     """Indexer for hmmer2-text format."""
 
     _parser = Hmmer2TextParser
@@ -342,6 +340,7 @@ class Hmmer2TextIndexer(_BaseHmmerTextIndexer):
                 break
 
             line = read_forward(handle)
+
 
 # if not used as a module, run the doctest
 if __name__ == "__main__":

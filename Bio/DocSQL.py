@@ -5,7 +5,7 @@
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
 
-"""Bio.DocSQL: easy access to DB API databases.
+"""Bio.DocSQL: easy access to DB API databases (DEPRECATED).
 
 >>> import os
 >>> import MySQLdb
@@ -26,12 +26,17 @@ CreatePeople(message=Success)
 from __future__ import print_function
 
 import sys
+import warnings
 
 from Bio import MissingPythonDependencyError
+from Bio import BiopythonDeprecationWarning
+
+warnings.warn("Bio.DocSQL is now deprecated will be removed in a "
+              "future release of Biopython.", BiopythonDeprecationWarning)
 
 try:
     import MySQLdb
-except:
+except ImportError:
     raise MissingPythonDependencyError("Install MySQLdb if you want to use "
                                        "Bio.DocSQL.")
 
@@ -85,9 +90,8 @@ class QueryRow(list):
 
 
 class Query(object):
-    """
-    SHOW TABLES
-    """
+    """SHOW TABLES."""
+
     MSG_FAILURE = "Failure"
     MSG_SUCCESS = "Success"
     message = "not executed"
@@ -221,6 +225,7 @@ class Insert(Create):
 def _test(*args, **keywds):
     import doctest
     doctest.testmod(sys.modules[__name__], *args, **keywds)
+
 
 if __name__ == "__main__":
     if __debug__:

@@ -8,16 +8,15 @@
 #                L.Pritchard@scri.ac.uk
 ################################################################################
 
-""" Colors module
+"""Colors module.
 
-    Provides:
+Provides:
 
-    o ColorTranslator -  class to convert tuples of integers and floats into
-                            colors.Color objects
+- ColorTranslator - class to convert tuples of integers and floats into
+  colors.Color objects
 
-    For drawing capabilities, this module uses reportlab to define colors:
-
-    http://www.reportlab.com
+For drawing capabilities, this module uses reportlab to define colors:
+http://www.reportlab.com
 """
 
 # ReportLab imports
@@ -28,15 +27,39 @@ from reportlab.lib import colors
 
 
 class ColorTranslator(object):
-    """ Class providing methods for translating representations of color into
+    """Class providing methods for translating representations of color into.
+
+    Example:
+
+    >>> from Bio.Graphics import GenomeDiagram
+    >>> gdct=GenomeDiagram._Colors.ColorTranslator()
+    >>> print(gdct.float1_color((0.5, 0.5, 0.5)))
+    Color(.5,.5,.5,1)
+    >>> print(gdct.int255_color((1, 75, 240)))
+    Color(.003922,.294118,.941176,1)
+    >>> print(gdct.artemis_color(7))
+    Color(1,1,0,1)
+    >>> print(gdct.scheme_color(2))
+    Color(1,0,0,1)
+    >>> gdct.get_artemis_colorscheme()
+    {0: (Color(1,1,1,1), 'pathogenicity, adaptation, chaperones'), 1: (Color(.39,.39,.39,1), 'energy metabolism'), 2: (Color(1,0,0,1), 'information transfer'), 3: (Color(0,1,0,1), 'surface'), 4: (Color(0,0,1,1), 'stable RNA'), 5: (Color(0,1,1,1), 'degradation of large molecules'), 6: (Color(1,0,1,1), 'degradation of small molecules'), 7: (Color(1,1,0,1), 'central/intermediary/miscellaneous metabolism'), 8: (Color(.6,.98,.6,1), 'unknown'), 9: (Color(.53,.81,.98,1), 'regulators'), 10: (Color(1,.65,0,1), 'conserved hypotheticals'), 11: (Color(.78,.59,.39,1), 'pseudogenes and partial genes'), 12: (Color(1,.78,.78,1), 'phage/IS elements'), 13: (Color(.7,.7,.7,1), 'some miscellaneous information'), 14: (Color(0,0,0,1), ''), 15: (Color(1,.25,.25,1), 'secondary metabolism'), 16: (Color(1,.5,.5,1), ''), 17: (Color(1,.75,.75,1), '')}
+
+    >>> print(gdct.translate((0.5, 0.5, 0.5)))
+    Color(.5,.5,.5,1)
+    >>> print(gdct.translate((1, 75, 240)))
+    Color(.003922,.294118,.941176,1)
+    >>> print(gdct.translate(7))
+    Color(1,1,0,1)
+    >>> print(gdct.translate(2))
+    Color(1,0,0,1)
+
     """
+
     def __init__(self, filename=None):
-        """ __init__(self, filename)
+        """Initialize.
 
-            o filename      Location of a file containing colorscheme
-                            information
-
-            Optional parameters set the color scheme
+        Argument filename is the location of a file containing
+        colorscheme information.
         """
         self._artemis_colorscheme = {0: (colors.Color(1, 1, 1,), "pathogenicity, adaptation, chaperones"),
                1: (colors.Color(0.39, 0.39, 0.39), "energy metabolism"),
@@ -64,18 +87,19 @@ class ColorTranslator(object):
             self._colorscheme = self._artemis_colorscheme
 
     def translate(self, color=None, colour=None):
-        """ translate(self, color)
+        """Translate a color into a ReportLab Color object.
 
-            o color    Color defined as an int, a tuple of three ints 0->255
-                       or a tuple of three floats 0 -> 1, or a string giving
-                       one of the named colors defined by ReportLab, or a
-                       ReportLab color object (returned as is).
+        Arguments:
 
-                       (This argument is overridden by a backwards compatible
-                       argument with UK spelling, colour).
+        - color - Color defined as an int, a tuple of three ints 0->255
+          or a tuple of three floats 0 -> 1, or a string giving
+          one of the named colors defined by ReportLab, or a
+          ReportLab color object (returned as is).
+        - colour - Backards compatible alias using UK spelling (which
+          will over-ride any color argument).
 
-            Returns a colors.Color object, determined semi-intelligently
-            depending on the input values
+        Returns a colors.Color object, determined semi-intelligently
+        depending on the input values
         """
         # Let the UK spelling (colour) override the USA spelling (color)
         if colour is not None:
@@ -97,18 +121,20 @@ class ColorTranslator(object):
         return color
 
     def read_colorscheme(self, filename):
-        """ read_colorscheme(self, filename)
+        r"""Load colour scheme from file.
 
-            o filename      The location of a file defining colors in tab-separated
-                            format plaintext as:
-                            INT \t RED \t GREEN \t BLUE \t Comment
-                            Where RED, GREEN and BLUE are intensities in the range
-                            0 -> 255
-                            e.g.
-                            2 \t 255 \t 0 \t 0 \t Red: Information transfer
+        Reads information from a file containing color information and stores
+        it internally.
 
-            Reads information from a file containing color information and
-            stores it internally
+        Argument filename is the location of a file defining colors in
+        tab-separated format plaintext as::
+
+            INT \t RED \t GREEN \t BLUE \t Comment
+
+        Where RED, GREEN and BLUE are intensities in the range 0 -> 255, e.g.::
+
+            2 \t 255 \t 0 \t 0 \t Red: Information transfer
+
         """
         with open(filename, 'r').readlines() as lines:
             for line in lines:
@@ -122,7 +148,7 @@ class ColorTranslator(object):
                         comment = ""
                     self._colorscheme[label] = (self.int255_color((red, green, blue)),
                                                  comment)
-                except:
+                except ValueError:
                     raise ValueError("Expected INT \t INT \t INT \t INT \t string input")
 
     def get_artemis_colorscheme(self):
@@ -133,11 +159,12 @@ class ColorTranslator(object):
         """Artemis color (integer) to ReportLab Color object.
 
         Arguments:
-         - value: An int representing a functional class in the Artemis
-           color scheme (see www.sanger.ac.uk for a description),
-           or a string from a GenBank feature annotation for the
-           color which may be dot delimited (in which case the
-           first value is used).
+
+        - value: An int representing a functional class in the Artemis
+          color scheme (see www.sanger.ac.uk for a description),
+          or a string from a GenBank feature annotation for the
+          color which may be dot delimited (in which case the
+          first value is used).
 
         Takes an int representing a functional class in the Artemis color
         scheme, and returns the appropriate colors.Color object
@@ -159,13 +186,13 @@ class ColorTranslator(object):
         return self._colorscheme
 
     def scheme_color(self, value):
-        """ scheme_color(self, value)
+        """Map a user-defined color integer to a ReportLab Color object.
 
-            o value     An int representing a single color in the user-defined
-                        color scheme
+        - value: An int representing a single color in the user-defined
+          color scheme
 
-            Takes an int representing a user-defined color and returns the
-            appropriate colors.Color object
+        Takes an int representing a user-defined color and returns the
+        appropriate colors.Color object.
         """
         if value in self._colorscheme:
             return self._colorscheme[value][0]
@@ -173,13 +200,13 @@ class ColorTranslator(object):
             raise ValueError("Scheme color out of range: %d" % value)
 
     def int255_color(self, values):
-        """ int255_color(self, values)
+        """Map integer (red, green, blue) tuple to a ReportLab Color object.
 
-            o values        A tuple of (red, green, blue) intensities as
-                            integers in the range 0->255
+        - values: A tuple of (red, green, blue) intensities as
+          integers in the range 0->255
 
-            Takes a tuple of (red, green, blue) intensity values in the range
-            0 -> 255 and returns an appropriate colors.Color object
+        Takes a tuple of (red, green, blue) intensity values in the range
+        0 -> 255 and returns an appropriate colors.Color object.
         """
         red, green, blue = values
         factor = 1 / 255.
@@ -187,32 +214,18 @@ class ColorTranslator(object):
         return colors.Color(red, green, blue)
 
     def float1_color(self, values):
-        """ float1_color(self, values)
+        """Map float (red, green, blue) tuple to a ReportLab Color object.
 
-            o values        A tuple of (red, green, blue) intensities as floats
-                            in the range 0 -> 1
+        - values: A tuple of (red, green, blue) intensities as floats
+          in the range 0 -> 1
 
-            Takes a tuple of (red, green, blue) intensity values in the range
-            0 -> 1 and returns an appropriate colors.Color object
+        Takes a tuple of (red, green, blue) intensity values in the range
+        0 -> 1 and returns an appropriate colors.Color object.
         """
         red, green, blue = values
         return colors.Color(red, green, blue)
 
 
-################################################################################
-# RUN AS SCRIPT
-################################################################################
-
 if __name__ == '__main__':
-
-    # Test code
-    gdct = ColorTranslator()
-    print(gdct.float1_color((0.5, 0.5, 0.5)))
-    print(gdct.int255_color((1, 75, 240)))
-    print(gdct.artemis_color(7))
-    print(gdct.scheme_color(2))
-
-    print(gdct.translate((0.5, 0.5, 0.5)))
-    print(gdct.translate((1, 75, 240)))
-    print(gdct.translate(7))
-    print(gdct.translate(2))
+    from Bio._utils import run_doctest
+    run_doctest(verbose=2)

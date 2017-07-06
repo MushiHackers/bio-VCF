@@ -78,6 +78,7 @@ def matches(s):
 
 class NeXMLError(Exception):
     """Exception raised when NeXML object construction cannot continue."""
+
     pass
 
 
@@ -88,6 +89,7 @@ def parse(handle, **kwargs):
     """Iterate over the trees in a NeXML file handle.
 
     :returns: generator of Bio.Phylo.NeXML.Tree objects.
+
     """
     return Parser(handle).parse(**kwargs)
 
@@ -96,6 +98,7 @@ def write(trees, handle, plain=False, **kwargs):
     """Write a trees in NeXML format to the given file handle.
 
     :returns: number of trees written.
+
     """
     return Writer(trees).write(handle, plain=plain, **kwargs)
 
@@ -110,14 +113,17 @@ class Parser(object):
     """
 
     def __init__(self, handle):
+        """Initialize parameters for NeXML file parser."""
         self.handle = handle
 
     @classmethod
     def from_string(cls, treetext):
+        """Convert file handle to StringIO object."""
         handle = StringIO(treetext)
         return cls(handle)
 
     def add_annotation(self, node_dict, meta_node):
+        """Add annotations for the NeXML parser."""
         if 'property' in meta_node.attrib:
             prop = meta_node.attrib['property']
         else:
@@ -130,7 +136,6 @@ class Parser(object):
 
     def parse(self, values_are_confidence=False, rooted=False):
         """Parse the text stream this object was initialized with."""
-
         nexml_doc = ElementTree.iterparse(self.handle, events=('end',))
 
         for event, node in nexml_doc:
@@ -200,7 +205,6 @@ class Parser(object):
         traversing the  entire tree and creating a nested structure of NeXML.Clade
         objects.
         """
-
         this_node = node_dict[node]
         clade = NeXML.Clade(**this_node)
 
@@ -218,6 +222,7 @@ class Writer(object):
     """Based on the writer in Bio.Nexus.Trees (str, to_string)."""
 
     def __init__(self, trees):
+        """Initialize parameters for NeXML writer."""
         self.trees = trees
 
         self.node_counter = 0
@@ -225,13 +230,13 @@ class Writer(object):
         self.tree_counter = 0
 
     def new_label(self, obj_type):
+        """Create new labels for the NeXML writer."""
         counter = '%s_counter' % obj_type
         setattr(self, counter, getattr(self, counter) + 1)
         return '%s%s' % (obj_type, getattr(self, counter))
 
     def write(self, handle, cdao_to_obo=True, **kwargs):
         """Write this instance's trees to a file handle."""
-
         self.cdao_to_obo = cdao_to_obo
 
         # set XML namespaces

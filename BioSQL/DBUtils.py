@@ -8,6 +8,8 @@
 #
 # Note that BioSQL (including the database schema and scripts) is
 # available and licensed separately.  Please consult www.biosql.org
+"""Helper code for Biopython's BioSQL code (for internal use)."""
+
 import os
 
 
@@ -18,15 +20,18 @@ class Generic_dbutils(object):
     """Default database utilities."""
 
     def __init__(self):
+        """Create a Generic_dbutils object."""
         pass
 
     def tname(self, table):
+        """Return the name of the table."""
         if table != 'biosequence':
             return table
         else:
             return 'bioentry'
 
     def last_id(self, cursor, table):
+        """Return the last used id for a table."""
         # XXX: Unsafe without transactions isolation
         table = self.tname(table)
         sql = r"select max(%s_id) from %s" % (table, table)
@@ -35,16 +40,15 @@ class Generic_dbutils(object):
         return rv[0]
 
     def execute(self, cursor, sql, args=None):
-        """Just execute an sql command.
-        """
+        """Just execute an sql command."""
         cursor.execute(sql, args or ())
 
     def executemany(self, cursor, sql, seq):
-        """Execute many sql commands
-        """
+        """Execute many sql commands."""
         cursor.executemany(sql, seq)
 
     def autocommit(self, conn, y=1):
+        """Set autocommit on the database connection."""
         # Let's hope it was not really needed
         pass
 
@@ -53,17 +57,19 @@ class Sqlite_dbutils(Generic_dbutils):
     """Custom database utilities for SQLite."""
 
     def _sub_placeholder(self, sql):
-        """Format the argument placeholders for sqlite
-        """
+        """Format the argument placeholders for sqlite."""
         return sql.replace("%s", "?")
 
     def execute(self, cursor, sql, args=None):
-        """Execute SQL command, replacing %s with ? for variable substitution in sqlite3.
+        """Execute SQL command.
+
+        Replaces %s with ? for variable substitution in sqlite3.
         """
         sql = self._sub_placeholder(sql)
         cursor.execute(sql, args or ())
 
     def executemany(self, cursor, sql, seq):
+        """Execute many sql statements."""
         sql = self._sub_placeholder(sql)
         cursor.executemany(sql, seq)
 
@@ -75,6 +81,7 @@ class Mysql_dbutils(Generic_dbutils):
     """Custom database utilities for MySQL."""
 
     def last_id(self, cursor, table):
+        """Return the last used id for a table."""
         if os.name == "java":
             return Generic_dbutils.last_id(self, cursor, table)
         try:
@@ -85,6 +92,7 @@ class Mysql_dbutils(Generic_dbutils):
             # Google suggests this is the new way,
             # same fix also suggested by Eric Gibert:
             return cursor.lastrowid
+
 
 _dbutils["MySQLdb"] = Mysql_dbutils
 
@@ -111,6 +119,7 @@ class Psycopg2_dbutils(_PostgreSQL_dbutils):
     """Custom database utilities for Psycopg2 (PostgreSQL)."""
 
     def autocommit(self, conn, y=True):
+        """Set autocommit on the database connection."""
         if y:
             if os.name == "java":
                 conn.autocommit = 1
@@ -122,6 +131,7 @@ class Psycopg2_dbutils(_PostgreSQL_dbutils):
             else:
                 conn.set_isolation_level(1)
 
+
 _dbutils["psycopg2"] = Psycopg2_dbutils
 
 
@@ -129,12 +139,15 @@ class Pgdb_dbutils(_PostgreSQL_dbutils):
     """Custom database utilities for Pgdb (aka PyGreSQL, for PostgreSQL)."""
 
     def autocommit(self, conn, y=True):
+        """Set autocommit on the database connection. Currently not implemented."""
         raise NotImplementedError("pgdb does not support this!")
+
 
 _dbutils["pgdb"] = Pgdb_dbutils
 
 
 def get_dbutils(module_name):
+    """Return the correct dbutils object for the database driver."""
     try:
         return _dbutils[module_name]()
     except KeyError:

@@ -45,6 +45,7 @@ class ProteinAnalysis(object):
     molecular mass will be used for the calculation.
 
     """
+
     def __init__(self, prot_sequence, monoisotopic=False):
         if prot_sequence.islower():
             self.sequence = Seq(prot_sequence.upper(), IUPAC.protein)
@@ -268,7 +269,7 @@ class ProteinAnalysis(object):
         Amino acids in Turn: N, P, G, S.
         Amino acids in sheet: E, M, A, L.
 
-        Returns a tuple of three integers (Helix, Turn, Sheet).
+        Returns a tuple of three floats (Helix, Turn, Sheet).
         """
         aa_percentages = self.get_amino_acids_percent()
 

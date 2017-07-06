@@ -56,6 +56,7 @@ class CharBuffer(object):
 
     This class is not intended for public use (any more).
     """
+
     def __init__(self, string):
         if string:
             self.buffer = list(string)
@@ -76,6 +77,7 @@ class CharBuffer(object):
             return None
 
     def __next__(self):
+        """Iterates over NEXUS characters in the file."""
         if self.buffer:
             return self.buffer.pop(0)
         else:
@@ -87,6 +89,7 @@ class CharBuffer(object):
             return self.__next__()
 
     def next_nonwhitespace(self):
+        """Checks for next non whitespace character in NEXUS file."""
         while True:
             p = next(self)
             if p is None:
@@ -96,10 +99,15 @@ class CharBuffer(object):
         return None
 
     def skip_whitespace(self):
+        """Skips whitespace characters in NEXUS file."""
         while self.buffer[0] in WHITESPACE:
             self.buffer = self.buffer[1:]
 
     def next_until(self, target):
+        """Keeps iterating the NEXUS file until it reaches a target character.
+
+        Returns the word found in the NEXUS file.
+        """
         for t in target:
             try:
                 pos = self.buffer.index(t)
@@ -113,6 +121,7 @@ class CharBuffer(object):
             return None
 
     def peek_word(self, word):
+        """Returns a word stored in the buffer."""
         return ''.join(self.buffer[:len(word)]) == word
 
     def next_word(self):
@@ -163,6 +172,7 @@ class StepMatrix(object):
 
     See Wheeler (1990), Cladistics 6:269-275.
     """
+
     def __init__(self, symbols, gap):
         self.data = {}
         self.symbols = sorted(symbols)
@@ -173,6 +183,7 @@ class StepMatrix(object):
                 self.set(x, y, 0)
 
     def set(self, x, y, value):
+        """Swaps the value."""
         if x > y:
             x, y = y, x
         self.data[x + y] = value
@@ -199,6 +210,7 @@ class StepMatrix(object):
         return self
 
     def smprint(self, name='your_name_here'):
+        """Prints a stepmatrix."""
         matrix = 'usertype %s stepmatrix=%d\n' % (name, len(self.symbols))
         matrix += '        %s\n' % '        '.join(self.symbols)
         for x in self.symbols:
@@ -302,7 +314,6 @@ def _compact4nexus(orig_list):
     """Transform [1 2 3 5 6 7 8 12 15 18 20] (baseindex 0, used in the Nexus class)
     into '2-4 6-9 13-19\\3 21' (baseindex 1, used in programs like Paup or MrBayes.).
     """
-
     if not orig_list:
         return ''
     orig_list = sorted(set(orig_list))
@@ -339,7 +350,6 @@ def combine(matrices):
     Character sets, character partitions and taxon sets are prefixed, readjusted
     and present in the combined matrix.
     """
-
     if not matrices:
         return None
     name = matrices[0][0]
@@ -382,10 +392,10 @@ def combine(matrices):
         for t in m_only:
             combined.matrix[t] = Seq(combined.missing * combined.nchar,
                                      combined.alphabet) + \
-                                Seq(str(m.matrix[t])
-                                    .replace(m.gap, combined.gap)
-                                    .replace(m.missing, combined.missing),
-                                    combined.alphabet)
+                Seq(str(m.matrix[t])
+                    .replace(m.gap, combined.gap)
+                    .replace(m.missing, combined.missing),
+                    combined.alphabet)
         combined.taxlabels.extend(m_only)    # new taxon list
         for cn, cs in m.charsets.items():  # adjust character sets for new matrix
             combined.charsets['%s.%s' % (n, cn)] = [x + combined.nchar for x in cs]
@@ -502,7 +512,6 @@ def _adjust_lines(lines):
 
 def _replace_parenthesized_ambigs(seq, rev_ambig_values):
     """Replaces ambigs in xxx(ACG)xxx format by IUPAC ambiguity code."""
-
     opening = seq.find('(')
     while opening > -1:
         closing = seq.find(')')
@@ -558,6 +567,7 @@ class Commandline(object):
 
 class Block(object):
     """Represent a NEXUS block with block name and list of commandlines."""
+
     def __init__(self, title=None):
         self.title = title
         self.commandlines = []
@@ -617,7 +627,6 @@ class Nexus(object):
 
     def read(self, input):
         """Read and parse NEXUS input (a filename, file-handle, or string)."""
-
         # 1. Assume we have the name of a file in the execution dir or a
         # file-like object.
         # Note we need to add parsing of the path to dir/filename
@@ -840,6 +849,7 @@ class Nexus(object):
         return nextaxa.get(nexid)
 
     def _charlabels(self, options):
+        """Get labels for characters."""
         self.charlabels = {}
         opts = CharBuffer(options)
         while True:
@@ -924,6 +934,7 @@ class Nexus(object):
         pass
 
     def _matrix(self, options):
+        """Creates a matrix for NEXUS object (PRIVATE)."""
         if not self.ntax or not self.nchar:
             raise NexusError('Dimensions must be specified before matrix!')
         self.matrix = {}
@@ -1032,6 +1043,7 @@ class Nexus(object):
             "Please Report this as a bug, and send in data file."
 
     def _translate(self, options):
+        """Translates a Nexus file (PRIVATE)."""
         self.translate = {}
         opts = CharBuffer(options)
         while True:
@@ -1094,6 +1106,7 @@ class Nexus(object):
         self.trees.append(tree)
 
     def _apply_block_structure(self, title, lines):
+        """Applies Block structure to the NEXUS file (PRIVATE)."""
         block = Block('')
         block.title = title
         for line in lines:
@@ -1101,14 +1114,17 @@ class Nexus(object):
         self.structured.append(block)
 
     def _taxset(self, options):
+        """Creates unique taxset (PRIVATE)."""
         name, taxa = self._get_indices(options, set_type=TAXSET)
         self.taxsets[name] = _make_unique(taxa)
 
     def _charset(self, options):
+        """Creates unique character set (PRIVATE)."""
         name, sites = self._get_indices(options, set_type=CHARSET)
         self.charsets[name] = _make_unique(sites)
 
     def _taxpartition(self, options):
+        """Collects taxpartition from a NEXUS file (PRIVATE)."""
         taxpartition = {}
         quotelevel = False
         opts = CharBuffer(options)
@@ -1139,7 +1155,6 @@ class Nexus(object):
         Here codonposset is just a fancy name for a character partition with
         the name CodonPositions and the partitions N,1,2,3
         """
-
         prev_partitions = list(self.charpartitions.keys())
         self._charpartition(options)
         # mcclade calls it CodonPositions, but you never know...
@@ -1153,6 +1168,7 @@ class Nexus(object):
         pass
 
     def _charpartition(self, options):
+        """Collects character partition from NEXUS file (PRIVATE)."""
         charpartition = {}
         quotelevel = False
         opts = CharBuffer(options)
@@ -1258,7 +1274,7 @@ class Nexus(object):
                             plain_list.append(start)
             except NexusError:
                 raise
-            except:
+            except Exception:  # FIXME - this seems unwise
                 return None
         return plain_list
 
@@ -1274,6 +1290,7 @@ class Nexus(object):
             Plain numbers are translated in their taxon name, underscores and spaces are considered equal.
             Names are returned unchanged (if plain taxon identifiers), or the names in
             the corresponding taxon set is returned.
+
         """
         identifier = quotestrip(identifier)
         if not set_type:
@@ -1342,7 +1359,6 @@ class Nexus(object):
         Only non-excluded characters and non-deleted taxa are included,
         just the data block is written.
         """
-
         if not matrix:
             matrix = self.matrix
         if not matrix:
@@ -1561,9 +1577,9 @@ class Nexus(object):
                     newpartition[sn] = nsp
             if newpartition:
                 setsb.append('taxpartition %s = %s' % (safename(n),
-                             ', '.join('%s: %s' % (safename(sn),
-                                                   ' '.join(safename(x) for x in newpartition[sn]))
-                                       for sn in names if sn in newpartition)))
+                                                       ', '.join('%s: %s' % (safename(sn),
+                                                                             ' '.join(safename(x) for x in newpartition[sn]))
+                                                                 for sn in names if sn in newpartition)))
         # add 'end' and return everything
         setsb.append('end;\n')
         if len(setsb) == 2:  # begin and end only
@@ -1589,7 +1605,8 @@ class Nexus(object):
         """Writes matrix into a PHYLIP file.
 
         Note that this writes a relaxed PHYLIP format file, where the names
-        are not truncated, nor checked for invalid characters."""
+        are not truncated, nor checked for invalid characters.
+        """
         if not filename:
             if '.' in self.filename and self.filename.split('.')[-1].lower() in ['paup', 'nexus', 'nex', 'dat']:
                 filename = '.'.join(self.filename.split('.')[:-1]) + '.phy'
@@ -1729,7 +1746,6 @@ class Nexus(object):
 
     def add_sequence(self, name, sequence):
         """Adds a sequence (string) to the matrix."""
-
         if not name:
             raise NexusError('New sequence must have a name')
 
@@ -1759,10 +1775,10 @@ class Nexus(object):
         pos=0: first position
         pos=nchar: last position
         """
-
         def _adjust(set, x, d, leftgreedy=False):
             """Adjusts character sets if gaps are inserted, taking care of
-            new gaps within a coherent character set."""
+            new gaps within a coherent character set.
+            """
             # if 3 gaps are inserted at pos. 9 in a set that looks like 1 2 3  8 9 10 11 13 14 15
             # then the adjusted set will be 1 2 3  8 9 10 11 12 13 14 15 16 17 18
             # but inserting into position 8 it will stay like 1 2 3 11 12 13 14 15 16 17 18
@@ -1844,8 +1860,8 @@ class Nexus(object):
     def terminal_gap_to_missing(self, missing=None, skip_n=True):
         """Replaces all terminal gaps with missing character.
 
-        Mixtures like ???------??------- are properly resolved."""
-
+        Mixtures like ???------??------- are properly resolved.
+        """
         if not missing:
             missing = self.missing
         replace = [self.missing, self.gap]
@@ -1883,70 +1899,3 @@ else:
         # nexus file under normal circumstances)
         commandlines = _adjust_lines(decommented.split(chr(7)))
         return commandlines
-
-
-# Test code from command line (python Nexus.py)
-if __name__ == '__main__':
-    print()
-    print()
-    print('=== NEXUS PARSING TEST ===')
-    print()
-
-    # 1. Check basic tree file with TREES and TAXA block
-    print('Testing file "bats.nex": TREES and TAXA')
-    nexus1 = Nexus()
-    try:
-        nexus1.read('../../Tests/Nexus/bats.nex')
-    except Exception as nexus_error:
-        raise Exception(nexus_error.message)
-
-    # 2. Check simple sequence data file with DATA and CODONS block
-    print('Testing file "codonposset.nex": DATA and CODONS')
-    nexus2 = Nexus()
-    try:
-        nexus2.read('../../Tests/Nexus/codonposset.nex')
-    except Exception as nexus_error:
-        raise Exception(nexus_error.message)
-
-    # 3. Check sequence data file with DATA, SETS, TREES and an unknown block
-    print('Testing file "test_Nexus_input.nex": DATA, SETS, TREES and unknown')
-    nexus3 = Nexus()
-    try:
-        nexus3.read('../../Tests/Nexus/test_Nexus_input.nex')
-    except Exception as nexus_error:
-        raise Exception(nexus_error.message)
-
-    # 4. Check simple multi-state character data file with TAXA and CHARACTERS
-    # block
-    print('Testing file "vSysLab_Ganaspidium_multistate.nex": TAXA, CHARACTERS (multi-state)')
-    nexus4 = Nexus()
-    try:
-        nexus4.read('../../Tests/Nexus/vSysLab_Ganaspidium_multistate.nex')
-    except Exception as nexus_error:
-        raise Exception(nexus_error.message)
-
-    # 5. Check character data file with TAXA and CHARACTERS block with more
-    # than 9 codings and a character without states
-    print('Testing file "vSysLab_Heptascelio_no-states_10+chars.nex": TAXA, CHARACTERS (stateless and 10+ codings)')
-    nexus5 = Nexus()
-    try:
-        nexus5.read('../../Tests/Nexus/vSysLab_Heptascelio_no-states_10+chars.nex')
-    except Exception as nexus_error:
-        raise Exception(nexus_error.message)
-
-    # TODO: Not supported
-    # 6. Check character data file with TAXA and two CHARACTERS blocks (one with continuous characters)
-    # print('Testing file "vSysLab_Oreiscelio_discrete+continuous.nex": TAXA, 2 CHARACTERS (discrete and continuous)')
-    #
-    # nexus6 = Nexus()
-    #
-    # try:
-    #    nexus6.read('../../Tests/Nexus/vSysLab_Oreiscelio_discrete+continuous.nex')
-    # except Exception as nexus_error:
-    #    raise Exception(nexus_error.message)
-
-    # Made it here, so success
-    print()
-    print('Successfully completed test suite.')
-    print()
-    print()

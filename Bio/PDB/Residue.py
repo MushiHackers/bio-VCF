@@ -6,6 +6,8 @@
 """Residue class, used by Structure objects."""
 
 # My Stuff
+import warnings
+from Bio import BiopythonDeprecationWarning
 from Bio.PDB.PDBExceptions import PDBConstructionException
 from Bio.PDB.Entity import Entity, DisorderedEntityWrapper
 
@@ -18,9 +20,8 @@ _atom_name_dict["O"] = 4
 
 
 class Residue(Entity):
-    """
-    Represents a residue. A Residue object stores atoms.
-    """
+    """Represents a residue. A Residue object stores atoms."""
+
     def __init__(self, id, resname, segid):
         self.level = "R"
         self.disordered = 0
@@ -45,7 +46,8 @@ class Residue(Entity):
         but N, CA, C, O always come first.
 
         Arguments:
-        o a1, a2 - Atom objects
+         - a1, a2 - Atom objects
+
         """
         name1 = a1.get_name()
         name2 = a2.get_name()
@@ -85,20 +87,18 @@ class Residue(Entity):
         self.child_list.sort(self._sort)
 
     def flag_disordered(self):
-        "Set the disordered flag."
+        """Set the disordered flag."""
         self.disordered = 1
 
     def is_disordered(self):
-        "Return 1 if the residue contains disordered atoms."
+        """Return 1 if the residue contains disordered atoms."""
         return self.disordered
 
     def get_resname(self):
         return self.resname
 
     def get_unpacked_list(self):
-        """
-        Returns the list of all atoms, unpack DisorderedAtoms."
-        """
+        """Returns the list of all atoms, unpack DisorderedAtoms."""
         atom_list = self.get_list()
         undisordered_atom_list = []
         for atom in atom_list:
@@ -111,17 +111,25 @@ class Residue(Entity):
     def get_segid(self):
         return self.segid
 
+    def get_atoms(self):
+        for a in self:
+            yield a
+
     def get_atom(self):
+        warnings.warn("`get_atom` has been deprecated and we intend to remove it"
+                      " in a future release of Biopython. Please use `get_atoms` instead.",
+                     BiopythonDeprecationWarning)
         for a in self:
             yield a
 
 
 class DisorderedResidue(DisorderedEntityWrapper):
+    """DisorderedResidue is a wrapper around two or more Residue objects.
+
+    It is used to represent point mutations (e.g. there is a Ser 60 and a Cys 60
+    residue, each with 50 % occupancy).
     """
-    DisorderedResidue is a wrapper around two or more Residue objects. It is
-    used to represent point mutations (e.g. there is a Ser 60 and a Cys 60 residue,
-    each with 50 % occupancy).
-    """
+
     def __init__(self, id):
         DisorderedEntityWrapper.__init__(self, id)
 
@@ -146,7 +154,7 @@ class DisorderedResidue(DisorderedEntityWrapper):
         residue.add(atom)
 
     def sort(self):
-        "Sort the atoms in the child Residue objects."
+        """Sort the atoms in the child Residue objects."""
         for residue in self.disordered_get_list():
             residue.sort()
 
@@ -154,7 +162,8 @@ class DisorderedResidue(DisorderedEntityWrapper):
         """Add a residue object and use its resname as key.
 
         Arguments:
-        o residue - Residue object
+         - residue - Residue object
+
         """
         resname = residue.get_resname()
         # add chain parent to residue

@@ -3,13 +3,14 @@
 # This code is part of the Biopython distribution and governed by its
 # license.  Please see the LICENSE file that should have been included
 # as part of this package.
-"""This module deals with CAPS markers.
+"""Cleaved amplified polymorphic sequence (CAPS) markers.
 
 A CAPS marker is a location a DifferentialCutsite as described below and a
 set of primers that can be used to visualize this.  More information can
 be found in the paper `Konieczny and Ausubel (1993)`_ (PMID 8106085).
 
 .. _`Konieczny and Ausubel (1993)`: http://dx.doi.org/10.1046/j.1365-313X.1993.04020403.x
+
 """
 
 
@@ -35,7 +36,6 @@ class DifferentialCutsite(object):
         Each member (as listed in the class description) should be included as a
         keyword.
         """
-
         self.start = int(kwds["start"])
         self.enzyme = kwds["enzyme"]
         self.cuts_in = kwds["cuts_in"]
@@ -53,6 +53,7 @@ class CAPSMap(object):
      - alignment - The alignment that is mapped.
      - dcuts - A list of possible CAPS markers in the form of
        DifferentialCutsites.
+
     """
 
     def __init__(self, alignment, enzymes=None):
@@ -64,6 +65,7 @@ class CAPSMap(object):
         Optional:
          - enzymes - List of enzymes to be used to create the map.
            Defaults to an empty list.
+
         """
         if enzymes is None:
             enzymes = []
