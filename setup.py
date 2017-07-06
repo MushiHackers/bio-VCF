@@ -460,7 +460,7 @@ setup(name='biopython',
           'Topic :: Scientific/Engineering :: Bio-Informatics',
           'Topic :: Software Development :: Libraries :: Python Modules',
       ],
-      entry_points: {"vcf.filters":[
+      entry_points={"vcf.filters":[
               'site_quality = Bio.VCF.filters:SiteQuality',
             'vgq = Bio.VCF.filters:VariantGenotypeQuality',
             'eb = Bio.VCF.filters:ErrorBiasFilter',
